@@ -1,0 +1,6 @@
+0.1-devel
+    + Initial import.
+    + Added SQL stats shown on finalization.
+    + Importing to cubes works. Transactions. Proof of concept ready.
+    + Some complex processing working (inserting data from XML into Star Schema)
+    + Application prototype and proof of concept.

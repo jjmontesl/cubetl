@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+               http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+
+
+    <object id="node-directorylister" class="cubetl.os.DirectoryLister" scope="singleton">
+        <property name="path" value="/tmp" />
+        <!-- <property name="filter_re" value=".*.xml" />  -->
+    </object>
+    
+    <object id="node-testscript" class="cubetl.script.Script" scope="singleton">
+        <property name="code"><value><![CDATA[
+m["test-script"] = True
+        ]]></value></property>
+    </object>     
+    
+    <object id="node-print" class="cubetl.os.Print" scope="singleton">
+        <property name="eval" value="${ m['id'] }" />
+    </object>
+    
+    <object id="process" class="cubetl.flow.Chain" scope="singleton">
+        <property name="steps">
+            <list>
+                <ref object="node-directorylister" />
+                
+                <ref object="node-testscript" />
+                <ref object="cubetl-print" />
+                
+            </list>
+        </property>  
+    </object>
+
+</objects>

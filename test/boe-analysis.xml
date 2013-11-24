@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+               http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+
+    <object id="dim-modality" class="cubetl.olap.Dimension" scope="singleton">
+        <property name="name" value="modality" ></property>
+        <property name="label" value="Modalidad" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>modality</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+
+    <object id="dim-type" class="cubetl.olap.Dimension" scope="singleton">
+        <property name="name" value="type" ></property>
+        <property name="label" value="Tipo" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>type</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+    
+    <object id="dim-tramitation" class="cubetl.olap.Dimension" scope="singleton">
+        <property name="name" value="tramitation" ></property>
+        <property name="label" value="Tramitación" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>tramitation</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>    
+
+    <object id="dim-procedure" class="cubetl.olap.Dimension" scope="singleton">
+        <property name="name" value="procedure" ></property>
+        <property name="label" value="Procedimiento" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>procedure</value></entry>
+                    <entry><key><value>label</value></key><value>Procedimiento</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>  
+    
+    <object id="dim-concept" class="cubetl.olap.Dimension" scope="singleton">
+        <property name="name" value="concept" ></property>
+        <property name="label" value="Concepto" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>concept</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>    
+    
+    <object id="dim-geographic_scope" class="cubetl.olap.Dimension" scope="singleton">
+        <property name="name" value="geographic_scope" ></property>
+        <property name="label" value="Ámbito Geográfico" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>geographic_scope</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+
+    <object id="dim-boe_article" class="cubetl.olap.FactDimension" scope="singleton">
+        <property name="name" value="boe_article" ></property>
+        <property name="label" value="Artículo BOE" ></property>
+        <property name="fact"><ref object="fact-boe-article" /></property>
+    </object>
+
+    <object id="fact-boe-analysis" class="cubetl.olap.Fact" scope="singleton">
+        
+        <property name="name" value="boe_analysis" />
+        <property name="label" value="BOE / Artículos" />
+        
+        <property name="dimensions" >
+            <list>
+                <ref object="dim-modality" />
+                <ref object="dim-type" />
+                <ref object="dim-tramitation" />
+                <ref object="dim-procedure" />
+                <ref object="dim-concept" />
+                <ref object="dim-geographic_scope" />
+                <ref object="dim-boe_article" />
+            </list>
+        </property>
+        <property name="measures" >
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>cost</value></entry>
+                    <entry><key><value>type</value></key><value>Float</value></entry>
+                </dict>
+            </list>
+        </property>
+        <property name="attributes">
+            <list>
+                <dict> 
+                    <entry><key><value>name</value></key><value>notes</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+            </list>
+        </property>        
+    </object>   
+
+    <object id="olap-sql-mapper-boe-analysis" class="cubetl.olap.OlapMapper" scope="singleton">
+    
+        <property name="include">
+            <list>
+                <ref object="olap-sql-mapper-boe" />
+            </list>
+        </property>
+    
+        <property name="mappings">
+            <list>
+                <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-modality" />
+                    <property name="table" value="modality" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>value</value></key><value>${ m["modality_code"] }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                                <entry><key><value>type</value></key><value>String</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object>
+                
+                 <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-type" />
+                    <property name="table" value="type" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>value</value></key><value>${ m["type_code"] }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                                <entry><key><value>type</value></key><value>Integer</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object> 
+                
+                 <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-tramitation" />
+                    <property name="table" value="tramitation" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>value</value></key><value>${ m["tramitation_code"] }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                                <entry><key><value>type</value></key><value>Integer</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object>    
+                
+                <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-procedure" />
+                    <property name="table" value="procedure" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>value</value></key><value>${ m["procedure_code"] }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                                <entry><key><value>type</value></key><value>Integer</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object> 
+                target
+                <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-concept" />
+                    <property name="table" value="concept" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>value</value></key><value>${ m["concept"].split(" ")[0] }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                                <entry><key><value>type</value></key><value>String</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object>                
+                
+                <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-geographic_scope" />
+                    <property name="table" value="geographic_scope" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object>
+                
+                <object class="cubetl.olap.sql.SQLFactDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-boe_article" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>column</value></key><value>boe_article_id</value></entry>
+                                <entry><key><value>value</value></key><value>${ text.slugu(m["id"]) }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object>  
+                
+                <object class="cubetl.olap.sql.SQLFactMapper" scope="prototype">
+                    <property name="fact" ref="fact-boe-analysis" />
+                    <property name="table" value="boe_analysis" />
+                    <property name="connection" ref="connection-sql-target" />
+                    <property name="mappings">
+                        <list>
+                            <dict>
+                                <entry><key><value>name</value></key><value>id</value></entry>
+                                <entry><key><value>value</value></key><value>${ text.slugu(m["id"]) }</value></entry>
+                                <entry><key><value>pk</value></key><value>True</value></entry>
+                            </dict>
+                        </list>
+                    </property>        
+                </object>                
+                
+            </list>
+        </property>
+        
+    </object>
+
+    <object id="node-storefact-analysis" class="cubetl.olap.StoreFact" scope="prototype">
+        <property name="fact" ref="fact-boe-analysis" />
+        <property name="mapper" ref="olap-sql-mapper-boe-analysis" />
+    </object> 
+    
+    
+    <object id="node-filter-analysis" class="cubetl.flow.Filter" scope="singleton">
+        <property name="condition"><value>${ m['xml'].xpath('string(//analisis/modalidad)').strip() != '' }</value></property>
+    </object>
+    
+     <object id="node-xpathextract-analysis" class="cubetl.xml.XPathExtract" scope="singleton">
+        <property name="mappings">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>modality</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/modalidad)</value></entry>
+                    <entry><key><value>default</value></key><value>DESCONOCIDA</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>modality_code</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/modalidad/@codigo)</value></entry>
+                    <entry><key><value>default</value></key><value>0</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>type</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/tipo)</value></entry>
+                    <entry><key><value>default</value></key><value>DESCONOCIDO</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>type_code</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/tipo/@codigo)</value></entry>
+                    <entry><key><value>default</value></key><value>0</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>tramitation</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/tramitacion)</value></entry>
+                    <entry><key><value>default</value></key><value>DESCONOCIDO</value></entry>                    
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>tramitation_code</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/tramitacion/@codigo)</value></entry>
+                    <entry><key><value>default</value></key><value>0</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>procedure</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/procedimiento)</value></entry>
+                    <entry><key><value>default</value></key><value>DESCONOCIDO</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>procedure_code</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/procedimiento/@codigo)</value></entry>
+                    <entry><key><value>default</value></key><value>0</value></entry>
+                </dict>
+                
+                <dict>
+                    <entry><key><value>name</value></key><value>cost</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/importe)</value></entry>
+                    <entry><key><value>eval</value></key><value>${ text.extract_number(m["cost"]) }</value></entry>
+                </dict>
+                
+                <dict>
+                    <entry><key><value>name</value></key><value>geographic_scope</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/ambito_geografico)</value></entry>
+                    <entry><key><value>default</value></key><value>Desconocido</value></entry>
+                </dict>
+                
+                <dict>
+                    <entry><key><value>name</value></key><value>geographic_scope</value></entry>
+                    <entry><key><value>eval</value></key><value>${ ("Varios (%d)" % (m["geographic_scope"].count("\n"))) if ("\n" in m["geographic_scope"]) else  m["geographic_scope"] }</value></entry>
+                </dict>
+                
+                <dict>
+                    <entry><key><value>name</value></key><value>concept</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/materias_cpv)</value></entry>
+                    <entry><key><value>default</value></key><value>000000 DESCONOCIDO</value></entry>
+                </dict>
+                
+                <dict>
+                    <entry><key><value>name</value></key><value>notes</value></entry>
+                    <entry><key><value>xpath</value></key><value>string(//documento/analisis/observaciones)</value></entry>
+                </dict>
+                
+            </list>
+        </property>  
+    </object>  
+    
+    
+
+</objects>
