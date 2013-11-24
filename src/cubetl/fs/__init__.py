@@ -4,6 +4,10 @@ from os.path import isfile, join
 import itertools
 import re
 from cubetl.core import Node
+import chardet    
+from BeautifulSoup import UnicodeDammit
+
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -35,8 +39,15 @@ class DirectoryLister(Node):
     
 class FileReader(Node):
     
+    
+    
     def __init__(self):
+        
         self.filename = '${ m["data"] }'
+        
+        self.encoding = "detect"
+        self.encoding_errors = "strict" # strict, ignore, replace
+        self.encoding_abort = True
     
     def process(self, ctx, m):
         
@@ -45,8 +56,39 @@ class FileReader(Node):
         
         logger.debug ("Reading file %s" % msg_filename)
         with open (msg_filename, "r") as myfile:
-            m["filename"] = msg_filename
+
+            m["_filename"] = msg_filename
             m["data"] = myfile.read()
+
+            # Encoding
+            encoding = ctx.interpolate(m, self.encoding)
+            
+            if encoding:
+            
+                if (encoding in ["guess", "detect", "unicodedammit"]):
+                    dammit = UnicodeDammit(m["data"])
+                    encoding = dammit.originalEncoding
+                    m["data"] = dammit.unicode
+                    logger.debug("Detected content encoding as %s (using 'unicodedammit' detection)" % encoding )
+                    
+                else:
+                    if (encoding in ["chardet"]):
+                        chardet_result = chardet.detect(m["data"])
+                        encoding = chardet_result['encoding']
+                        logger.debug("Detected content encoding as %s (using 'chardet' detection)" % encoding )  
+                    
+                    try:
+                        m["data"] = m["data"].decode(encoding, self.encoding_errors)
+                    except UnicodeDecodeError:
+                        if (self.encoding_abort):
+                            raise Exception ("Error decoding unicode with encoding '%s' on data: %r" %  (encoding, m["data"]))
+                        logger.warn("Error decoding unicode with encoding '%s' on data: %r" % (encoding, m["data"]))
+                        m["data"] = m["data"].decode("latin-1")
+                    
+                m["_encoding"] = encoding
+                
+                
+                
         
         yield m
             
@@ -62,6 +104,7 @@ class DirectoryFileReader (Node):
         self.filter_re = None 
         
         self.is_initialized = False
+        self.encoding = None
     
     def process(self, ctx, m):
         
@@ -71,6 +114,7 @@ class DirectoryFileReader (Node):
             self.directoryLister.path = self.path
             
             self.fileReader = FileReader()
+            if (self.encoding): self.fileReader.encoding = self.encoding 
             
             self.is_initialized = True
         

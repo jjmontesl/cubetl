@@ -32,13 +32,15 @@ class EvalExtract(Node):
     
     def process(self, ctx, m):
 
+        # TODO: Mix functionalityh with XMLExtract which is very similar
+
         logger.debug ("EvalExtract (%s mappings)" % len(self.mappings))
         for mapping in self.mappings:
             
             if ("eval" in mapping):
                 m[mapping["name"]] = ctx.interpolate(m, mapping["eval"])
             else:
-                logging.error("EvalExtract mapping with no 'eval' keyword: doing nothing.")
+                logging.warn("EvalExtract mapping with no 'eval' keyword: doing nothing.")
                 
             if ("default" in mapping):
                 if ((not mapping["name"] in m) or

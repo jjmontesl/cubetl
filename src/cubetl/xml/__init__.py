@@ -10,12 +10,15 @@ class XmlParser(Node):
     def __init__(self):
         
         super(XmlParser, self).__init__()
+        
+        self.encoding = 'utf-8' #'${ m["encoding"] }'
     
     def process(self, ctx, m):
         
         #logger.debug("Parsing XML")
         
-        m["xml"] = etree.fromstring(m["data"])
+        parser = etree.XMLParser(ns_clean=True, recover=True, encoding=ctx.interpolate(m, self.encoding))
+        m["xml"] = etree.fromstring(m["data"].encode(ctx.interpolate(m, self.encoding)), parser = parser)
         
         yield m
             
@@ -27,7 +30,9 @@ class XPathExtract(Node):
         super(XPathExtract, self).__init__()
     
         self.mappings = []
-        self.xmlfield = "xml"
+        self.xml = "xml"
+        
+        self.encoding = 'utf-8' #'${ m["encoding"] }'
     
     def process(self, ctx, m):
 
@@ -37,7 +42,9 @@ class XPathExtract(Node):
             
             if ("xpath" in mapping):
                 
-                m[mapping["name"]] = m[self.xmlfield].xpath(mapping["xpath"])
+                m[mapping["name"]] = m[self.xml].xpath(mapping["xpath"])
+                if (isinstance(m[mapping["name"]], str)):
+                    m[mapping["name"]] = m[mapping["name"]].decode(ctx.interpolate(m, self.encoding))
                 #m[mapping["key"]] = etree.XPath("string()")( m["xml"].xpath(mapping["xpath"])[0] )
                 #m[mapping["key"]] = etree.tostring(m["xml"].xpath(mapping["xpath"])[0], method="text", encoding=unicode)
             

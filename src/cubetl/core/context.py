@@ -34,9 +34,9 @@ class Context():
         
         # TODO: Naive interpolation
 
-        #logger.debug ("Evaluating %s | %s"  % (value, m))
-        
-        result = value
+        # TODO: We are enforcing unicode working around Python Spring seems to give strings, not unicode
+        # This shall not be necessary and it's bad practice
+        result = unicode(value) 
 
         pos = result.find("${")
         while (pos >= 0):
@@ -49,6 +49,8 @@ class Context():
                     compiled = compile(expr, '', 'eval')
                     self._compiled.put(expr, compiled)
                 res = eval (compiled, self._globals , { "m": m, "ctx": self })
+                if (self.debug2):
+                    logger.debug ('Evaluated: %s = %r' % (expr, res))
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 raise Exception('Error evaluating expression "%s" on message: %s' % (expr, (traceback.format_exception_only(exc_type, exc_value))) ) 
@@ -62,10 +64,6 @@ class Context():
                 result = res
                 pos = -1
                 
-        
-        if (self.debug2):
-            logger.debug ('Evaluated "%s" = "%s"' % (value, result))
-        
         return result
 
         

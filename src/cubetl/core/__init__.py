@@ -3,6 +3,9 @@ import logging
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+SIGNAL_INITIALIZE = "initialize"
+SIGNAL_FINALIZE = "finalize"
+
 class Component(object):
     """
     Base class for all components. 

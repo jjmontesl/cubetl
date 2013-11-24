@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 from slugify import slugify
 
 def slug(value):
-    return slugify(unicode(value))
+    return unicode(slugify(unicode(value)))
 
 def slugu(value):
     return slug(value).replace("-", "_")
@@ -25,59 +25,17 @@ def parsebool (value):
         else:
             raise Exception("Invalid boolean value '%s' (valid values are 'True' or 'False')" % value)
     except Exception, e:
-        raise Exception("Invalid boolean value '%s' (valid values are 'True' or 'False')" % value)
+        raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
     
-"""    
-def extractnumber(value):
-    
-    if (isinstance(value, int)): return value
-    if (isinstance(value, float)): return value
-    
-    result = re.sub(r'&#\d+', '', value)
-    result = re.sub(r'^[^0-9\-]+', '', result)
-    result = re.sub(r'[^0-9]+$', '', result)
-    
-    if (len(result) == 0): return None
-    
-    numPoints = result.count('.')
-    numCommas = result.count(',')
-    symbols = re.sub(r'[^\.\,]', '', result)
-    result = result.replace(",", ".")
-    
-    if (len(symbols) == 1):
-        result = result.replace(" ", "")
-        
-    if (numPoints > 0 and numCommas > 0):
-        if (len(symbols) > 2):
-            if (symbols[-1] in symbols[:-1]):
-                raise Exception ("Invalid decimal format found while trying to extract number: %s" % value)
-     
-    if ((numPoints > 0 and numCommas > 0) or (numPoints == 1) or (numCommas == 1)):
-        integerPart = "".join (result.split(".")[0:-1])
-        decimalPart = result.split(".")[-1]
-        if (decimalPart == ""): decimalPart = 0    
-    else:
-        integerPart = result.replace(".", "")
-        decimalPart = 0 
-     
-    integerPart = int(integerPart)
-    if decimalPart == 0:
-        return int(integerPart)
-    else:
-        if (integerPart > 0):
-            return int(integerPart) + (float(int(decimalPart)) / pow(10, len(decimalPart)))
-        else:
-            return int(integerPart) - (float(int(decimalPart)) / pow(10, len(decimalPart)))
-"""
-
 
 def extract_number(value):
     
+    if (value == None): return None
     if (isinstance(value, int)): return value
     if (isinstance(value, float)): return value
-    
+        
     text = value
-    text = re.sub(r'&#\d+', '', text)
+    text = re.sub(r'\&\#[0-9A-Fa-f]+', '', text)
     text = re.sub(r' +', ' ', text)
     
     _pattern = r"""(?x)       # enable verbose mode (which ignores whitespace and comments)
@@ -118,6 +76,8 @@ def extract_number(value):
     if match is None or not (match.group("integer_part") or
                              match.group("decimal_part")):    # failed to match
         return None                      # consider raising an exception instead
+
+    
 
     num_str = match.group("number")      # get all of the number, without the junk
     sep = match.group("sep")

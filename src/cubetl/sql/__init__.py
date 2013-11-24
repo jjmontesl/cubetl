@@ -47,7 +47,8 @@ class SQLTable(Component):
         self.sa_metadata = None
         
         self._lookups = 0
-        self._inserts = 0        
+        self._inserts = 0
+        self._unicode_errors = 0        
     
     def _get_sa_type(self, column):
         
@@ -220,12 +221,13 @@ class SQLTable(Component):
                     raise Exception("Missing attribute for column %s in table '%s' while inserting row: %s" % (e, self.name, data))
                 
                 # Checks
-                if (ctx.debug2):
-                    if ((column["type"] == "String") and (not isinstance(row[column["name"]], Unicode))):
-                        logger.warn("Unicode column %s received non-unicode string %s " % (column["name"], row[column["name"]]))
+                if ((column["type"] == "String") and (not isinstance(row[column["name"]], unicode))):
+                    self._unicodeUnmatched = self._unicodeUnmatched + 1 
+                    if (ctx.debug):
+                        logger.warn("Unicode column %r received non-unicode string: %r " % (column["name"], row[column["name"]]))
                 
         
-        logger.debug ("Inserting row %s" % row)
+        logger.debug ("Inserting table '%s' row: %s" % (self.name, row))
         res = self.connection.connection().execute(self.sa_table.insert(row))
 
         pk = self.pk(ctx)

@@ -296,7 +296,7 @@
                 <dict>
                     <entry><key><value>name</value></key><value>tramitation</value></entry>
                     <entry><key><value>xpath</value></key><value>string(//documento/analisis/tramitacion)</value></entry>
-                    <entry><key><value>default</value></key><value>DESCONOCIDO</value></entry>                    
+                    <entry><key><value>default</value></key><value>DESCONOCIDO 0</value></entry>                    
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>tramitation_code</value></entry>
@@ -328,13 +328,13 @@
                 
                 <dict>
                     <entry><key><value>name</value></key><value>geographic_scope</value></entry>
-                    <entry><key><value>eval</value></key><value>${ ("Varios (%d)" % (m["geographic_scope"].count("\n"))) if ("\n" in m["geographic_scope"]) else  m["geographic_scope"] }</value></entry>
+                    <entry><key><value>eval</value></key><value>${ (u"Varios (%d)" % (m["geographic_scope"].count("\n"))) if ("\n" in m["geographic_scope"]) else  m["geographic_scope"] }</value></entry>
                 </dict>
                 
                 <dict>
                     <entry><key><value>name</value></key><value>concept</value></entry>
                     <entry><key><value>xpath</value></key><value>string(//documento/analisis/materias_cpv)</value></entry>
-                    <entry><key><value>default</value></key><value>000000 DESCONOCIDO</value></entry>
+                    <entry><key><value>default</value></key><value>00000000 DESCONOCIDO</value></entry>
                 </dict>
                 
                 <dict>

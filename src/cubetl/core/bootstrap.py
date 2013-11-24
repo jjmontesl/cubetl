@@ -137,8 +137,8 @@ class Bootstrap:
             
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            if (ctx.debug2):
+            if (ctx.debug):
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
-            
+
             logger.fatal("Error during process: %s" % (traceback.format_exception_only(exc_type, exc_value)))
             

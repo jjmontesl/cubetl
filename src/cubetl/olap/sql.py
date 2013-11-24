@@ -46,15 +46,15 @@ class SQLDimensionMapper(DimensionMapper):
         
         for attribute in self.dimension.attributes:
             if (not attribute["name"] in [mapping["name"] for mapping in self.mappings]):
-                self.mappings.append({
-                                      "name": attribute["name"], 
-                                      })
+                mapping = { "name": attribute["name"] }
+                if ("type" in attribute): mapping["type"] = attribute["type"]
+                self.mappings.append(mapping)
 
         for detail in self.dimension.details:
             if (not detail["name"] in [mapping["name"] for mapping in self.mappings]):
-                self.mappings.append({
-                                      "name": detail["name"], 
-                                      })
+                mapping = { "name": detail["name"] }
+                if ("type" in detail): mapping["type"] = detail["type"]
+                self.mappings.append(mapping)
         
         for mapping in self.mappings:
             mapping["pk"] = False if (not "pk" in mapping) else parsebool(mapping["pk"])  
@@ -190,6 +190,7 @@ class SQLFactMapper(FactMapper):
                                           "name": dimension.name,
                                           "column": dimension.name + "_id",
                                           "value": '${ m["' + dimension.name + "_id" + '"] }',
+                                          "type": dimmapper.pk(ctx)["type"]
                                           })
 
         for measure in self.fact.measures:

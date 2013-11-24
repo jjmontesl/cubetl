@@ -350,6 +350,7 @@
     <object id="node-directoryfilereader" class="cubetl.fs.DirectoryFileReader" scope="singleton">
         <property name="path" ref="var-path-inputfiles" />
         <property name="filter_re" value=".*.xml" />
+        <property name="encoding" value="latin-1" />
     </object>
     
     <object id="node-parsexml" class="cubetl.xml.XmlParser" scope="singleton">
@@ -471,10 +472,15 @@ m["test-script"] = True
 			                
 			                <ref object="node-storefact-analysis" />
 
+                            <!-- 
 			                <object class="cubetl.util.log.Log" scope="singleton">
-			                     <property name="condition" value="${ m['cost'] == None }" />
-			                     <property name="message" value="Empty cost in analysis section - Id: ${ m['id'] }" />
-			                </object>
+			                     <property name="condition" value="${ m['cost'] != m['cost2'] }" /> 
+			                     <property name="message" value="${ 'Id: %s  New method: %10s  Old method: %10s' % (m['id'], m['cost'], m['cost2'])  }" />
+			                </object> 
+			                 -->
+                            
+                            <!-- <ref object="cubetl-print" />  --> 
+                            
 			                
 			            </list>
 			        </property>
@@ -482,7 +488,6 @@ m["test-script"] = True
 			    </object>  
                 
                 <!-- <ref object="node-storerow" />  -->
-                <!-- <ref object="cubetl-print" />--> 
                 
                 <ref object="node-testscript" />
                 <ref object="node-logperformance" />

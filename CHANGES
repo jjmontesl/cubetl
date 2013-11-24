@@ -1,4 +1,5 @@
 0.1-devel
+    + Adding Unicode support.
     + Initial import.
     + Added SQL stats shown on finalization.
     + Importing to cubes works. Transactions. Proof of concept ready.
