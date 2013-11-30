@@ -17,9 +17,13 @@ class ConfigGraphWriter(Node):
         
         self.olapmapper = None
     
-    def signal(self, ctx, s):
+    def initialize(self, ctx):
+        super(ConfigGraphWriter, self).initialize(ctx)
+        ctx.comp.initialize(self.olapmapper)
         
-        self.olapmapper.signal(ctx, s)
+    def finalize(self, ctx):
+        super(ConfigGraphWriter, self).finalize(ctx)
+        ctx.comp.finalize(self.olapmapper)
 
     def _export_cube(self, ctx, model, mapper):
         

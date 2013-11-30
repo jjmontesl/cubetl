@@ -1,4 +1,6 @@
 0.1-devel
+    + Initial version of the build script, reorganised.
+    + Replaced signalling with lifecycle methods.
     + Adding Unicode support.
     + Initial import.
     + Added SQL stats shown on finalization.

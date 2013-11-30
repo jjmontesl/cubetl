@@ -14,26 +14,36 @@ logger = logging.getLogger(__name__)
 class Connection(Component):
     
     def __init__(self):
+        
+        super(Connection, self).__init__()
+        
         self.url = None
         self._engine = None
         self._connection = None
         
-    def initialize(self):
+
+    def lazy_init(self):
         if (self._engine == None):
-            self._engine = create_engine(self.url)
-            self._connection = self._engine.connect()
-    
+                self._engine = create_engine(self.url)
+                self._connection = self._engine.connect()
+                
     def connection(self):
-        self.initialize()
+        self.lazy_init()
         return self._connection
     
     def engine(self):
-        self.initialize()
+        self.lazy_init()
         return self._engine
 
 class SQLTable(Component):
     
+    _selects = 0
+    _inserts = 0
+    _finalized = False
+    
     def __init__(self):
+
+        super(SQLTable, self).__init__()
 
         self._pk = False
 
@@ -46,9 +56,9 @@ class SQLTable(Component):
         self.sa_table = None
         self.sa_metadata = None
         
-        self._lookups = 0
+        self._selects = 0
         self._inserts = 0
-        self._unicode_errors = 0        
+        self._unicode_errors = 0
     
     def _get_sa_type(self, column):
         
@@ -66,49 +76,57 @@ class SQLTable(Component):
         else:
             raise Exception("Invalid data type: %s" % column["type"])
     
-    def signal(self, ctx, s):
+    def finalize(self, ctx):
         
-        super(SQLTable, self).signal(ctx, s)    
-        self.connection.signal(ctx, s) 
+        if (not SQLTable._finalized):
+            SQLTable._finalized = True
+            logger.info("SQLTable Totals  inserts/selects: %d/%d " % 
+                        (SQLTable._inserts, SQLTable._selects))
         
-        if (s == "initialize"):
-            self.initialize(ctx)
-        if (s == "finalize"):
-            logger.info("sqltable %-18s lookups/inserts: %6d/%-6d " % 
-                        (self.name, self._lookups, self._inserts))
+        logger.info("SQLTable %-18s inserts/selects: %6d/%-6d " % 
+                        (self.name, self._inserts, self._selects))
+        if (self._unicode_errors > 0):
+            logger.warn("SQLTable %s found %d warnings assigning non-unicode fields to unicode columns" % 
+                        (self.name, self._unicode_errors))
+        
+        ctx.comp.finalize(self.connection)     
+        
+        super(SQLTable, self).finalize(ctx)
     
     def initialize(self, ctx):
         
-        if (self.sa_table == None):
+        super(SQLTable, self).initialize(ctx)
         
-            logger.debug("Loading table %s on %r" % (self.name, self))
-            
-            self.sa_metadata = MetaData()
-            self.sa_table = Table(self.name, self.sa_metadata)
+        ctx.comp.initialize(self.connection) 
+        
+        logger.debug("Loading table %s on %r" % (self.name, self))
+        
+        self.sa_metadata = MetaData()
+        self.sa_table = Table(self.name, self.sa_metadata)
 
-            # Drop?
+        # Drop?
 
-            # Columns
-            for column in self.columns:
-                column["pk"] = False if (not "pk" in column) else parsebool(column["pk"])
-                if (not "type" in column): column["type"] = "String"
-                #if (not "value" in column): column["value"] = None
-                logger.debug("Adding column %s" % column)
-                self.sa_table.append_column( Column(column["name"], 
-                                                    self._get_sa_type(column), 
-                                                    primary_key = column["pk"], 
-                                                    autoincrement = (True if column["type"] == "AutoIncrement" else False) ))
+        # Columns
+        for column in self.columns:
+            column["pk"] = False if (not "pk" in column) else parsebool(column["pk"])
+            if (not "type" in column): column["type"] = "String"
+            #if (not "value" in column): column["value"] = None
+            logger.debug("Adding column %s" % column)
+            self.sa_table.append_column( Column(column["name"], 
+                                                self._get_sa_type(column), 
+                                                primary_key = column["pk"], 
+                                                autoincrement = (True if column["type"] == "AutoIncrement" else False) ))
+        
+        # Check schema
+        
+        # Create if doesn't exist
+        if (not self.connection.engine().has_table(self.name)):
+            logger.info("Creating table %s" % self.name) 
+            self.sa_table.create(self.connection.connection())
             
-            # Check schema
-            
-            # Create if doesn't exist
-            if (not self.connection.engine().has_table(self.name)):
-                logger.info("Creating table %s" % self.name) 
-                self.sa_table.create(self.connection.connection())
-                
-            # Extend?
-            
-            # Delete columns?
+        # Extend?
+        
+        # Delete columns?
                 
             
     def pk(self, ctx):
@@ -152,7 +170,8 @@ class SQLTable(Component):
             
     def find(self, ctx, attribs):
         
-        self._lookups = self._lookups + 1
+        self._selects = self._selects + 1
+        SQLTable._selects = SQLTable._selects + 1
         
         query = self.sa_table.select(self._attribsToClause(attribs))
         rows = self.connection.connection().execute(query)
@@ -180,7 +199,6 @@ class SQLTable(Component):
         return row
     
     def store(self, ctx, data, keys = []):
-        self.initialize(ctx)
         
         # Use primary key if available
         pk = self.pk(ctx)
@@ -206,10 +224,7 @@ class SQLTable(Component):
                         
         return rid
         
-    
-    def insert(self, ctx, data):
-        
-        self.initialize(ctx)
+    def _prepare_row(self, ctx, data):
         
         row = {}
         
@@ -222,10 +237,15 @@ class SQLTable(Component):
                 
                 # Checks
                 if ((column["type"] == "String") and (not isinstance(row[column["name"]], unicode))):
-                    self._unicodeUnmatched = self._unicodeUnmatched + 1 
+                    self._unicode_errors = self._unicode_errors + 1 
                     if (ctx.debug):
                         logger.warn("Unicode column %r received non-unicode string: %r " % (column["name"], row[column["name"]]))
                 
+        return row
+    
+    def insert(self, ctx, data):
+        
+        row = self._prepare_row(ctx, data)
         
         logger.debug ("Inserting table '%s' row: %s" % (self.name, row))
         res = self.connection.connection().execute(self.sa_table.insert(row))
@@ -234,6 +254,7 @@ class SQLTable(Component):
         row[pk["name"]] = res.inserted_primary_key[0]
         
         self._inserts = self._inserts +1
+        SQLTable._inserts = SQLTable._inserts + 1 
         
         if (pk != None):
             return row
@@ -252,18 +273,16 @@ class Transaction(Node):
         
         self.enabled = True
 
-    def signal(self, ctx, s):
+    def initialize(self, ctx):
         
-        super(Transaction, self).signal(ctx, s)
-        
-        # If finalizing, close transaction
-        if (s == "initialize"):
-            self.enabled = parsebool(self.enabled)
-        if (s == "finalize"):
-            if (self.enabled):
-                logger.info("Commiting database transaction")
-                self._transaction.commit()
-                self._transaction = None
+        super(Transaction, self).initialize(ctx)
+        self.enabled = parsebool(self.enabled)
+
+    def finalize(self, ctx):
+        if (self.enabled):
+            logger.info("Commiting database transaction")
+            self._transaction.commit()
+            self._transaction = None
         
     def process(self, ctx, m):
         

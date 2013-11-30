@@ -1,5 +1,4 @@
 import logging
-from lxml import etree
 from cubetl.olap import Dimension, Fact, DimensionMapper, FactMapper
 from cubetl.sql.cache import CachingSQLTable
 from cubetl.functions.text import parsebool
@@ -23,22 +22,18 @@ class SQLDimensionMapper(DimensionMapper):
         
         self._sqltable = None
     
-    def signal(self, ctx, s):
+    def finalize(self, ctx):
         
-        super(SQLDimensionMapper, self).signal(ctx, s)
+        ctx.comp.finalize(self.dimension)
+        ctx.comp.finalize(self._sqltable)
         
-        self.dimension.signal(ctx, s)
-        
-        # If finalizing, close transaction
-        if (s == "initialize"):
-            self._initialize(ctx)
-        
-        # Signal table last
-        self._sqltable.signal(ctx, s)
+        super(SQLDimensionMapper, self).finalize(ctx)
     
-    def _initialize(self, ctx):
+    def initialize(self, ctx):
         
-        if (self._sqltable): return
+        super(SQLDimensionMapper, self).initialize(ctx)
+        
+        ctx.comp.initialize(self.dimension)
 
         self._sqltable = CachingSQLTable()
         self._sqltable.name = self.table
@@ -69,6 +64,8 @@ class SQLDimensionMapper(DimensionMapper):
 
             # Add to underlying table
             self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
+            
+        ctx.comp.initialize(self._sqltable)
             
     def pk(self, ctx):
         """
@@ -109,7 +106,7 @@ class SQLDimensionMapper(DimensionMapper):
 
         return row[self.pk(ctx)["name"]]
         
-class SQLEmbeddedDimensionMapper(SQLDimensionMapper):
+class SQLEmbeddedDimensionMapper(DimensionMapper):
     
     def __init__(self):
 
@@ -118,15 +115,15 @@ class SQLEmbeddedDimensionMapper(SQLDimensionMapper):
         self.dimension = None
         self.mappings = []
 
-    def signal(self, ctx, s):
-        
-        self.dimension.signal(ctx, s)
-        
-        # If finalizing, close transaction
-        if (s == "initialize"):
-            self.initialize(ctx)
-        
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.dimension)
+        super(SQLEmbeddedDimensionMapper, self).finalize(ctx)
+    
     def initialize(self, ctx):
+        
+        super(SQLEmbeddedDimensionMapper, self).initialize(ctx)
+        
+        ctx.comp.initialize(self.dimension)
         
         # Check there's at least one "relative" PK (either the data or a separate column). 
         # PKs shall not be transferred to parent table, however.
@@ -134,7 +131,8 @@ class SQLEmbeddedDimensionMapper(SQLDimensionMapper):
             if (not "value" in mapping): mapping["value"] = None 
             if (not "type" in mapping): 
                 # Infer type
-                mapping["type"] = self.dimension.attribute(mapping["name"])["type"] 
+                mapping["type"] = self.dimension.attribute(mapping["name"])["type"]
+        
                  
     def pk(self, ctx):
         raise Exception("Method pk() not implemented for %s" % self)
@@ -160,20 +158,18 @@ class SQLFactMapper(FactMapper):
         
         self._sqltable = None
         
-    def signal(self, ctx, s):
+    def finalize(self, ctx):
+        ctx.comp.finalize(self._sqltable)
+        ctx.comp.finalize(self.connection)
+        ctx.comp.finalize(self.fact)
+        super(SQLFactMapper, self).finalize(ctx)
         
-        self.fact.signal(ctx, s)
-        self.connection.signal(ctx, s)
+    def initialize(self, ctx):
         
-        # If finalizing, close transaction
-        if (s == "initialize"):
-            self._initialize(ctx)
-            
-        self._sqltable.signal(ctx, s)        
+        super(SQLFactMapper, self).initialize(ctx)
         
-    def _initialize(self, ctx):
-        
-        if (self._sqltable): return
+        ctx.comp.initialize(self.fact)
+        ctx.comp.initialize(self.connection)
         
         self._sqltable = CachingSQLTable()
         self._sqltable.name = self.table
@@ -183,14 +179,16 @@ class SQLFactMapper(FactMapper):
             if (not dimension.name in [mapping["name"] for mapping in self.mappings]):
                 dimmapper = self.olapmapper.getDimensionMapper(dimension)
                 if (isinstance(dimmapper, SQLEmbeddedDimensionMapper)):
-                    dimmapper.initialize(ctx)
+                    ctx.comp.initialize(dimmapper)
                     self.mappings.extend(dimmapper.mappings) 
                 else:
+                    type = dimmapper.pk(ctx)["type"]
+                    if (type == "AutoIncrement"): type = "Integer"
                     self.mappings.append({
                                           "name": dimension.name,
                                           "column": dimension.name + "_id",
                                           "value": '${ m["' + dimension.name + "_id" + '"] }',
-                                          "type": dimmapper.pk(ctx)["type"]
+                                          "type": type
                                           })
 
         for measure in self.fact.measures:
@@ -203,7 +201,7 @@ class SQLFactMapper(FactMapper):
             if (not attribute["name"] in [mapping["name"] for mapping in self.mappings]):
                 self.mappings.append({
                                       "name": attribute["name"], 
-                                      "type": "String"
+                                      "type": attribute["type"]
                                       })
         
         
@@ -213,7 +211,9 @@ class SQLFactMapper(FactMapper):
             if (not "type" in mapping): mapping["type"] = "String"
             mapping["pk"] = False if (not "pk" in mapping) else parsebool(mapping["pk"])  
                  
-            self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })            
+            self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
+            
+        ctx.comp.initialize(self._sqltable)            
             
     def pk(self, ctx):
         """
@@ -252,30 +252,28 @@ class SQLFactMapper(FactMapper):
 class SQLFactDimensionMapper(SQLEmbeddedDimensionMapper):
     
     def __init__(self):
-
+        
         super(SQLFactDimensionMapper, self).__init__()
         
         self.dimension = None
         self.mappings = []
 
-    def signal(self, ctx, s):
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.olapmapper.getFactMapper(self.dimension.fact))
+        ctx.comp.finalize(self.dimension)
+        super(SQLFactDimensionMapper, self).finalize(ctx)
         
-        self.dimension.signal(ctx, s)
-        self.olapmapper.getFactMapper(self.dimension.fact).signal(ctx, s)
+    def initialize(self, ctx):
         
-        if (s == "initialize"):
-            self._initialize(ctx)
-            
-        
-    def _initialize(self, ctx):
+        ctx.comp.initialize(self.dimension)
+        ctx.comp.initialize(self.olapmapper.getFactMapper(self.dimension.fact))
         
         if (len(self.mappings) != 1):
             raise Exception("SQLFactDimensionMapper must contain a single mapping for the Fact-to-Fact relation.")
         
         for mapping in self.mappings:
-            if "name" in mapping:
-                if (mapping["name"] != self.dimension.fact.name):
-                    logger.warn("Attribute 'name' for the mapping must exist and match the associated fact name: " + self.dimension.fact.name)
+            if (not (("name" in mapping) and (mapping["name"] == self.dimension.fact.name))):
+                logger.warn("Attribute 'name' for the mapping must exist and match the associated fact name: " + self.dimension.fact.name)
             
             mapping["name"] = self.dimension.fact.name
             mapping["pk"] = False
@@ -285,6 +283,8 @@ class SQLFactDimensionMapper(SQLEmbeddedDimensionMapper):
             if (not "type" in mapping): 
                 # Infer type
                 mapping["type"] = self.olapmapper.getFactMapper(self.dimension.fact).pk(ctx)["type"]
+                
+        super(SQLFactDimensionMapper, self).initialize(ctx)
                  
     def pk(self, ctx):
         raise Exception("Method pk() not implemented for %s" % self)

@@ -7,6 +7,7 @@ import sys
 import traceback
 
 from repoze.lru import LRUCache
+from cubetl.core.components import Components
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -29,6 +30,8 @@ class Context():
                          } 
         
         self._compiled = LRUCache(512)  # TODO: Configurable
+        
+        self.comp = Components(self)
     
     def interpolate(self, m, value):
         

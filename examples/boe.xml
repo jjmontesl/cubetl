@@ -119,9 +119,9 @@
                 
     </object>        
 
-    <object id="dim-journalnum" class="cubetl.olap.Dimension" scope="singleton">
+    <object id="dim-journal_num" class="cubetl.olap.Dimension" scope="singleton">
     
-        <property name="name" value="journalnum" ></property>
+        <property name="name" value="journal_num" ></property>
         <property name="label" value="Diario" ></property>
         
         <property name="attributes">
@@ -162,7 +162,7 @@
                 <ref object="dim-department" />
                 <ref object="dim-imageletter" />
                 <ref object="dim-section" />
-                <ref object="dim-journalnum" />
+                <ref object="dim-journal_num" />
                 <ref object="dim-hasanalysis" />
             </list>
         </property>
@@ -194,7 +194,7 @@
     
     <object id="olap-sql-mapper-boe" class="cubetl.olap.OlapMapper" scope="singleton">
     
-        <property name="mappings">
+        <property name="mappers">
             <list>
                 <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
 			        <property name="dimension" ref="dim-datepublished" />
@@ -239,7 +239,7 @@
                     <property name="table" value="department" />
                     <property name="connection" ref="connection-sql-target" />
                     <property name="mappings">
-                        <list>
+                        <list>id
                             <dict>
                                 <entry><key><value>name</value></key><value>id</value></entry>
                                 <entry><key><value>value</value></key><value>${ text.slugu( m["department"] ) }</value></entry>
@@ -285,17 +285,12 @@
                     </property>        
                 </object> 
                 
-                <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
-                    <property name="dimension" ref="dim-journalnum" />
-                    <property name="table" value="journalnum" />
-                    <property name="connection" ref="connection-sql-target" />
+                <object class="cubetl.olap.sql.SQLEmbeddedDimensionMapper" scope="prototype">
+                    <property name="dimension" ref="dim-journal_num" />
                     <property name="mappings">
                         <list>
                             <dict>
-                                <entry><key><value>name</value></key><value>id</value></entry>
-                                <entry><key><value>value</value></key><value>${ m["journal_num"] }</value></entry>
-                                <entry><key><value>pk</value></key><value>True</value></entry>
-                                <entry><key><value>type</value></key><value>Integer</value></entry>
+                                <entry><key><value>name</value></key><value>journal_num</value></entry>
                             </dict>
                         </list>
                     </property>        

@@ -6,7 +6,7 @@
                 "department", 
                 "imageletter", 
                 "section", 
-                "journalnum", 
+                "journal_num", 
                 "hasanalysis"
             ], 
             "joins": [
@@ -29,11 +29,6 @@
                     "alias": "section", 
                     "detail": "section.id", 
                     "master": "boe_article.section_id"
-                }, 
-                {
-                    "alias": "journalnum", 
-                    "detail": "journalnum.id", 
-                    "master": "boe_article.journalnum_id"
                 }
             ], 
             "label": "boe_article", 
@@ -49,8 +44,7 @@
                 "hasanalysis.hasanalysis": "boe_article.hasanalysis", 
                 "imageletter.id": "imageletter.id", 
                 "imageletter.image_letter": "imageletter.image_letter", 
-                "journalnum.id": "journalnum.id", 
-                "journalnum.journal_num": "journalnum.journal_num", 
+                "journal_num.journal_num": "boe_article.journal_num", 
                 "section.id": "section.id", 
                 "section.section": "section.section"
             }, 
@@ -75,7 +69,12 @@
                 "procedure", 
                 "concept", 
                 "geographic_scope", 
-                "boe_article"
+                "date_published", 
+                "department", 
+                "imageletter", 
+                "section", 
+                "journal_num", 
+                "hasanalysis"
             ], 
             "joins": [
                 {
@@ -107,19 +106,62 @@
                     "alias": "geographic_scope", 
                     "detail": "geographic_scope.id", 
                     "master": "boe_analysis.geographic_scope_id"
+                }, 
+                {
+                    "detail": "boe_article.id", 
+                    "master": "boe_analysis.boe_article_id"
+                }, 
+                {
+                    "alias": "date_published", 
+                    "detail": "date_published.id", 
+                    "master": "boe_article.date_published_id"
+                }, 
+		{
+         		"alias": "journal_num",
+                    "detail": "boe_article.journal_num", 
+                    "master": "boe_analysis.journal_num"
+
+		},
+                {
+                    "alias": "department", 
+                    "detail": "department.id", 
+                    "master": "boe_article.department_id"
+                }, 
+                {
+                    "alias": "imageletter", 
+                    "detail": "imageletter.id", 
+                    "master": "boe_article.imageletter_id"
+                }, 
+                {
+                    "alias": "section", 
+                    "detail": "section.id", 
+                    "master": "boe_article.section_id"
                 }
             ], 
             "label": "boe_analysis", 
             "mappings": {
-                "boe_article.boe_article": "boe_analysis.boe_article_id", 
                 "concept.concept": "concept.concept", 
                 "concept.id": "concept.id", 
+                "date_published.day": "date_published.day", 
+                "date_published.id": "date_published.id", 
+                "date_published.month": "date_published.month", 
+                "date_published.quarter": "date_published.quarter", 
+                "date_published.week": "date_published.week", 
+                "date_published.year": "date_published.year", 
+                "department.department": "department.department", 
+                "department.id": "department.id", 
                 "geographic_scope.geographic_scope": "geographic_scope.geographic_scope", 
                 "geographic_scope.id": "geographic_scope.id", 
+                "hasanalysis.hasanalysis": "boe_article.hasanalysis", 
+		"boe_analysis.journal_num": "journal_num.journal_num",
+                "imageletter.id": "imageletter.id", 
+                "imageletter.image_letter": "imageletter.image_letter", 
                 "modality.id": "modality.id", 
                 "modality.modality": "modality.modality", 
                 "procedure.id": "procedure.id", 
                 "procedure.procedure": "procedure.procedure", 
+                "section.id": "section.id", 
+                "section.section": "section.section", 
                 "tramitation.id": "tramitation.id", 
                 "tramitation.tramitation": "tramitation.tramitation", 
                 "type.id": "type.id", 
@@ -254,16 +296,13 @@
             "levels": [
                 {
                     "attributes": [
-                        "id", 
                         "journal_num"
                     ], 
-                    "key": "id", 
-                    "label": "journal_num", 
-                    "label_attribute": "journal_num", 
+                    "label": "Diario", 
                     "name": "journal_num"
                 }
             ], 
-            "name": "journalnum"
+            "name": "journal_num"
         }, 
         {
             "comment": "Generated by CubETL", 
@@ -274,7 +313,6 @@
                         "hasanalysis"
                     ], 
                     "label": "An\u00e1lisis", 
-                    "label_attribute": "hasanalysis", 
                     "name": "hasanalysis"
                 }
             ], 
@@ -381,12 +419,6 @@
                 }
             ], 
             "name": "geographic_scope"
-        }, 
-        {
-            "comment": "Generated by CubETL", 
-            "label": "Art\u00edculo BOE", 
-            "levels": [], 
-            "name": "boe_article"
         }
     ]
 }

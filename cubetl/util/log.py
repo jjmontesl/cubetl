@@ -20,12 +20,6 @@ class Log(Node):
         
         self.count = 0
         
-    def signal(self, ctx, s):
-        
-        super(Log, self).signal(ctx, s)
-        
-        logger.debug("Signal %s reached Log node %s" % (s, self))  
-    
     def process(self, ctx, m):
         
         self.count = self.count + 1 
@@ -53,19 +47,16 @@ class LogPerformance(Node):
         self._lastTime = time.time()
         self._lastCount = 0
     
-    def signal(self, ctx, s):
+    def finalize(self, ctx):
         
-        super(LogPerformance, self).signal(ctx, s)
+        super(LogPerformance, self).finalize(ctx)
         
-        if (s == "initialize"):
-            logger.debug("Signal %s reached LogPerformance node %s" % (s, self))  
-        elif (s == "finalize"):
-            current = time.time()
-            logger.info("Total time: %d  Total messages: %d  Global rate: %.3f msg/s" % (
-                        current - self._startTime,
-                        self._count,
-                        float(self._count) / (current-self._startTime)
-                        ))
+        current = time.time()
+        logger.info("Total time: %d  Total messages: %d  Global rate: %.3f msg/s" % (
+                    current - self._startTime,
+                    self._count,
+                    float(self._count) / (current-self._startTime)
+                    ))
             
     def loginfo(self, ctx):
         current = time.time()

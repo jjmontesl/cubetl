@@ -16,9 +16,15 @@ class Chain(Node):
         self.fork = False
         self.steps=[]
     
-    def signal(self, ctx, s):
+    def initialize(self, ctx):
+        super(Chain, self).initialize(ctx)
         for p in self.steps:
-            p.signal(ctx, s)
+            ctx.comp.initialize(p)
+        
+    def finalize(self, ctx):
+        for p in self.steps:
+            ctx.comp.finalize(p)
+        super(Chain, self).finalize(ctx)
     
     def _process(self, steps, ctx, m):
         

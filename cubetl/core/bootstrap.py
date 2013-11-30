@@ -123,17 +123,19 @@ class Bootstrap:
         # Launch process and consume messages
         try:
             logger.info ("Initializing components")
-            process.signal(ctx, "initialize")
+            ctx.comp.initialize(process)
             
             logger.info ("Processing %s" % ctx.startprocess)
-            msgs = process.process(ctx, source)
+            msgs = ctx.comp.process(process, source)
             for m in msgs:
                 count = count + 1
             
             logger.debug ("%s messages resulted from the process" % count)
             
             logger.debug ("Finalizing components")
-            process.signal(ctx, "finalize")
+            ctx.comp.finalize(process)
+            
+            ctx.comp.cleanup()
             
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()

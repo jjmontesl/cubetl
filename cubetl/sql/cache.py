@@ -34,11 +34,20 @@ class CachingSQLTable(SQLTable):
 
         super(CachingSQLTable, self).__init__()
 
-        self._cache = Cache().cache()
+        self._cache = None
+        self.cache_hits = 0
+        self.cache_misses = 0
         
-    def signal(self, ctx, s):
+    def initialize(self, ctx):
         
-        super(CachingSQLTable, self).signal(ctx, s)    
+        super(CachingSQLTable, self).initialize(ctx)
+        self._cache = Cache().cache() 
+        
+    def finalize(self, ctx):
+        
+        logger.info ("%s  hits/misses: %d/%d" % (self, self.cache_hits, self.cache_misses))
+        
+        super(CachingSQLTable, self).finalize(ctx)
         
     def find(self, ctx, attribs):
 
@@ -56,6 +65,8 @@ class CachingSQLTable(SQLTable):
         # Run through parent
         if (rows == None):
             
+            self.cache_misses = self.cache_misses + 1
+            
             #query = self.sa_table.select(self._attribsToClause(attribs))
             #rows = self.connection.engine().execute(query)
             
@@ -71,6 +82,8 @@ class CachingSQLTable(SQLTable):
                     if (len(rows) > 0):
                         if (ctx.debug2): logger.debug("Caching row: %s = %s" % (attribs.values()[0], rows))
                         self._cache.put(attribs.values()[0], rows)
+        else:
+            self.cache_hits = self.cache_hits + 1
         
         return iter(rows)
         

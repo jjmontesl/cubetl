@@ -103,24 +103,32 @@ class DirectoryFileReader (Node):
         self.path = None
         self.filter_re = None 
         
-        self.is_initialized = False
         self.encoding = None
+    
+    def initialize(self, ctx):
+        
+        super(DirectoryFileReader, self).initialize(ctx)
+        
+        self.directoryLister = DirectoryLister()
+        self.directoryLister.filter_re = self.filter_re
+        self.directoryLister.path = self.path
+        
+        self.fileReader = FileReader()
+        if (self.encoding): self.fileReader.encoding = self.encoding 
+
+        ctx.comp.initialize(self.directoryLister)
+        ctx.comp.initialize(self.fileReader)
+        
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.directoryLister)
+        ctx.comp.finalize(self.fileReader)
+        super(DirectoryFileReader, self).finalize(ctx)
     
     def process(self, ctx, m):
         
-        if (not self.is_initialized):
-            self.directoryLister = DirectoryLister()
-            self.directoryLister.filter_re = self.filter_re
-            self.directoryLister.path = self.path
-            
-            self.fileReader = FileReader()
-            if (self.encoding): self.fileReader.encoding = self.encoding 
-            
-            self.is_initialized = True
-        
-        files_msgs = self.directoryLister.process(ctx, m)
+        files_msgs = ctx.comp.process(self.directoryLister, m)
         for mf in files_msgs:
-            fr_msgs = self.fileReader.process(ctx, mf)
+            fr_msgs = ctx.comp.process(self.fileReader, mf)
             for mfr in fr_msgs:
                 yield mfr
         

@@ -14,11 +14,11 @@ class Print(Node):
     def __init__(self):
         self.eval = None
     
-    def signal(self, ctx, s):
+    def initialize(self, ctx):
         
-        super(Print, self).signal(ctx, s)
+        super(Print, self).initialize(ctx)
         
-        logger.debug("Signal %s reached Log node %s" % (s, self))    
+        logger.debug("Initializing Print node %s" % (self))    
     
     def process(self, ctx, m):
         

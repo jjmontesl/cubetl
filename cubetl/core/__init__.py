@@ -3,19 +3,28 @@ import logging
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-SIGNAL_INITIALIZE = "initialize"
-SIGNAL_FINALIZE = "finalize"
-
 class Component(object):
     """
     Base class for all components. 
-    
-    These must implement a signal(ctx, s) method that
-    accepts messages.
     """
 
-    def signal(self, ctx, s):
+    def __init__(self):
         pass
+        
+    def initialize(self, ctx):
+        pass
+        
+    def finalize(self, ctx):
+        pass
+    
+    def __str__(self, *args, **kwargs):
+        
+        cid = id(self)
+        if (hasattr(self, "name")): cid = self.name
+            
+        return "%s %s" % (self.__class__.__name__, cid)
+             
+        #return object.__str__(self, *args, **kwargs)
     
         
 class Node(Component):
@@ -24,13 +33,7 @@ class Node(Component):
     
     These must implement a process(ctx, m) method that
     accepts and yield messages.
-    
-    It is critical that no returns are used within
-    nodes process() method.
     """
-
-    def signal(self, ctx, s):
-        super(Node, self).signal(ctx, s)
 
     def process(self, ctx, m):
         

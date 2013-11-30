@@ -83,6 +83,7 @@
         </property>
     </object>
 
+    
     <object id="dim-boe_article" class="cubetl.olap.FactDimension" scope="singleton">
         <property name="name" value="boe_article" ></property>
         <property name="label" value="Artículo BOE" ></property>
@@ -131,7 +132,7 @@
             </list>
         </property>
     
-        <property name="mappings">
+        <property name="mappers">
             <list>
                 <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
                     <property name="dimension" ref="dim-modality" />
@@ -196,7 +197,7 @@
                         </list>
                     </property>        
                 </object> 
-                target
+                
                 <object class="cubetl.olap.sql.SQLDimensionMapper" scope="prototype">
                     <property name="dimension" ref="dim-concept" />
                     <property name="table" value="concept" />
@@ -232,6 +233,7 @@
                     <property name="mappings">
                         <list>
                             <dict>
+                                <entry><key><value>name</value></key><value>boe_article</value></entry>
                                 <entry><key><value>column</value></key><value>boe_article_id</value></entry>
                                 <entry><key><value>value</value></key><value>${ text.slugu(m["id"]) }</value></entry>
                                 <entry><key><value>pk</value></key><value>True</value></entry>
