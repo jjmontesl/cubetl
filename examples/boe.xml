@@ -46,22 +46,27 @@
             <list>
                 <dict>
                     <entry><key><value>name</value></key><value>year</value></entry>
+                    <entry><key><value>label</value></key><value>Year</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>quarter</value></entry>
+                    <entry><key><value>label</value></key><value>Quarter</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>month</value></entry>
+                    <entry><key><value>label</value></key><value>Month</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>week</value></entry>
+                    <entry><key><value>label</value></key><value>Week</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>day</value></entry>
+                    <entry><key><value>label</value></key><value>Day</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
                 </dict>
             </list>

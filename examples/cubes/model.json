@@ -1,6 +1,11 @@
 {
     "cubes": [
         {
+            "details": [
+                "url_pdf", 
+                "page_start", 
+                "page_end"
+            ], 
             "dimensions": [
                 "date_published", 
                 "department", 
@@ -31,6 +36,7 @@
                     "master": "boe_article.section_id"
                 }
             ], 
+            "key": "id", 
             "label": "boe_article", 
             "mappings": {
                 "date_published.day": "date_published.day", 
@@ -41,10 +47,10 @@
                 "date_published.year": "date_published.year", 
                 "department.department": "department.department", 
                 "department.id": "department.id", 
-                "hasanalysis.hasanalysis": "boe_article.hasanalysis", 
+                "hasanalysis": "boe_article.hasanalysis", 
                 "imageletter.id": "imageletter.id", 
                 "imageletter.image_letter": "imageletter.image_letter", 
-                "journal_num.journal_num": "boe_article.journal_num", 
+                "journal_num": "boe_article.journal_num", 
                 "section.id": "section.id", 
                 "section.section": "section.section"
             }, 
@@ -62,6 +68,9 @@
             "name": "boe_article"
         }, 
         {
+            "details": [
+                "notes"
+            ], 
             "dimensions": [
                 "modality", 
                 "type", 
@@ -108,6 +117,7 @@
                     "master": "boe_analysis.geographic_scope_id"
                 }, 
                 {
+                    "alias": "boe_article", 
                     "detail": "boe_article.id", 
                     "master": "boe_analysis.boe_article_id"
                 }, 
@@ -116,12 +126,6 @@
                     "detail": "date_published.id", 
                     "master": "boe_article.date_published_id"
                 }, 
-		{
-         		"alias": "journal_num",
-                    "detail": "boe_article.journal_num", 
-                    "master": "boe_analysis.journal_num"
-
-		},
                 {
                     "alias": "department", 
                     "detail": "department.id", 
@@ -138,6 +142,7 @@
                     "master": "boe_article.section_id"
                 }
             ], 
+            "key": "id", 
             "label": "boe_analysis", 
             "mappings": {
                 "concept.concept": "concept.concept", 
@@ -152,10 +157,10 @@
                 "department.id": "department.id", 
                 "geographic_scope.geographic_scope": "geographic_scope.geographic_scope", 
                 "geographic_scope.id": "geographic_scope.id", 
-                "hasanalysis.hasanalysis": "boe_article.hasanalysis", 
-		"boe_analysis.journal_num": "journal_num.journal_num",
+                "hasanalysis": "boe_article.hasanalysis", 
                 "imageletter.id": "imageletter.id", 
                 "imageletter.image_letter": "imageletter.image_letter", 
+                "journal_num": "boe_article.journal_num", 
                 "modality.id": "modality.id", 
                 "modality.modality": "modality.modality", 
                 "procedure.id": "procedure.id", 
@@ -188,51 +193,46 @@
             "levels": [
                 {
                     "attributes": [
-                        "id", 
                         "year"
                     ], 
-                    "key": "id", 
-                    "label": "year", 
+                    "key": "year", 
+                    "label": "Year", 
                     "label_attribute": "year", 
                     "name": "year"
                 }, 
                 {
                     "attributes": [
-                        "id", 
                         "quarter"
                     ], 
-                    "key": "id", 
-                    "label": "quarter", 
+                    "key": "quarter", 
+                    "label": "Quarter", 
                     "label_attribute": "quarter", 
                     "name": "quarter"
                 }, 
                 {
                     "attributes": [
-                        "id", 
                         "month"
                     ], 
-                    "key": "id", 
-                    "label": "month", 
+                    "key": "month", 
+                    "label": "Month", 
                     "label_attribute": "month", 
                     "name": "month"
                 }, 
                 {
                     "attributes": [
-                        "id", 
                         "week"
                     ], 
-                    "key": "id", 
-                    "label": "week", 
+                    "key": "week", 
+                    "label": "Week", 
                     "label_attribute": "week", 
                     "name": "week"
                 }, 
                 {
                     "attributes": [
-                        "id", 
                         "day"
                     ], 
-                    "key": "id", 
-                    "label": "day", 
+                    "key": "day", 
+                    "label": "Day", 
                     "label_attribute": "day", 
                     "name": "day"
                 }
@@ -298,7 +298,9 @@
                     "attributes": [
                         "journal_num"
                     ], 
+                    "key": "journal_num", 
                     "label": "Diario", 
+                    "label_attribute": "journal_num", 
                     "name": "journal_num"
                 }
             ], 
@@ -312,7 +314,9 @@
                     "attributes": [
                         "hasanalysis"
                     ], 
+                    "key": "hasanalysis", 
                     "label": "An\u00e1lisis", 
+                    "label_attribute": "hasanalysis", 
                     "name": "hasanalysis"
                 }
             ], 
@@ -419,6 +423,12 @@
                 }
             ], 
             "name": "geographic_scope"
+        }, 
+        {
+            "comment": "Generated by CubETL", 
+            "label": "Art\u00edculo BOE", 
+            "levels": [], 
+            "name": "boe_article"
         }
     ]
 }

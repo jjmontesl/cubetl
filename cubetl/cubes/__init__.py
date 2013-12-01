@@ -67,13 +67,20 @@ class CubesModelWriter(Node):
             dimmapper = self.olapmapper.getDimensionMapper(dim)
             if (not isinstance(dimmapper, SQLEmbeddedDimensionMapper)):
                 for mapping in dimmapper.mappings:
-                    mappings[dim.name + "." + mapping["name"]] = dimmapper.table + "." + mapping["column"]
+                    if (len(dimmapper.mappings) == 1):
+                        mappings[dim.name] = dimmapper.table + "." + mapping["column"]
+                    else:
+                        mappings[dim.name + "." + mapping["name"]] = dimmapper.table + "." + mapping["column"]
             else:
                 if (isinstance(dimmapper, SQLFactDimensionMapper)):
                     mappings.update(self._get_mappings(ctx, self.olapmapper.getFactMapper(dimmapper.dimension.fact)))
                 else:
                     for mapping in dimmapper.mappings:
-                        mappings[dim.name + "." + mapping["name"]] = fact_mapper.table + "." + mapping["column"]
+                        if (len(dimmapper.mappings) == 1):
+                            mappings[dim.name] = fact_mapper.table + "." + mapping["column"]
+                        else:
+                            mappings[dim.name + "." + mapping["name"]] = fact_mapper.table + "." + mapping["column"]
+                        
                     
         return mappings
          
@@ -101,6 +108,11 @@ class CubesModelWriter(Node):
         
         # Joins
         cube["joins"] = self._get_joins(ctx, mapper)
+
+        # Details
+        cube["details"] = []
+        for attribute in mapper.fact.attributes:
+            cube["details"].append(attribute["name"])
             
         # Mappings
         cube["mappings"] = self._get_mappings(ctx, mapper)
@@ -123,11 +135,16 @@ class CubesModelWriter(Node):
             level["name"] = attrib["name"]
             level["label"] = attrib["label"]
             if (isinstance(mapper, SQLEmbeddedDimensionMapper)):
-                level["attributes"] = [ mapping["name"] for mapping in mapper.mappings ]
+                level["attributes"] = [ attrib["name"] ]
+                level["key"] = attrib["name"]
                 #level["key"] = mapper.pk(ctx)["name"]
             else:
-                level["attributes"] = [ mapper.pk(ctx)["name"], attrib["name"] ]
-                level["key"] = mapper.pk(ctx)["name"]
+                if (len(mapper.dimension.attributes) > 1):
+                    level["attributes"] = [ attrib["name"] ]
+                    level["key"] = attrib["name"]
+                else:
+                    level["attributes"] = [ mapper.pk(ctx)["name"], attrib["name"] ]
+                    level["key"] = mapper.pk(ctx)["name"]
             level["label_attribute"] = attrib["name"]
             dim["levels"].append(level)
         
