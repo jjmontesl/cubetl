@@ -15,6 +15,8 @@ class Dimension(Component):
         self.label = None
         self.attributes = []
         self.details = []
+        self.hierarchies = []
+        self.role = None
         
     def initialize(self, ctx):
         logger.debug("Initializing %s" % self.name)

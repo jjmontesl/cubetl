@@ -11,5 +11,9 @@
     <!-- Helpers -->
     <object id="cubetl-print" class="cubetl.util.Print" scope="prototype">
     </object>
+    
+    <!-- Tools -->
+    
+    
 
 </objects>

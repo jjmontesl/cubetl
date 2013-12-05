@@ -1,4 +1,7 @@
-0.1-devel
+0.2-devel
+    + Implemented very basic template module (mako)
+0.1
+    + Improved cubes export (datetime filters, levels, hierarchies).
     + Initial version of the build script, reorganised.
     + Replaced signalling with lifecycle methods.
     + Adding Unicode support.

@@ -42,36 +42,71 @@
         <property name="name" value="date_published" ></property>
         <property name="label" value="Fecha Publicación" ></property>
 
+        <property name="role" value="date"></property>
+       
+        <property name="hierarchies">
+            <list>
+	            <dict>
+	                <entry><key><value>name</value></key><value>daily</value></entry>
+	                <entry><key><value>label</value></key><value>Daily</value></entry>
+	                <entry><key><value>levels</value></key><value>
+	                   <list>
+	                       <value>year</value>
+	                       <value>quarter</value>
+	                       <value>month</value>
+	                       <value>day</value>
+	                   </list>
+	                </value></entry>
+	            </dict>
+	            <dict>
+	                <entry><key><value>name</value></key><value>weekly</value></entry>
+	                <entry><key><value>label</value></key><value>Weekly</value></entry>
+	                <entry><key><value>levels</value></key><value>
+	                   <list>
+	                       <value>year</value>
+	                       <value>week</value>
+	                   </list>
+	                </value></entry>
+	            </dict>
+            </list>
+        </property> 
+
         <property name="attributes">
             <list>
                 <dict>
                     <entry><key><value>name</value></key><value>year</value></entry>
                     <entry><key><value>label</value></key><value>Year</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
+                    <entry><key><value>role</value></key><value>year</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>quarter</value></entry>
                     <entry><key><value>label</value></key><value>Quarter</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
+                    <entry><key><value>role</value></key><value>quarter</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>month</value></entry>
                     <entry><key><value>label</value></key><value>Month</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
+                    <entry><key><value>role</value></key><value>month</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>week</value></entry>
                     <entry><key><value>label</value></key><value>Week</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
+                    <entry><key><value>role</value></key><value>week</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>day</value></entry>
                     <entry><key><value>label</value></key><value>Day</value></entry>
                     <entry><key><value>type</value></key><value>Integer</value></entry>
+                    <entry><key><value>role</value></key><value>day</value></entry>
                 </dict>
             </list>
         </property>    
         
+       
             
     </object>
 
@@ -446,6 +481,8 @@ m["test-script"] = True
     <object id="process-boe" class="cubetl.flow.Chain" scope="singleton">
         <property name="steps">
             <list>
+                <ref object="cubetl-graph-context" />
+            
                 <ref object="node-sql-transaction" />
                 
                 <ref object="node-directoryfilereader" />

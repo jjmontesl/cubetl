@@ -130,6 +130,7 @@ class CubesModelWriter(Node):
         dim["levels"] = []
 
         # Attributes are levels 
+        levels_map = {}
         for attrib in mapper.dimension.attributes:
             level = {}
             level["name"] = attrib["name"]
@@ -146,7 +147,46 @@ class CubesModelWriter(Node):
                     level["attributes"] = [ mapper.pk(ctx)["name"], attrib["name"] ]
                     level["key"] = mapper.pk(ctx)["name"]
             level["label_attribute"] = attrib["name"]
+            
+            # Cubesviewer dates
+            if ("role" in attrib):
+                if (attrib["role"] == "year"): level["info"] = { "cv-datefilter-field": "year" }
+                elif (attrib["role"] == "quarter"): level["info"] = { "cv-datefilter-field": "quarter" }
+                elif (attrib["role"] == "month"): level["info"] = { "cv-datefilter-field": "month" }
+                elif (attrib["role"] == "week"): level["info"] = { "cv-datefilter-field": "week" }
+                elif (attrib["role"] == "day"): level["info"] = { "cv-datefilter-field": "day" }
+            
             dim["levels"].append(level)
+            levels_map[level["name"]] = level
+            
+        # Hierarchies
+        finest_hierarchy = None
+        if (len(mapper.dimension.hierarchies) > 0):
+            dim["hierarchies"] = []
+            for hierarchy in mapper.dimension.hierarchies:
+
+                # Calculate levels and finest level
+                for lev in hierarchy["levels"]:
+                    if (not lev in levels_map):
+                        raise Exception("Hierarchy level '%s' not found in attributes defined for dimension '%s'" % (lev, mapper.dimension.name))
+                
+                if ((finest_hierarchy == None) or (len(hierarchy["levels"]) > len(finest_hierarchy["levels"]))):
+                    finest_hierarchy = hierarchy
+                    
+                # Define hierarchy
+                chierarchy = {
+                              "name": hierarchy["name"],
+                              "label": hierarchy["label"] if ("label" in hierarchy) else hierarchy["name"],
+                              "levels": [ lev for lev in hierarchy["levels"] ] 
+                              }
+                dim["hierarchies"].append(chierarchy)
+        
+        # Add cubesviewer datefilter info
+        if (mapper.dimension.role == "date"):
+            dim["info"] = {
+                           "cv-datefilter": True,
+                           "cv-datefilter-hierarchy": finest_hierarchy["name"]
+                           }
         
         model["dimensions"].append(dim)
 
