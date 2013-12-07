@@ -21,9 +21,11 @@ class Context():
         self.debug = False
         self.debug2 = False
         
-        self.configfiles = []     
+        self.config_files = []     
         
         self.startprocess = None
+        
+        self.props = {}
         
         self._globals = {
                          "text": text

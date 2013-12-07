@@ -9,6 +9,7 @@ import os
 import sys
 from compiler.ast import Raise
 import traceback
+from cubetl.core import ContextProperties
 
 
 
@@ -37,47 +38,67 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print "cubetl [-d] [-f config.xml] <start-process>"
+        print "cubetl [-d] [-p property=value ...] [-m attribute=value] [config.xml ...] <start-node>"
         print ""
-        print "    -f   include configuration file"
-        print "    -d   debug mode (can be used up to 2 times for more debug)"
-        
+        print "    -d   debug mode (can be used twice for more debug)"
+        print "    -p   set a context property"
+        print "    -m   set an attribute for the start message"
+
+    def _split_keyvalue(self, text):
+        """Return key=value pair, or key=None if format is incorrect
+        """
+        if (text.find('=') < 0):
+            return (None, text)
+        else:
+            return (text[ : text.find('=')], text[text.find('=') + 1 : ])
 
     def parse_args(self, ctx):
         
         try:
-            opts, arguments = getopt.gnu_getopt(ctx.argv, "f:d", [ ])
+            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:d", [ ])
         except getopt.GetoptError as err:
             print str(err) 
             self.usage()
             sys.exit(2)
             
         for o,a  in opts:
-            if o == "-f":
-                ctx.configfiles.append(a)
-            elif o == "-d":
+            if o == "-d":
                 if (ctx.debug):
                     ctx.debug2 = True
                 else:
                     ctx.debug = True
+            elif o == "-p":
+                (key, value) = self._split_keyvalue(a)
+                if (key == None):
+                    print ("Invalid property key=value definition (%s)" % (value))
+                    self.usage()
+                    sys.exit(2)
+                logger.debug("Setting context property from command line: %s = %s" % (key, value))
+                ctx.props[key] = value
 
+        
         if (len(arguments) < 1):
             print ("A start process can be specified.")
             self.usage()
             sys.exit(2)
-
-        if (len(arguments) != 1):
-            print ("Only one start process can be specified.")
-            self.usage()
-            sys.exit(2)                        
         
-        ctx.startprocess = arguments[0]
-    
+        for argument in arguments:
+            if (argument.endswith('.xml')):
+                ctx.config_files.append(argument)
+            else:
+                if (ctx.startprocess == None):
+                    ctx.startprocess = argument
+                else:
+                    print ("Only one start node can be specified (second found: '%s')" % (argument))
+                    self.usage()
+                    sys.exit(2) 
+        
+
     def init_container(self, ctx):
         
         try:
             configs = [XMLConfig(os.path.dirname(os.path.realpath(__file__)) + "/../cubetl-context.xml")]
-            configs.extend ([XMLConfig(config_file) for config_file in ctx.configfiles])
+            configs.extend ([XMLConfig(config_file) for config_file in ctx.config_files])
 
             cubetl.container = ApplicationContext( configs )
             
@@ -87,6 +108,13 @@ class Bootstrap:
                 raise e
             else:
                 sys.exit(3)
+    
+    def init_properties(self, ctx):
+        
+        # Returns all instances of MyClass and of its subclasses.
+        for obj in cubetl.container.get_objects_by_type(ContextProperties):
+            cubetl.container.get_object(obj).load_properties(ctx)
+
     
     def start(self, argv):
 
@@ -108,6 +136,9 @@ class Bootstrap:
         
         # Init container
         self.init_container(ctx)
+        
+        # Init property components
+        self.init_properties(ctx)
 
         # Launch process
         try:

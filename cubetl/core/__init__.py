@@ -1,4 +1,5 @@
 import logging
+from springpython.context import InitializingObject
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -39,3 +40,18 @@ class Node(Component):
         
         yield m
         
+        
+class ContextProperties(object):
+    
+    #def after_properties_set(self):   
+
+    def load_properties(self, ctx):
+        
+        for attr in self.__dict__:
+        
+            value = getattr(self, attr)
+            logger.debug("Setting context property %s = %s" % (attr, value))
+            ctx.props[attr] = value
+            
+    
+    

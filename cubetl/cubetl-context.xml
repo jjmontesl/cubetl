@@ -9,7 +9,18 @@
     
     
     <!-- Helpers -->
-    <object id="cubetl-print" class="cubetl.util.Print" scope="prototype">
+    <object id="cubetl-print" class="cubetl.util.Print">
+    </object>
+    
+    <object id="cubetl-list-nodes" class="cubetl.util.config.PrintConfig" >
+        <property name="type" value="nodes" />
+    </object>
+    
+    <object id="cubetl-list-components" class="cubetl.util.config.PrintConfig" >
+        <property name="type" value="components" />
+    </object>
+    
+    <object id="cubetl-list-objects" class="cubetl.util.config.PrintConfig" >
     </object>
     
     <!-- Tools -->

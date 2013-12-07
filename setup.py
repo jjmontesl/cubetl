@@ -1,5 +1,4 @@
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
     
@@ -11,6 +10,11 @@ setup(
     
     packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     
+    include_package_data=True,
+    package_data = { 
+                    'cubetl': ['*.xml'] 
+                    },
+    
     scripts = ['bin/cubetl'],
     
     url='https://github.com/jjmontesl/cubetl',
@@ -19,14 +23,16 @@ setup(
     long_description="CubETL is a data manipulation tool (also known as ETL for Extract, Transform and Load). It allows data processing flows to be defined on a configuration file. It can access and store files, databases, HTTP, FTP, SFTP resources and is extensible and scriptable.",
     
     classifiers = [
-        #'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
-        #'License :: OSI Approved :: MIT License',
+        'Intended Audience :: Information Technology',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python',
         'Topic :: Database',
         'Topic :: Scientific/Engineering',
-        'Topic :: Utilities'
+        'Topic :: Utilities',
+        'Topic :: Text Processing :: Markup :: XML'
     ],
     
     install_requires=[
