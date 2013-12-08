@@ -213,8 +213,9 @@ class SQLTable(Component):
             except KeyError, e:
                 raise Exception("Could not find attibute '%s' in data when storing row data: %s" % (key, data))
         
-        row = self.findone(ctx, qfilter)
-                
+        row = None
+        if (len(qfilter.keys()) > 0):
+            row = self.findone(ctx, qfilter)
         
         if (row):
             # TODO

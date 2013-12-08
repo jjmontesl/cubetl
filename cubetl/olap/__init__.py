@@ -131,6 +131,7 @@ class OlapMapper(Component):
 
     def getDimensionMapper(self, dim, fail = True):
         
+        # Our mappings first
         for mapper in self.mappers:
             if (isinstance(mapper, DimensionMapper)):
                 if (not isinstance(mapper.dimension, FactDimension)):
@@ -140,6 +141,7 @@ class OlapMapper(Component):
                     if (mapper.dimension.fact.name == dim.name):
                         return mapper
         
+        # Included mappers
         for inc in self.include:
             mapper = inc.getDimensionMapper(dim, False)
             if (mapper): return mapper

@@ -18,7 +18,7 @@ class Script(Node):
         
         yield m
         
-class EvalExtract(Node):
+class Eval(Node):
     """
     Note that evaluation is done via ctx.interpolate(), and so
     requires expressions to be delimited by ${}.
@@ -26,7 +26,7 @@ class EvalExtract(Node):
     
     def __init__(self):
         
-        super(Script, self).__init__()
+        super(Eval, self).__init__()
     
         self.mappings = []
     

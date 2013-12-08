@@ -234,15 +234,20 @@ class SQLFactMapper(FactMapper):
             return None
     
     def store(self, ctx, m):
+
+        logger.debug("Inserting fact in %s" % self)
         
         # Insert or update data
         row = {}
         for mapping in self.mappings:
 
-            if (mapping["value"] == None):
-                row[mapping["column"]] = m[mapping["name"]]
-            else:
-                row[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+            if (mapping["type"] != "AutoIncrement"):
+                if (mapping["value"] == None):
+                    if (not mapping["name"] in m):
+                        raise Exception("Field '%s' does not exist in message when assigning Fact data for column %s in %s" % (mapping["name"], mapping["column"], self))
+                    row[mapping["column"]] = m[mapping["name"]]
+                else:
+                    row[mapping["column"]] = ctx.interpolate(m, mapping["value"])
 
         row = self._sqltable.store(ctx, row)
         return row[self.pk(ctx)["name"]]

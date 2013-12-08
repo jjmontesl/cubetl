@@ -103,7 +103,8 @@ class Bootstrap:
             cubetl.container = ApplicationContext( configs )
             
         except Exception, e:
-            logger.error ("Could not load config: %s" % e)
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            logger.error ("Could not load config: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
             if (ctx.debug): 
                 raise e
             else:
@@ -173,5 +174,5 @@ class Bootstrap:
             if (ctx.debug):
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
 
-            logger.fatal("Error during process: %s" % (traceback.format_exception_only(exc_type, exc_value)))
+            logger.fatal("Error during process: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
             

@@ -15,8 +15,10 @@ logger = logging.getLogger(__name__)
 class DirectoryLister(Node):
    
     def __init__(self):
+        
         self.path = None
-        self.filter_re = None 
+        self.filter_re = None
+        self.name = "filename" 
     
     def process(self, ctx, m):
 
@@ -34,7 +36,7 @@ class DirectoryLister(Node):
         files = [join(path, f) for f in files]
         
         for f in files:
-            m = { "data": f }
+            m = { self.name: f }
             yield m 
     
 class FileReader(Node):
@@ -43,11 +45,21 @@ class FileReader(Node):
     
     def __init__(self):
         
-        self.filename = '${ m["data"] }'
+        self.filename = None
         
         self.encoding = "detect"
         self.encoding_errors = "strict" # strict, ignore, replace
         self.encoding_abort = True
+        
+        self.name = "data"
+    
+    def initialize(self, ctx):
+        
+        super(FileReader, self).initialize(ctx)
+        
+        if (self.filename == None):
+            raise Exception("Missing filename attribute for %s" % self)
+        
     
     def process(self, ctx, m):
         
@@ -57,8 +69,7 @@ class FileReader(Node):
         logger.debug ("Reading file %s" % msg_filename)
         with open (msg_filename, "r") as myfile:
 
-            m["_filename"] = msg_filename
-            m["data"] = myfile.read()
+            m[self.name] = myfile.read()
 
             # Encoding
             encoding = ctx.interpolate(m, self.encoding)
@@ -66,30 +77,27 @@ class FileReader(Node):
             if encoding:
             
                 if (encoding in ["guess", "detect", "unicodedammit"]):
-                    dammit = UnicodeDammit(m["data"])
+                    dammit = UnicodeDammit(m[self.name])
                     encoding = dammit.originalEncoding
-                    m["data"] = dammit.unicode
+                    m[self.name] = dammit.unicode
                     logger.debug("Detected content encoding as %s (using 'unicodedammit' detection)" % encoding )
                     
                 else:
                     if (encoding in ["chardet"]):
-                        chardet_result = chardet.detect(m["data"])
+                        chardet_result = chardet.detect(m[self.name])
                         encoding = chardet_result['encoding']
                         logger.debug("Detected content encoding as %s (using 'chardet' detection)" % encoding )  
                     
                     try:
-                        m["data"] = m["data"].decode(encoding, self.encoding_errors)
+                        m[self.name] = m[self.name].decode(encoding, self.encoding_errors)
                     except UnicodeDecodeError:
                         if (self.encoding_abort):
-                            raise Exception ("Error decoding unicode with encoding '%s' on data: %r" %  (encoding, m["data"]))
-                        logger.warn("Error decoding unicode with encoding '%s' on data: %r" % (encoding, m["data"]))
-                        m["data"] = m["data"].decode("latin-1")
+                            raise Exception ("Error decoding unicode with encoding '%s' on data: %r" %  (encoding, m[self.name]))
+                        logger.warn("Error decoding unicode with encoding '%s' on data: %r" % (encoding, m[self.name]))
+                        m[self.name] = m[self.name].decode("latin-1")
                     
                 m["_encoding"] = encoding
                 
-                
-                
-        
         yield m
             
 
@@ -114,6 +122,7 @@ class DirectoryFileReader (Node):
         self.directoryLister.path = self.path
         
         self.fileReader = FileReader()
+        self.fileReader.filename = "${ m['filename'] }"
         if (self.encoding): self.fileReader.encoding = self.encoding 
 
         ctx.comp.initialize(self.directoryLister)

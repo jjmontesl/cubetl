@@ -8,6 +8,9 @@ import traceback
 
 from repoze.lru import LRUCache
 from cubetl.core.components import Components
+import copy
+import inspect
+from cubetl.core import Component
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -35,6 +38,15 @@ class Context():
         
         self.comp = Components(self)
     
+    
+    def _class_from_frame(self, fr):
+        try:
+            class_type = fr.f_locals['self'].__class__
+        except KeyError:
+            class_type = None
+    
+        return class_type
+    
     def interpolate(self, m, value):
         
         # TODO: Naive interpolation
@@ -56,9 +68,19 @@ class Context():
                 res = eval (compiled, self._globals , { "m": m, "ctx": self })
                 if (self.debug2):
                     logger.debug ('Evaluated: %s = %r' % (expr, res))
-            except Exception, e:
+                    
+            except (Exception) as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                raise Exception('Error evaluating expression "%s" on message: %s' % (expr, (traceback.format_exception_only(exc_type, exc_value))) ) 
+
+                caller_component = None 
+                frame = inspect.currentframe()
+                for caller in inspect.getouterframes(frame):
+                    if issubclass(self._class_from_frame(caller[0]), Component):
+                        caller_component = caller[0].f_locals['self']
+                        break
+                
+                raise Exception('Error evaluating expression "%s" called from %s on message: %s' % (expr, caller_component, (", ".join(traceback.format_exception_only(exc_type, exc_value)))) ) 
+            
             
             
             if ((pos>0) or (pos_end < len(result) - 1)):
@@ -71,5 +93,6 @@ class Context():
                 
         return result
 
-        
-        
+    def copy_message (self, m):
+        return copy.copy (m)
+    

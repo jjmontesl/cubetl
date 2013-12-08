@@ -1,4 +1,8 @@
 0.2-devel
+    + Initial doc generation scripts.
+    + Added basic initial CSV support.
+    + Added config instrospection utils (cubetl-list-nodes...).
+    + Added support for parameters in context and command line.
     + Implemented very basic template module (mako)
 0.1
     + Improved cubes export (datetime filters, levels, hierarchies).
