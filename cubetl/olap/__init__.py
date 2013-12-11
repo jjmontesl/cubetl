@@ -6,6 +6,10 @@ from cubetl.core import Node, Component
 logger = logging.getLogger(__name__)
 
 class Dimension(Component):
+    """A flat dimension.
+
+    Note: This represents a Flat dimension (no hierarchies, only one level of attributes). 
+    """
     
     def __init__(self):
         
@@ -14,13 +18,12 @@ class Dimension(Component):
         self.name = None
         self.label = None
         self.attributes = []
-        self.details = []
-        self.hierarchies = []
-        self.role = None
+        #self.role = None
         
     def initialize(self, ctx):
         logger.debug("Initializing %s" % self.name)
         super(Dimension, self).initialize(ctx)
+        
         if (self.label == None): self.label = self.name
         for attr in self.attributes:
             if (not "label" in attr):
@@ -28,13 +31,46 @@ class Dimension(Component):
                     attr["label"] = self.label
                 else:
                     attr["label"] = attr["name"]
-
+        
+    def has_attribute(self, search):
+        return (search in [attr["name"] for attr in self.attributes])
+    
     def attribute(self, search):
         att = [attr for attr in self.attributes if attr["name"] == search]
-        if (len(att) != 1):
-            raise Exception("Could not find attribute %s in dimension %s" % (search, self.name))
+        
+        if (len(att) > 1):
+            raise Exception("More than one attribute with name '%s' found in dimension %s" % (search, self.name))
+        if (len(att) == 0):
+            raise Exception("Could not find attribute '%s' in dimension %s" % (search, self.name))
         
         return att[0]
+       
+class HierarchyDimension(Dimension):
+    """A non-flat dimension, forming one or more hierarchies.
+    
+    References subdimensions (levels).
+
+    Note: This represents a Flat dimension (no hierarchies, only one level of attributes). 
+    """
+    
+    def __init__(self):
+        
+        super(Dimension, self).__init__()
+        
+        self.name = None
+        self.label = None
+        self.levels = []
+        self.hierarchies = []
+        self.attributes = []
+        
+    def initialize(self, ctx):
+        logger.debug("Initializing %s" % self.name)
+        super(HierarchyDimension, self).initialize(ctx)
+        
+        if (len(self.attributes) > 0):
+            raise Exception ("%s is a HierarchyDimension and cannot have attributes." % (self))
+        
+        if (self.label == None): self.label = self.name
         
 
 class Fact(Component):
@@ -79,8 +115,6 @@ class FactDimension(Dimension):
         
         if (len(self.attributes) > 0):
             raise Exception("Cannot define attributes for a FactDimension (it's defined by the linked fact)")
-        if (len(self.details) > 0):
-            raise Exception("Cannot define details for a FactDimension (it's defined by the linked fact)")
 
     def attribute(self, search):
         att = [attr for attr in self.fact.attributes if attr["name"] == search]

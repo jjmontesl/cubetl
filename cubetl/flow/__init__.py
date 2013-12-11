@@ -107,7 +107,7 @@ class Iterator(Node):
             yield m2
 
             
-class MultiEval(Node):
+class SplitEval(Node):
     """
     Note that evaluation is done via ctx.interpolate(), and so
     requires expressions to be delimited by ${}.
@@ -115,7 +115,7 @@ class MultiEval(Node):
     
     def __init__(self):
         
-        super(MultiEval, self).__init__()
+        super(SplitEval, self).__init__()
     
         self.instances = []
     

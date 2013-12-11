@@ -1,7 +1,8 @@
 import logging
 from cubetl.olap import Dimension, Fact, DimensionMapper, FactMapper
-from cubetl.sql.cache import CachingSQLTable
+from cubetl.sql.cache import CachedSQLTable
 from cubetl.functions.text import parsebool
+from cubetl.sql import SQLTable
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -21,6 +22,8 @@ class SQLDimensionMapper(DimensionMapper):
         self.mappings = []
         
         self._sqltable = None
+        
+        self.lookup_cols = None 
     
     def finalize(self, ctx):
         
@@ -35,35 +38,45 @@ class SQLDimensionMapper(DimensionMapper):
         
         ctx.comp.initialize(self.dimension)
 
-        self._sqltable = CachingSQLTable()
+        self._sqltable = CachedSQLTable()
         self._sqltable.name = self.table
         self._sqltable.connection = self.connection
-        
+
+        print self
+        print self.mappings
+
         for attribute in self.dimension.attributes:
             if (not attribute["name"] in [mapping["name"] for mapping in self.mappings]):
                 mapping = { "name": attribute["name"] }
                 if ("type" in attribute): mapping["type"] = attribute["type"]
                 self.mappings.append(mapping)
 
-        for detail in self.dimension.details:
-            if (not detail["name"] in [mapping["name"] for mapping in self.mappings]):
-                mapping = { "name": detail["name"] }
-                if ("type" in detail): mapping["type"] = detail["type"]
-                self.mappings.append(mapping)
-        
         for mapping in self.mappings:
             mapping["pk"] = False if (not "pk" in mapping) else parsebool(mapping["pk"])  
             if (not "column" in mapping): mapping["column"] = mapping["name"]
             if (not "value" in mapping): mapping["value"] = None 
             if (not "type" in mapping): 
                 # Infer type
-                if (mapping["pk"]):
-                    mapping["type"] = "AutoIncrement"
-                else:
+                if (self.dimension.has_attribute(mapping["name"])):
                     mapping["type"] = self.dimension.attribute(mapping["name"])["type"]
+                else:
+                    if (mapping["pk"]):
+                        mapping["type"] = "AutoIncrement"
 
             # Add to underlying table
             self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
+        
+        
+        # Get pk:
+        pk = self.pk(ctx)
+        if (pk == None):
+            raise Exception ("No pk (primary key) defined for %s " % self)
+        
+        # If key is a string, split by commas
+        if (isinstance(self.lookup_cols, basestring)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
+        # If no key, use pk()
+        if (self.lookup_cols == None):
+            self.lookup_cols = [ pk["name"] ]
             
         ctx.comp.initialize(self._sqltable)
             
@@ -84,23 +97,38 @@ class SQLDimensionMapper(DimensionMapper):
             return pk_mappings[0]
         else:
             return None
-                
+
     def store(self, ctx, m):
         
+        logger.debug("Storing dimension %s" % self)
+        
         data = {}
-        keys = []
+        row = {}
+        
+        # First try to look it up
         for mapping in self.mappings:
-            
-            if (mapping["name"] in [attr["name"] for attr in self.dimension.attributes]):
-                keys.append (mapping["name"])
-                
-            if (mapping["type"] != "AutoIncrement"):
-                if (mapping["value"] == None):
-                    data[mapping["column"]] = m[mapping["name"]]
-                else:
-                    data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+            if (mapping["column"] in self.lookup_cols):
+                if (mapping["type"] != "AutoIncrement"):
+                    if (mapping["value"] == None):
+                        data[mapping["column"]] = m[mapping["name"]]
+                    else:
+                        data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+        
+        row = self._sqltable.lookup(ctx, data)
+        
+        if (not row):
+            for mapping in self.mappings:
+                if (not mapping["column"] in self.lookup_cols):
+                    if (mapping["type"] != "AutoIncrement"):
+                        if (mapping["value"] == None):
+                            data[mapping["column"]] = m[mapping["name"]]
+                        else:
+                            data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
 
-        row = self._sqltable.store(ctx, data, keys)
+            row = self._sqltable.insert(ctx, data)
+    
+        logger.debug("%s stored data: %s (lookup: %s)" % (self, row, self.lookup_cols)) 
+            
         if (not self.pk(ctx)["name"] in row):
             raise Exception("No primary key set when storing dimension entry: %s" % data)
 
@@ -156,6 +184,8 @@ class SQLFactMapper(FactMapper):
         
         self.mappings = []
         
+        self.lookup_cols = None
+        
         self._sqltable = None
         
     def finalize(self, ctx):
@@ -171,7 +201,7 @@ class SQLFactMapper(FactMapper):
         ctx.comp.initialize(self.fact)
         ctx.comp.initialize(self.connection)
         
-        self._sqltable = CachingSQLTable()
+        self._sqltable = CachedSQLTable()
         self._sqltable.name = self.table
         self._sqltable.connection = self.connection
         
@@ -182,13 +212,13 @@ class SQLFactMapper(FactMapper):
                     ctx.comp.initialize(dimmapper)
                     self.mappings.extend(dimmapper.mappings) 
                 else:
-                    type = dimmapper.pk(ctx)["type"]
-                    if (type == "AutoIncrement"): type = "Integer"
+                    ctype = dimmapper.pk(ctx)["type"]
+                    if (ctype == "AutoIncrement"): ctype = "Integer"
                     self.mappings.append({
                                           "name": dimension.name,
                                           "column": dimension.name + "_id",
                                           "value": '${ m["' + dimension.name + "_id" + '"] }',
-                                          "type": type
+                                          "type": ctype
                                           })
 
         for measure in self.fact.measures:
@@ -213,6 +243,17 @@ class SQLFactMapper(FactMapper):
                  
             self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
             
+        # Get pk:
+        pk = self.pk(ctx)
+        if (pk == None): raise Exception ("No pk (primary key) defined for %s " % self)
+        
+        # If key is a string, split by commas
+        if (isinstance(self.lookup_cols, basestring)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
+        
+        # If no key, use pk()
+        if (self.lookup_cols == None):
+            self.lookup_cols = [ pk["name"] ]
+            
         ctx.comp.initialize(self._sqltable)            
             
     def pk(self, ctx):
@@ -235,22 +276,36 @@ class SQLFactMapper(FactMapper):
     
     def store(self, ctx, m):
 
-        logger.debug("Inserting fact in %s" % self)
+        logger.debug("Storing fact in %s (lookup: %s)" % (self, self.lookup_cols))
         
-        # Insert or update data
+        data = {}
         row = {}
+
+        # First try to look it up
         for mapping in self.mappings:
+            if (mapping["column"] in self.lookup_cols):
+                if (mapping["type"] != "AutoIncrement"):
+                    if (mapping["value"] == None):
+                        data[mapping["column"]] = m[mapping["name"]]
+                    else:
+                        data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+        
+        row = self._sqltable.lookup(ctx, data) 
+        
+        if (not row):
+            for mapping in self.mappings:
+    
+                if (mapping["type"] != "AutoIncrement"):
+                    if (mapping["value"] == None):
+                        if (not mapping["name"] in m):
+                            raise Exception("Field '%s' does not exist in message when assigning Fact data for column %s in %s" % (mapping["name"], mapping["column"], self))
+                        data[mapping["column"]] = m[mapping["name"]]
+                    else:
+                        data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
 
-            if (mapping["type"] != "AutoIncrement"):
-                if (mapping["value"] == None):
-                    if (not mapping["name"] in m):
-                        raise Exception("Field '%s' does not exist in message when assigning Fact data for column %s in %s" % (mapping["name"], mapping["column"], self))
-                    row[mapping["column"]] = m[mapping["name"]]
-                else:
-                    row[mapping["column"]] = ctx.interpolate(m, mapping["value"])
-
-        row = self._sqltable.store(ctx, row)
-        return row[self.pk(ctx)["name"]]
+            row = self._sqltable.insert(ctx, data)
+        
+        return row[self.pk(ctx)["column"]]
         
         
 

@@ -168,7 +168,7 @@ class SQLTable(Component):
     
         return d
             
-    def find(self, ctx, attribs):
+    def _find(self, ctx, attribs):
         
         self._selects = self._selects + 1
         SQLTable._selects = SQLTable._selects + 1
@@ -181,49 +181,44 @@ class SQLTable(Component):
             yield self._rowtodict(r)
              
         
-    def findone(self, ctx, attribs):
+    def lookup(self, ctx, attribs):
+        
+        logger.debug ("Lookup on '%s' attribs: %s" % (self, attribs))
         
         if (len(attribs.keys()) == 0):
-            raise Exception("Searching on table with no criteria (empty attribute set)")
+            raise Exception("Cannot lookup on table with no criteria (empty attribute set)")
         
-        rows = self.find(ctx, attribs)
+        rows = self._find(ctx, attribs)
         rows = list(rows)
         if (len(rows) > 1):
-            raise Exception("Found 0 or more than one row when searching for just one in table %s: %s" % (self.name, attribs))
+            raise Exception("Found more than one row when searching for just one in table %s: %s" % (self.name, attribs))
         elif (len(rows) == 1):
             row = rows[0]   
         else:
             row = None
         
-        logger.debug("Findone result on %s: %s = %s" % (self.name, attribs, row))
+        logger.debug("Lookup result on %s: %s = %s" % (self.name, attribs, row))
         return row
     
-    def store(self, ctx, data, keys = []):
+    def upsert(self, ctx, data, keys = []):
         
-        # Use primary key if available
-        pk = self.pk(ctx)
-        if ((pk != None) and (pk["name"] in data)):
-            keys = [pk["name"]]
+        # TODO: Check for AutoIncrement in keys, shall not be used
         
-        # Use keys
+        # If keys
         qfilter = {}
-        for key in keys:
-            try:
-                qfilter[key] = data[key]
-            except KeyError, e:
-                raise Exception("Could not find attibute '%s' in data when storing row data: %s" % (key, data))
+        if (len(keys) > 0):
+            for key in keys:
+                try:
+                    qfilter[key] = data[key]
+                except KeyError as e:
+                    raise Exception("Could not find attribute '%s' in data when storing row data: %s" % (key, data))
         
-        row = None
-        if (len(qfilter.keys()) > 0):
-            row = self.findone(ctx, qfilter)
+            row = self.lookup(ctx, qfilter)
+            if (row): return row
         
-        if (row):
-            # TODO
-            return row
-        
-        rid =  self.insert(ctx, data)
+        row_with_id =  self.insert(ctx, data)
                         
-        return rid
+        return row_with_id
         
     def _prepare_row(self, ctx, data):
         
@@ -248,7 +243,7 @@ class SQLTable(Component):
         
         row = self._prepare_row(ctx, data)
         
-        logger.debug ("Inserting table '%s' row: %s" % (self.name, row))
+        logger.debug ("Inserting in table '%s' row: %s" % (self.name, row))
         res = self.connection.connection().execute(self.sa_table.insert(row))
 
         pk = self.pk(ctx)
@@ -280,10 +275,7 @@ class Transaction(Node):
         self.enabled = parsebool(self.enabled)
 
     def finalize(self, ctx):
-        if (self.enabled):
-            logger.info("Commiting database transaction")
-            self._transaction.commit()
-            self._transaction = None
+        pass
         
     def process(self, ctx, m):
         
@@ -297,7 +289,12 @@ class Transaction(Node):
         else:
             logger.debug("Not starting database transaction (Transaction node is disabled)")
         
-        yield m        
+        yield m     
+        
+        if (self.enabled):
+            logger.info("Commiting database transaction")
+            self._transaction.commit()
+            self._transaction = None   
         
         
 class StoreRow(Node):
@@ -314,3 +311,54 @@ class StoreRow(Node):
         self.table.store(ctx, m)
         
         yield m        
+
+class LookupQuery(Node):
+    
+    NOT_CACHED = "NOT_CACHED"
+    
+    def __init__(self):
+
+        super(LookupQuery, self).__init__()
+
+        self.connection = None
+        self.query = None
+        
+    def initialize(self, ctx):
+        
+        super(LookupQuery, self).initialize(ctx)
+        
+    def finalize(self, ctx):
+        
+        super(LookupQuery, self).finalize(ctx)
+
+    def _rowtodict(self, row):
+
+        d = {}
+        for column,value in row.items():
+            d[column] = value
+    
+        return d
+
+    def _do_query(self, query):
+        
+        logger.debug ("Running query: %s" % query.strip())
+        rows = self.connection.connection().execute(query)
+
+        result = None
+        for r in rows:
+            if (result != None):
+                raise Exception ("Error: %s query resulted in more than one row: %s" % (self, self.query) )
+            result = self._rowtodict(r)
+            
+        return result
+        
+    def process(self, ctx, m):
+
+        query = ctx.interpolate(m, self.query)
+        
+        result = self._do_query(query)
+        
+        if (result != None): m.update(result)
+        yield m
+        
+

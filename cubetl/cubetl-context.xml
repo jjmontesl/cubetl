@@ -9,7 +9,7 @@
     
     
     <!-- Helpers -->
-    <object id="cubetl-node-print" class="cubetl.util.Print">
+    <object id="cubetl-node-print" class="cubetl.util.PrettyPrint">
     </object>
     
     <object id="cubetl-list-nodes" class="cubetl.util.config.PrintConfig" >

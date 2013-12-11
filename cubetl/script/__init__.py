@@ -10,7 +10,7 @@ class Script(Node):
         
         super(Script, self).__init__()
         
-        self.code = None
+        self.script = None
     
     def process(self, ctx, m):
 

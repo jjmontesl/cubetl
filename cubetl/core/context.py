@@ -79,7 +79,7 @@ class Context():
                         caller_component = caller[0].f_locals['self']
                         break
                 
-                raise Exception('Error evaluating expression "%s" called from %s on message: %s' % (expr, caller_component, (", ".join(traceback.format_exception_only(exc_type, exc_value)))) ) 
+                raise Exception('Error evaluating expression "%s" called from %s:\n%s' % (expr, caller_component, ("".join(traceback.format_exception_only(exc_type, exc_value)))) ) 
             
             
             

@@ -1,4 +1,5 @@
 0.2-devel
+    + Syntax highlighting for print output (when output is a tty).
     + Initial doc generation scripts.
     + Added basic initial CSV support.
     + Added config instrospection utils (cubetl-list-nodes...).
