@@ -14,7 +14,7 @@ class Log(Node):
 
     def __init__(self):
 
-        self.condition = None
+        self.eval = None
         self.message = "MESSAGE NOT CONFIGURED - Check Log node configuration"
         self.level = logging.INFO
         
@@ -25,8 +25,8 @@ class Log(Node):
         self.count = self.count + 1 
         
         dolog = True
-        if (self.condition):
-            dolog = parsebool(ctx.interpolate(m, self.condition))
+        if (self.eval):
+            dolog = parsebool(ctx.interpolate(m, self.eval))
                 
         if dolog: 
             logger.log(self.level, ctx.interpolate(m, self.message))

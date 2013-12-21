@@ -8,22 +8,22 @@ from cubetl.olap import FactMapper, DimensionMapper, FactDimension
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-class CubesModelWriter(Node):
+class Cubes010ModelWriter(Node):
     
     def __init__(self):
         
-        super(CubesModelWriter, self).__init__()
+        super(Cubes010ModelWriter, self).__init__()
         
         self.olapmapper = None
     
     def initialize(self, ctx):
         
-        super(CubesModelWriter, self).initialize(ctx)
+        super(Cubes010ModelWriter, self).initialize(ctx)
         ctx.comp.initialize(self.olapmapper)
 
     def finalize(self, ctx):
         ctx.comp.finalize(self.olapmapper)
-        super(CubesModelWriter, self).initialize(ctx)
+        super(Cubes010ModelWriter, self).initialize(ctx)
 
     def _get_dimensions(self, fact):
         result = []

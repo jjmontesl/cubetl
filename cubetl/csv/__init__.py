@@ -23,6 +23,7 @@ class CsvReader(Node):
         self.header = None
         self.headers = None
         
+        self.delimiter = ","
         self.row_delimiter = "\n"
         
         self.count = 0
@@ -39,11 +40,17 @@ class CsvReader(Node):
         data = ctx.interpolate(m, self.data)
         
         header = None
+        if (self.headers): 
+            if (isinstance(self.headers, basestring)):
+                header = [h.strip() for h in self.headers.split(",")]
+            else:
+                header = self.headers
+        
         
         #census_year = 0
         rows = iter (self._utf_8_encoder(data.split(self.row_delimiter)))
         
-        reader = csv.reader(rows)
+        reader = csv.reader(rows, delimiter = self.delimiter)
         for row in reader:
             
             if (header == None):
@@ -71,7 +78,7 @@ class CsvFileReader (CsvReader):
         super(CsvFileReader, self).__init__()
         
         self.filename = None
-        self.filter_re = None 
+        self.filter_re = None
         
         self.encoding = "detect"
         self.encoding_errors = "strict" # strict, ignore, replace

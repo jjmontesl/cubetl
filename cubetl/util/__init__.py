@@ -21,12 +21,15 @@ class Assert(Node):
     
     def __init__(self):
         self.eval = None
+        self.message = None
     
     def process(self, ctx, m):
         
         value = ctx.interpolate(m, self.eval)
         
         if (not value):
+            if (self.message):
+                logger.error(ctx.interpolate(m, self.message))
             raise Exception("Assertion failed: %s = %s" % (self.eval, value))
         
         yield m
@@ -49,10 +52,12 @@ class Print(Node):
     
     def process(self, ctx, m):
         
-        if (self.eval):
-            print ctx.interpolate(m, self.eval)
-        else:
-            print m
+        if (not ctx.quiet):
+        
+            if (self.eval):
+                print ctx.interpolate(m, self.eval)
+            else:
+                print m
         
         yield m
 
@@ -84,27 +89,28 @@ class PrettyPrint(Node):
         self._terminal_formatter = TerminalFormatter()
     
     def process(self, ctx, m):
+    
+        if (not ctx.quiet): 
         
-        if (self.eval):
-            obj = ctx.interpolate(m, self.eval)
-        else:
-            obj = m
-        
-        res = self._pp.pformat(obj)
-        
-        if (self.truncate_line):
-            truncated = ""
-            for line in res.split("\n"):
-                if (len(line) > self.truncate_line):
-                    line = line[:self.truncate_line - 2] + ".."
-                truncated = truncated + line + "\n"
-            res = truncated 
-                    
-        if sys.stdout.isatty():                    
-            print highlight(res, self._python_lexer, self._terminal_formatter)
-        else:
-            print res
-        
+            if (self.eval):
+                obj = ctx.interpolate(m, self.eval)
+            else:
+                obj = m
+            
+            res = self._pp.pformat(obj)
+            
+            if (self.truncate_line):
+                truncated = ""
+                for line in res.split("\n"):
+                    if (len(line) > self.truncate_line):
+                        line = line[:self.truncate_line - 2] + ".."
+                    truncated = truncated + line + "\n"
+                res = truncated 
+                        
+            if sys.stdout.isatty():                    
+                print highlight(res, self._python_lexer, self._terminal_formatter)
+            else:
+                print res
         
         yield m
         

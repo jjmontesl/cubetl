@@ -106,8 +106,15 @@ class SQLTable(Component):
 
         # Drop?
 
-        # Columns
+        columns_ex = []
         for column in self.columns:
+            
+            # Check for duplicate names
+            if (column["name"] in columns_ex):
+                raise Exception("Duplicate column name %s in %s" % (column["name"], self))
+            columns_ex.append(column["name"])
+                
+            # Configure column            
             column["pk"] = False if (not "pk" in column) else parsebool(column["pk"])
             if (not "type" in column): column["type"] = "String"
             #if (not "value" in column): column["value"] = None

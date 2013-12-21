@@ -24,6 +24,8 @@ class Context():
         self.debug = False
         self.debug2 = False
         
+        self.quiet = False
+        
         self.config_files = []     
         
         self.startprocess = None
@@ -67,7 +69,10 @@ class Context():
                     self._compiled.put(expr, compiled)
                 res = eval (compiled, self._globals , { "m": m, "ctx": self })
                 if (self.debug2):
-                    logger.debug ('Evaluated: %s = %r' % (expr, res))
+                    if (isinstance(res, basestring)):
+                        logger.debug ('Evaluated: %s = %r' % (expr, res if (len(res) < 100) else res[:100] + ".."))
+                    else:
+                        logger.debug ('Evaluated: %s = %r' % (expr, res))
                     
             except (Exception) as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()

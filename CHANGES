@@ -1,4 +1,6 @@
 0.2-devel
+    + Refactored OLAP model.
+    + Quiet mode added to avoid helper printing nodes.
     + Syntax highlighting for print output (when output is a tty).
     + Initial doc generation scripts.
     + Added basic initial CSV support.

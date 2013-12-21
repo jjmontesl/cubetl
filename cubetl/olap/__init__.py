@@ -1,6 +1,7 @@
 import logging
 from lxml import etree
 from cubetl.core import Node, Component
+from cubetl.olap.sql import FactMapper
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ class Dimension(Component):
         self.name = None
         self.label = None
         self.attributes = []
-        #self.role = None
+        self.role = None
         
     def initialize(self, ctx):
         logger.debug("Initializing %s" % self.name)
@@ -48,20 +49,15 @@ class Dimension(Component):
 class HierarchyDimension(Dimension):
     """A non-flat dimension, forming one or more hierarchies.
     
-    References subdimensions (levels).
-
-    Note: This represents a Flat dimension (no hierarchies, only one level of attributes). 
+    References subdimensions (levels), usually forming hierarchies.
     """
     
     def __init__(self):
         
-        super(Dimension, self).__init__()
+        super(HierarchyDimension, self).__init__()
         
-        self.name = None
-        self.label = None
         self.levels = []
         self.hierarchies = []
-        self.attributes = []
         
     def initialize(self, ctx):
         logger.debug("Initializing %s" % self.name)
@@ -124,18 +120,8 @@ class FactDimension(Dimension):
         return att[0]
 
 
-class DimensionMapper(Component):
-    
-    def __init__(self):
-        super(DimensionMapper, self).__init__()
-        self.olapmapper = None
-
-class FactMapper(Component):
-    
-    def __init__(self):
-        super(FactMapper, self).__init__()
-        self.olapmapper = None
-
+        
+        
 class OlapMapper(Component):
     
     def __init__(self):
@@ -163,6 +149,7 @@ class OlapMapper(Component):
             ctx.comp.finalize(mapper)
         super(OlapMapper, self).finalize(ctx)
 
+    """
     def getDimensionMapper(self, dim, fail = True):
         
         # Our mappings first
@@ -184,24 +171,30 @@ class OlapMapper(Component):
             raise Exception("No OLAP mapper found for dimension: %s" % dim.name)
         
         return None
+    """
         
-    def getFactMapper(self, fact, fail = True):
+    def getEntityMapper(self, entity, fail = True):
+        """Returns the OlapMapper that handles a fact or dimension.
+        
+        Included mappers are processed after local ones, so mapping
+        definitions for different entities can be overrided.
+        """
+        
         for mapper in self.mappers:
-            if (isinstance(mapper, FactMapper)):
-                if (mapper.fact.name == fact.name):
-                    return mapper
+            if (mapper.entity.name == entity.name):
+                return mapper
                 
         for inc in self.include:
-            mapper = inc.getFactMapper(fact, False)
+            mapper = inc.getEntityMapper(entity, False)
             if (mapper): return mapper
 
         if fail:
-            raise Exception("No OLAP mapper found for fact: %s" % fact.name)
+            raise Exception("No OLAP mapper found for: %s" % entity.name)
 
         return None
 
+
 class StoreFact(Node):
-    
     
     def initialize(self, ctx):
         super(StoreFact, self).initialize(ctx)
@@ -218,14 +211,14 @@ class StoreFact(Node):
         # Store dimensions
         # TODO: Shall be optional
         for dim in self.fact.dimensions:
-            did = self.mapper.getDimensionMapper(dim).store(ctx, m)
+            did = self.mapper.getEntityMapper(dim).store(ctx, m)
             # TODO: review this too, or use rarer prefix
             if (did != None): m[dim.name + "_id"] = did
         
         # Store
-        fid = self.mapper.getFactMapper(self.fact).store(ctx, m)
+        # TODO: We shall not collect the ID here possibly
+        fid = self.mapper.getEntityMapper(self.fact).store(ctx, m)
         if (fid != None): m[self.fact.name + "_id"] = fid
         
         yield m
-        
         

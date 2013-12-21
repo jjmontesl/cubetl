@@ -38,11 +38,12 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print "cubetl [-d] [-p property=value ...] [-m attribute=value] [config.xml ...] <start-node>"
+        print "cubetl [-d] [-q] [-p property=value ...] [-m attribute=value] [config.xml ...] <start-node>"
         print ""
-        print "    -d   debug mode (can be used twice for more debug)"
         print "    -p   set a context property"
         print "    -m   set an attribute for the start message"
+        print "    -d   debug mode (can be used twice for more debug)"
+        print "    -q   quiet mode (print utils disabled)"        
 
     def _split_keyvalue(self, text):
         """Return key=value pair, or key=None if format is incorrect
@@ -55,7 +56,7 @@ class Bootstrap:
     def parse_args(self, ctx):
         
         try:
-            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:d", [ ])
+            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:dq", [ ])
         except getopt.GetoptError as err:
             print str(err) 
             self.usage()
@@ -67,6 +68,8 @@ class Bootstrap:
                     ctx.debug2 = True
                 else:
                     ctx.debug = True
+            elif o == "-q":
+                ctx.quiet = True
             elif o == "-p":
                 (key, value) = self._split_keyvalue(a)
                 if (key == None):
