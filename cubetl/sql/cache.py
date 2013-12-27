@@ -6,27 +6,12 @@ from sqlalchemy.types import Integer, String, Float
 import sys
 from cubetl.core import Node
 from sqlalchemy.sql.expression import and_
-from cubetl.sql import SQLTable, LookupQuery
+from cubetl.sql import SQLTable, QueryLookup
 from repoze.lru import LRUCache
+from cubetl.util.cache import Cache
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
-class Cache():
-    
-    def __init__(self):
-         
-        self._cache = None
-         
-    def initialize(self): 
-         
-        if (self._cache == None):
-         
-            self._cache = LRUCache(512) # 100 max length
-        
-    def cache(self):
-        self.initialize()
-        return self._cache
 
 class CachedSQLTable(SQLTable):
     
@@ -88,13 +73,13 @@ class CachedSQLTable(SQLTable):
         
         return iter(rows)
         
-class CachedLookupQuery(LookupQuery):
+class CachedQueryLookup(QueryLookup):
     
     NOT_CACHED = "NOT_CACHED"
     
     def __init__(self):
 
-        super(CachedLookupQuery, self).__init__()
+        super(CachedQueryLookup, self).__init__()
 
         self.connection = None
         self.query = None
@@ -105,21 +90,21 @@ class CachedLookupQuery(LookupQuery):
         
     def initialize(self, ctx):
         
-        super(CachedLookupQuery, self).initialize(ctx)
+        super(CachedQueryLookup, self).initialize(ctx)
         self._cache = Cache().cache() 
         
     def finalize(self, ctx):
         
         logger.info ("%s  hits/misses: %d/%d" % (self, self.cache_hits, self.cache_misses))
         
-        super(CachedLookupQuery, self).finalize(ctx)
+        super(CachedQueryLookup, self).finalize(ctx)
         
     def process(self, ctx, m):
 
         query = ctx.interpolate(m, self.query)
         
-        result = self._cache.get(query, CachedLookupQuery.NOT_CACHED)
-        if (result != CachedLookupQuery.NOT_CACHED):
+        result = self._cache.get(query, CachedQueryLookup.NOT_CACHED)
+        if (result != CachedQueryLookup.NOT_CACHED):
             self.cache_hits = self.cache_hits + 1
             if (ctx.debug2): logger.debug("Query cache hit: %s" % (result))
         else:

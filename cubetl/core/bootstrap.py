@@ -7,7 +7,6 @@ import getopt
 import logging
 import os
 import sys
-from compiler.ast import Raise
 import traceback
 from cubetl.core import ContextProperties
 
@@ -105,11 +104,11 @@ class Bootstrap:
 
             cubetl.container = ApplicationContext( configs )
             
-        except Exception, e:
+        except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logger.error ("Could not load config: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
             if (ctx.debug): 
-                raise e
+                raise
             else:
                 sys.exit(3)
     

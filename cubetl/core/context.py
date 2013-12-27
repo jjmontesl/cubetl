@@ -11,6 +11,7 @@ from cubetl.core.components import Components
 import copy
 import inspect
 from cubetl.core import Component
+from inspect import isclass
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class Context():
     
         return class_type
     
-    def interpolate(self, m, value):
+    def interpolate(self, m, value, data = {}):
         
         # TODO: Naive interpolation
 
@@ -67,7 +68,11 @@ class Context():
                 if (not compiled):
                     compiled = compile(expr, '', 'eval')
                     self._compiled.put(expr, compiled)
-                res = eval (compiled, self._globals , { "m": m, "ctx": self })
+                
+                locals = { "m": m, "ctx": self, "cubetl": cubetl }
+                locals.update(data)
+                res = eval (compiled, self._globals ,  locals)
+                
                 if (self.debug2):
                     if (isinstance(res, basestring)):
                         logger.debug ('Evaluated: %s = %r' % (expr, res if (len(res) < 100) else res[:100] + ".."))
@@ -80,10 +85,12 @@ class Context():
                 caller_component = None 
                 frame = inspect.currentframe()
                 for caller in inspect.getouterframes(frame):
-                    if issubclass(self._class_from_frame(caller[0]), Component):
+                    fc = self._class_from_frame(caller[0])
+                    if (isclass(fc) and issubclass(fc, Component)):
                         caller_component = caller[0].f_locals['self']
                         break
                 
+                logger.error("Error evaluating expression %s on data: %s" % (expr, m))
                 raise Exception('Error evaluating expression "%s" called from %s:\n%s' % (expr, caller_component, ("".join(traceback.format_exception_only(exc_type, exc_value)))) ) 
             
             

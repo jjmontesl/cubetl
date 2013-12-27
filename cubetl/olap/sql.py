@@ -1,3 +1,4 @@
+import cubetl
 from abc import ABCMeta, abstractmethod
 from cubetl.core import Component, Node
 from cubetl.functions.text import parsebool
@@ -27,18 +28,24 @@ class TableMapper(Component):
         
         self.lookup_cols = None
         
+        self.auto_store = None
+        
         self._sqltable = None    
 
+    def __str__(self, *args, **kwargs):
+        
+        return "%s(%s)" % (self.__class__.__name__, self.entity.name)
     
     def _mappings_join(self, ctx):
         
-        ctype = self.pk(ctx)["type"]
+        pk = self.pk(ctx)
+        ctype = pk["type"]
         if (ctype == "AutoIncrement"): ctype = "Integer"
         return [{
                   "entity": self.entity.name,
                   "name": self.entity.name,
                   "column": self.entity.name + "_id",
-                  "value": '${ m["' + self.entity.name + "_id" + '"] }',
+                  "value": pk['value'], # '${ m["' + self.entity.name + "_id" + '"] }',
                   "type": ctype 
                  }]
     
@@ -122,6 +129,21 @@ class TableMapper(Component):
     
     def store(self, ctx, m):
 
+        # Store automatically or include dimensions
+        if (self.auto_store != None):
+            logger.debug("Storing automatically: %s" % (self.auto_store))
+            for ast in self.auto_store:
+                did = self.olapmapper.getEntityMapper(ast).store(ctx, m)
+                # TODO: Review and use PK properly
+                if (did != None): m[ast.name + "_id"] = did
+        elif (isinstance(self.entity, cubetl.olap.Fact)):
+            logger.debug("Storing automatically: %s" % (self.entity.dimensions))
+            for dim in self.entity.dimensions:
+                did = self.olapmapper.getEntityMapper(dim).store(ctx, m)
+                # TODO: review this too, or use rarer prefix
+                if (did != None): m[dim.name + "_id"] = did
+
+        
         logger.debug("Storing entity in %s (lookup: %s)" % (self, self.lookup_cols))
         
         data = {}
@@ -137,18 +159,28 @@ class TableMapper(Component):
         
         row = self._sqltable.lookup(ctx, data) 
         
-        if (not row):
-            for mapping in self._mappings(ctx):
-    
-                if (mapping["type"] != "AutoIncrement"):
-                    if (mapping["value"] == None):
-                        if (not mapping["name"] in m):
-                            raise Exception("Field '%s' does not exist in message when assigning data for column %s in %s" % (mapping["name"], mapping["column"], self))
-                        data[mapping["column"]] = m[mapping["name"]]
-                    else:
-                        data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+        for mapping in self._mappings(ctx):
+            if (mapping["type"] != "AutoIncrement"):
+                if (mapping["value"] == None):
+                    if (not mapping["name"] in m):
+                        raise Exception("Field '%s' does not exist in message when assigning data for column %s in %s" % (mapping["name"], mapping["column"], self))
+                    data[mapping["column"]] = m[mapping["name"]]
+                else:
+                    data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
 
+        if (not row):
             row = self._sqltable.insert(ctx, data)
+        else:
+            # Check row is identical
+            for mapping in self._mappings(ctx):
+                if (mapping["type"] != "AutoIncrement"):
+                    v1 = row[mapping['column']]
+                    v2 = data[mapping['column']]
+                    if (isinstance(v1, basestring) or isinstance(v2, basestring)):
+                        if (not isinstance(v1, basestring)): v1 = str(v1)
+                        if (not isinstance(v2, basestring)): v2 = str(v2)
+                    if (v1 != v2):
+                        logger.warn("%s looked up an entity which exists with different attributes (field=%s, existing_value=%s, tried_value=%s)" % (self, mapping["column"], v1, v2))
         
         return row[self.pk(ctx)["column"]]    
     
@@ -194,7 +226,6 @@ class FactMapper(TableMapper):
         self._ensure_mappings (ctx, mappings)
         return mappings
 
-    
 class DimensionMapper(TableMapper):
     
     def __init__(self):
@@ -206,7 +237,6 @@ class DimensionMapper(TableMapper):
         mappings = [mapping.copy() for mapping in self.mappings]
         for mapping in mappings:
             if (not "entity" in mapping): mapping["entity"] = self.entity.name
-        
         for attribute in self.entity.attributes:
             mapping = { "name": attribute["name"], "entity": self.entity.name }
             if ("type" in attribute): mapping["type"] = attribute["type"]
@@ -257,12 +287,12 @@ class CompoundDimensionMapper(TableMapper):
         
         return mappings    
 
-class HierarchyDimensionMapper(CompoundDimensionMapper):
+class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
     """This maps all dimension levels on a CompoundDimensionMapper.""" 
     
     def __init__(self):
         
-        super(HierarchyDimensionMapper, self).__init__()
+        super(CompoundHierarchyDimensionMapper, self).__init__()
 
     def initialize(self, ctx):
         
@@ -272,8 +302,44 @@ class HierarchyDimensionMapper(CompoundDimensionMapper):
         for level in self.entity.levels:
             self.dimensions.append(level)
         
-        super(HierarchyDimensionMapper, self).initialize(ctx)
+        super(CompoundHierarchyDimensionMapper, self).initialize(ctx)
         
+
+class MultiTableHierarchyDimensionMapper(TableMapper):
+    
+    def __init__(self):
+        
+        super(MultiTableHierarchyDimensionMapper, self).__init__()
+        
+    def initialize(self, ctx):
+        
+        if (self.table):
+            raise Exception("Cannot define table in %s. All dimensions of a MultiTableHierarchyDimensionMapper must be mapped manually." % self)
+        if (self.connection):
+            raise Exception("Cannot define table in %s. All dimensions of a MultiTableHierarchyDimensionMapper must be mapped manually." % self)        
+        
+        # Do not call parent.
+
+    def finalize(self, ctx):
+        # Do not call parent.
+        pass
+
+    def _mappings_join(self, ctx):
+        
+        mappings = []
+        for dimension in self.entity.levels:
+            dimension_mapper = self.olapmapper.getEntityMapper(dimension, False)
+            self._extend_mappings(ctx, mappings, dimension_mapper._mappings_join(ctx))
+            
+        return mappings
+    
+    def _mappings(self, ctx):
+        
+        raise Exception("Cannot provide mappings for %s. No table is related to this kind of mapper." % (self))
+        
+    def store(self, ctx, m):
+        raise Exception("Cannot store on %s. Stores should be done on each related dimension as appropriate." % (self))
+    
 
 class EmbeddedDimensionMapper(DimensionMapper):
     
@@ -363,7 +429,4 @@ class SQLFactDimensionMapper(SQLEmbeddedDimensionMapper):
         
 """
 
-"""
-
-"""
 

@@ -194,31 +194,24 @@ class OlapMapper(Component):
         return None
 
 
-class StoreFact(Node):
+class Store(Node):
     
     def initialize(self, ctx):
-        super(StoreFact, self).initialize(ctx)
+        super(Store, self).initialize(ctx)
         ctx.comp.initialize(self.mapper)
          
     def finalize(self, ctx):
         ctx.comp.finalize(self.mapper)
-        super(StoreFact, self).finalize(ctx)
+        super(Store, self).finalize(ctx)
     
     def process(self, ctx, m):
         
-        logger.debug ("Storing fact %s" % (self.fact.name))
-        
-        # Store dimensions
-        # TODO: Shall be optional
-        for dim in self.fact.dimensions:
-            did = self.mapper.getEntityMapper(dim).store(ctx, m)
-            # TODO: review this too, or use rarer prefix
-            if (did != None): m[dim.name + "_id"] = did
+        logger.debug ("Storing entity %s" % (self.entity.name))
         
         # Store
         # TODO: We shall not collect the ID here possibly
-        fid = self.mapper.getEntityMapper(self.fact).store(ctx, m)
-        if (fid != None): m[self.fact.name + "_id"] = fid
+        fid = self.mapper.getEntityMapper(self.entity).store(ctx, m)
+        if (fid != None): m[self.entity.name + "_id"] = fid
         
         yield m
         

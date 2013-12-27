@@ -2,6 +2,7 @@ import logging
 from cubetl.core import Node
 import copy
 from cubetl.functions.text import parsebool
+from cubetl.script import Eval
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -126,21 +127,8 @@ class SplitEval(Node):
         for instance in self.instances:
             
             m = ctx.copy_message(mo)
-            
-            for mapping in instance:
-                
-                
-                if ("eval" in mapping):
-                    m[mapping["name"]] = ctx.interpolate(m, mapping["eval"])
-                else:
-                    logging.warn("%s mapping with no 'eval' keyword: doing nothing." % self)
-                    
-                if ("default" in mapping):
-                    if ((not mapping["name"] in m) or
-                        (m[mapping["name"]] == None)
-                        (m[mapping["name"]].strip() == "")):
-                        
-                        m[mapping["name"]] = ctx.interpolate(m, mapping["default"])                
+
+            Eval.process_mappings(ctx, m, instance)
             
             yield m
                   

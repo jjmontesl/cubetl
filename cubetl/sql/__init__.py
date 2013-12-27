@@ -134,7 +134,6 @@ class SQLTable(Component):
         # Extend?
         
         # Delete columns?
-                
             
     def pk(self, ctx):
         """
@@ -319,24 +318,22 @@ class StoreRow(Node):
         
         yield m        
 
-class LookupQuery(Node):
-    
-    NOT_CACHED = "NOT_CACHED"
+class QueryLookup(Node):
     
     def __init__(self):
 
-        super(LookupQuery, self).__init__()
+        super(QueryLookup, self).__init__()
 
         self.connection = None
         self.query = None
         
     def initialize(self, ctx):
         
-        super(LookupQuery, self).initialize(ctx)
+        super(QueryLookup, self).initialize(ctx)
         
     def finalize(self, ctx):
         
-        super(LookupQuery, self).finalize(ctx)
+        super(QueryLookup, self).finalize(ctx)
 
     def _rowtodict(self, row):
 
@@ -356,6 +353,10 @@ class LookupQuery(Node):
             if (result != None):
                 raise Exception ("Error: %s query resulted in more than one row: %s" % (self, self.query) )
             result = self._rowtodict(r)
+
+        # TODO: Optional fail?
+        if (not result):
+            raise Exception ("Error: %s query returned no results: %s" % (self, self.query) )
             
         return result
         

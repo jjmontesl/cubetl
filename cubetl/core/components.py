@@ -45,8 +45,11 @@ class Components():
             comp.initialize(self.ctx)
         
     def finalize(self, comp):
+        
+        # TODO: Count references and finalize in an adequate order!!!
+        
         if (not self.is_initialized(comp)):
-            raise Exception("Finalized a non initialized component: %s" % comp)
+            logger.warn("Finalized a non initialized component: %s" % comp)
         if (not self.is_finalized(comp)):
             logger.debug("Finalizing %s" % comp)
             self.component_desc(comp).finalized = True
