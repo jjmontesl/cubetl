@@ -12,7 +12,6 @@ from abc import abstractmethod, ABCMeta
 from cubetl.script import Eval
 
 
-
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 

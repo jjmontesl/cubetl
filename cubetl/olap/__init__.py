@@ -45,7 +45,8 @@ class Dimension(Component):
             raise Exception("Could not find attribute '%s' in dimension %s" % (search, self.name))
         
         return att[0]
-       
+    
+
 class HierarchyDimension(Dimension):
     """A non-flat dimension, forming one or more hierarchies.
     
@@ -66,7 +67,59 @@ class HierarchyDimension(Dimension):
         if (len(self.attributes) > 0):
             raise Exception ("%s is a HierarchyDimension and cannot have attributes." % (self))
         
-        if (self.label == None): self.label = self.name
+        for hie in self.hierarchies:
+            if (isinstance(hie["levels"], basestring)):
+                levels = []
+                for lev_name in hie["levels"].split(","):
+                    lev_name = lev_name.strip()
+                    level = [lev for lev in self.levels if lev.name == lev_name]
+                    if (len(level) != 1):
+                        raise Exception ("Level %s defined in hierarchy %s is undefined." % (lev_name, hie))
+                    levels.append(level[0])
+                hie["levels"] = levels
+                
+       
+class AliasDimension(Dimension):
+    
+    def __init__(self):
+        
+        super(Dimension, self).__init__()
+        
+        self.dimension = None
+        
+    def initialize(self, ctx):
+        
+        logger.debug("Initializing %s" % self.name)
+        super(Dimension, self).initialize(ctx)
+        
+        ctx.comp.initialize(self.dimension)
+        
+        if (self.role == None): self.role = self.dimension.role
+
+        if (self.attributes):
+            raise Exception("%s cannot define own attributes." % self)
+        
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.dimension)
+        super(AliasDimension, self).finalize(ctx)        
+        
+    def has_attribute(self, search):
+        return self.dimension.has_attribute(search)
+    
+    def attribute(self, search):
+        return self.dimension.attribute(self, search)
+    
+    def __getattr__(self, attr):
+        if (attr in ["label", "name", "dimension"]):
+            return super(AliasDimension, self).__getattr__(attr)
+        else:
+            return getattr(self.dimension, attr)
+    
+    def __setattr__(self, attr, value):
+        if (attr in ["label", "name", "dimension"]):
+            return super(AliasDimension, self).__setattr__(attr, value)
+        else:
+            return setattr(self.dimension, attr, value) 
         
 
 class Fact(Component):
@@ -173,7 +226,7 @@ class OlapMapper(Component):
         return None
     """
         
-    def getEntityMapper(self, entity, fail = True):
+    def entity_mapper(self, entity, fail = True):
         """Returns the OlapMapper that handles a fact or dimension.
         
         Included mappers are processed after local ones, so mapping
@@ -185,7 +238,7 @@ class OlapMapper(Component):
                 return mapper
                 
         for inc in self.include:
-            mapper = inc.getEntityMapper(entity, False)
+            mapper = inc.entity_mapper(entity, False)
             if (mapper): return mapper
 
         if fail:
@@ -210,7 +263,7 @@ class Store(Node):
         
         # Store
         # TODO: We shall not collect the ID here possibly
-        fid = self.mapper.getEntityMapper(self.entity).store(ctx, m)
+        fid = self.mapper.entity_mapper(self.entity).store(ctx, m)
         if (fid != None): m[self.entity.name + "_id"] = fid
         
         yield m

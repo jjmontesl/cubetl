@@ -1,5 +1,6 @@
 import logging
 import re
+from dateutil import parser
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -27,6 +28,10 @@ def parsebool (value):
     except Exception, e:
         raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
     
+def extract_date(value):
+    
+    datetime = parser.parse(value, fuzzy = True)
+    return datetime
 
 def extract_number(value):
     

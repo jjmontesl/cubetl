@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+               http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+
+
+     <object id="cubetl.dim.datetime.date" class="cubetl.olap.HierarchyDimension">
+
+        <property name="name" value="date" ></property>
+        <property name="label" value="Date" ></property>
+
+        <property name="role" value="date"></property>
+       
+        <property name="hierarchies">
+            <list>
+	            <dict>
+	                <entry><key><value>name</value></key><value>daily</value></entry>
+	                <entry><key><value>label</value></key><value>Daily</value></entry>
+	                <entry><key><value>levels</value></key><value>year, quarter, month, day</value></entry>
+	            </dict>
+	            <dict>
+	                <entry><key><value>name</value></key><value>weekly</value></entry>
+	                <entry><key><value>label</value></key><value>Weekly</value></entry>
+	                <entry><key><value>levels</value></key><value>year, week</value></entry>
+	            </dict>
+            </list>
+        </property> 
+
+        <property name="levels">
+            <list>
+                <ref object="cubetl.dim.datetime.year" />
+                <ref object="cubetl.dim.datetime.quarter" />
+                <ref object="cubetl.dim.datetime.month" />
+                <ref object="cubetl.dim.datetime.week" />
+                <ref object="cubetl.dim.datetime.day" />
+            </list>
+        </property>
+        
+    </object>
+
+    <object id="cubetl.dim.datetime.year" class="cubetl.olap.Dimension">
+        <property name="name" value="year" ></property>
+        <property name="label" value="Year" ></property>
+        <property name="role" value="year"></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>year</value></entry>
+                    <entry><key><value>label</value></key><value>Year</value></entry>
+                    <entry><key><value>type</value></key><value>Integer</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+    <object id="cubetl.dim.datetime.quarter" class="cubetl.olap.Dimension">
+        <property name="name" value="quarter" ></property>
+        <property name="label" value="Quarter" ></property>
+        <property name="role" value="quarter"></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>quarter</value></entry>
+                    <entry><key><value>label</value></key><value>Quarter</value></entry>
+                    <entry><key><value>type</value></key><value>Integer</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+    <object id="cubetl.dim.datetime.month" class="cubetl.olap.Dimension">
+        <property name="name" value="month" ></property>
+        <property name="label" value="Month" ></property>
+        <property name="role" value="month"></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>month</value></entry>
+                    <entry><key><value>label</value></key><value>Month</value></entry>
+                    <entry><key><value>type</value></key><value>Integer</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+    <object id="cubetl.dim.datetime.week" class="cubetl.olap.Dimension">
+        <property name="name" value="week" ></property>
+        <property name="label" value="Week" ></property>
+        <property name="role" value="week"></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>week</value></entry>
+                    <entry><key><value>label</value></key><value>Week</value></entry>
+                    <entry><key><value>type</value></key><value>Integer</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>
+    <object id="cubetl.dim.datetime.day" class="cubetl.olap.Dimension">
+        <property name="name" value="day" ></property>
+        <property name="label" value="Day" ></property>
+        <property name="role" value="day" ></property>
+        <property name="attributes">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>day</value></entry>
+                    <entry><key><value>label</value></key><value>Day</value></entry>
+                    <entry><key><value>type</value></key><value>Integer</value></entry>
+                </dict>
+            </list>
+        </property>
+    </object>        
+            
+</objects>

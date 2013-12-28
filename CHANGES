@@ -1,4 +1,6 @@
 0.2-devel
+    + Table module (standard interface with lookup() and other methods).
+    + Use dots (.) to separate namespaces in ids (ie cubetl.util.print)
     + Refactored OLAP model.
     + Quiet mode added to avoid helper printing nodes.
     + Syntax highlighting for print output (when output is a tty).
