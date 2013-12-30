@@ -84,7 +84,7 @@ class SQLTable(Component):
                 logger.info("SQLTable Totals  inserts/selects: %d/%d " % 
                             (SQLTable._inserts, SQLTable._selects))
         
-        if (SQLTable._inserts + SQLTable._selects > 0):
+        if (self._inserts + self._selects > 0):
             logger.info("SQLTable %-18s inserts/selects: %6d/%-6d " % 
                             (self.name, self._inserts, self._selects))
         if (self._unicode_errors > 0):

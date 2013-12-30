@@ -33,7 +33,7 @@ class CachedSQLTable(SQLTable):
     def finalize(self, ctx):
         
         if (self.cache_hits + self.cache_misses > 0):
-            logger.info ("%s  hits/misses: %d/%d (%.2f %)" % (self, self.cache_hits, self.cache_misses, self.cache_hits / (self.cache_hits + self.cache_misses)))
+            logger.info ("%s  hits/misses: %d/%d (%.2f%%)" % (self, self.cache_hits, self.cache_misses, float(self.cache_hits) / (self.cache_hits + self.cache_misses) * 100))
         
         super(CachedSQLTable, self).finalize(ctx)
         
@@ -96,7 +96,8 @@ class CachedQueryLookup(QueryLookup):
         
     def finalize(self, ctx):
         
-        logger.info ("%s  hits/misses: %d/%d" % (self, self.cache_hits, self.cache_misses))
+        if (self.cache_hits + self.cache_misses > 0):
+            logger.info ("%s  hits/misses: %d/%d (%.2f%%)" % (self, self.cache_hits, self.cache_misses, float(self.cache_hits) / (self.cache_hits + self.cache_misses) * 100))
         
         super(CachedQueryLookup, self).finalize(ctx)
         
