@@ -10,18 +10,18 @@
             <list>
             
                 <object class="cubetl.fs.DirectoryLister">
-			        <property name="path" value="/" />
-			        <!-- <property name="filter_re" value=".*.xml" />  -->
-			    </object>
-			    
-	           <object class="cubetl.script.Script">
-			        <property name="code"><value><![CDATA[
+                    <property name="path" value="/" />
+                    <!-- <property name="filter_re" value=".*.xml" />  -->
+                </object>
+                
+               <object class="cubetl.script.Script">
+                    <property name="code"><value><![CDATA[
 import random
 m["id"] = text.slugu(m["filename"])
 m["fruit"] = random.choice(['apples', 'oranges', 'bananas'])
 m["number"] = random.randint(0,10)
-			        ]]></value></property>
-			    </object>     
+                    ]]></value></property>
+                </object>     
                 
                 
                 <ref object="cubetl.util.print" />
