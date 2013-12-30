@@ -44,6 +44,8 @@ class Print(Node):
     
     def __init__(self):
         
+        super(Print, self).__init__()
+        
         self.eval = None
         
         self.truncate_line = 120
@@ -73,16 +75,16 @@ class Print(Node):
             res = self._prepare_res(obj)
         
             if (self.truncate_line):
-                truncated = ""
+                truncated = []
                 for line in res.split("\n"):
                     if (len(line) > self.truncate_line):
                         line = line[:self.truncate_line - 2] + ".."
-                    truncated = truncated + line + "\n"
-                res = truncated
+                    truncated.append(line) 
+                res = "\n".join(truncated)
 
                         
             if sys.stdout.isatty():                    
-                print highlight(res, self._lexer, self._formatter)
+                print highlight(res, self._lexer, self._formatter) #[:-1]
                 #print res
             else:
                 print res
@@ -96,6 +98,8 @@ class PrettyPrint(Print):
     
     def __init__(self):
         
+        super(PrettyPrint, self).__init__()
+        
         self.depth = 2
         self.indent = 4
         
@@ -105,10 +109,11 @@ class PrettyPrint(Print):
         
         super(PrettyPrint, self).initialize(ctx)
         
-        self._pp = pprint.PrettyPrinter(indent=self.indent, depth = self.depth)
+        self._pp = pprint.PrettyPrinter(indent=self.indent, depth=self.depth)
         
     def _prepare_res(self, obj):
     
+        #res = str(obj)
         res = self._pp.pformat(obj)
             
         return res

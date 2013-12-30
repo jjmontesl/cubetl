@@ -87,25 +87,27 @@ class Bootstrap:
                     sys.exit(2)
                 logger.debug("Setting context property from command line: %s = %s" % (key, value))
                 ctx.props[key] = value
+            elif o == "-m":
+                (key, value) = self._split_keyvalue(a)
+                if (key == None):
+                    print ("Invalid attribute key=value definition (%s)" % (value))
+                    self.usage()
+                    sys.exit(2)
+                logger.debug("Setting message attribute from command line: %s = %s" % (key, value))
+                ctx.start_message[key] = value
 
-        
-        if (len(arguments) < 1):
-            print ("A start process can be specified.")
-            self.usage()
-            sys.exit(2)
-        
         for argument in arguments:
             if (argument.endswith('.xml')):
                 ctx.config_files.append(argument)
             else:
-                if (ctx.startprocess == None):
-                    ctx.startprocess = argument
+                if (ctx.start_node == None):
+                    ctx.start_node = argument
                 else:
                     print ("Only one start node can be specified (second found: '%s')" % (argument))
                     self.usage()
                     sys.exit(2) 
         
-        if (ctx.startprocess == None):
+        if (ctx.start_node == None):
             print "One starting node must be specified, but none found."
             self.usage()
             sys.exit(2)
@@ -160,22 +162,21 @@ class Bootstrap:
 
         # Launch process
         try:
-            process = cubetl.container.get_object(ctx.startprocess)
+            process = cubetl.container.get_object(ctx.start_node)
         except KeyError, e:
-            logger.error ("Start process '%s' not found in configuration" % ctx.startprocess)
+            logger.error ("Start process '%s' not found in configuration" % ctx.start_node)
             sys.exit(1)
             
 
         count = 0
-        source = { }
         
         # Launch process and consume messages
         try:
             logger.debug ("Initializing components")
             ctx.comp.initialize(process)
             
-            logger.info ("Processing %s" % ctx.startprocess)
-            msgs = ctx.comp.process(process, source)
+            logger.info ("Processing %s" % ctx.start_node)
+            msgs = ctx.comp.process(process, ctx.start_message)
             for m in msgs:
                 count = count + 1
             

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+               http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+
+    
+    <object id="example.process.directorylister" class="cubetl.flow.Chain">
+        <property name="steps">
+            <list>
+            
+                <object class="cubetl.fs.DirectoryLister">
+			        <property name="path" value="/" />
+			        <!-- <property name="filter_re" value=".*.xml" />  -->
+			    </object>
+			    
+	           <object class="cubetl.script.Script">
+			        <property name="code"><value><![CDATA[
+import random
+m["id"] = text.slugu(m["filename"])
+m["fruit"] = random.choice(['apples', 'oranges', 'bananas'])
+m["number"] = random.randint(0,10)
+			        ]]></value></property>
+			    </object>     
+                
+                
+                <ref object="cubetl.util.print" />
+                
+            </list>
+        </property>  
+    </object>
+
+</objects>

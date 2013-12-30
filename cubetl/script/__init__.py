@@ -23,7 +23,9 @@ class Script(Node):
     def process(self, ctx, m):
 
         try:
-            exec self.code in { "m": m, "ctx": ctx, "cubetl": cubetl, "refs": self.refs, "logger": logger }
+            e_locals = { "m": m, "ctx": ctx, "refs": self.refs, "logger": logger }
+            e_globals = ctx._globals
+            exec (self.code, e_locals, e_globals)
         except (Exception) as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             #logger.error("Error evaluating expression %s on data: %s" % (expr, m))

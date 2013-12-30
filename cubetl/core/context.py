@@ -30,12 +30,14 @@ class Context():
         
         self.config_files = []     
         
-        self.startprocess = None
+        self.start_node = None
+        self.start_message = {}
         
         self.props = {}
         
         self._globals = {
-                         "text": text
+                         "text": text,
+                         "cubetl": cubetl
                          } 
         
         self._compiled = LRUCache(512)  # TODO: Configurable
