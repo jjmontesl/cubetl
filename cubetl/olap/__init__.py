@@ -22,7 +22,6 @@ class Dimension(Component):
         self.role = None
         
     def initialize(self, ctx):
-        logger.debug("Initializing %s" % self.name)
         super(Dimension, self).initialize(ctx)
         
         if (self.label == None): self.label = self.name
@@ -32,7 +31,8 @@ class Dimension(Component):
                     attr["label"] = self.label
                 else:
                     attr["label"] = attr["name"]
-        
+
+    """        
     def has_attribute(self, search):
         return (search in [attr["name"] for attr in self.attributes])
     
@@ -45,7 +45,7 @@ class Dimension(Component):
             raise Exception("Could not find attribute '%s' in dimension %s" % (search, self.name))
         
         return att[0]
-    
+    """
 
 class HierarchyDimension(Dimension):
     """A non-flat dimension, forming one or more hierarchies.
@@ -61,7 +61,6 @@ class HierarchyDimension(Dimension):
         self.hierarchies = []
         
     def initialize(self, ctx):
-        logger.debug("Initializing %s" % self.name)
         super(HierarchyDimension, self).initialize(ctx)
         
         if (len(self.attributes) > 0):
@@ -86,11 +85,11 @@ class AliasDimension(Dimension):
         super(Dimension, self).__init__()
         
         self.dimension = None
+        self.role = None
         
     def initialize(self, ctx):
         
-        logger.debug("Initializing %s" % self.name)
-        super(Dimension, self).initialize(ctx)
+        #super(Dimension, self).initialize(ctx)
         
         ctx.comp.initialize(self.dimension)
         
@@ -101,22 +100,24 @@ class AliasDimension(Dimension):
         
     def finalize(self, ctx):
         ctx.comp.finalize(self.dimension)
-        super(AliasDimension, self).finalize(ctx)        
-        
+        #super(AliasDimension, self).finalize(ctx)        
+    
+    """    
     def has_attribute(self, search):
         return self.dimension.has_attribute(search)
     
     def attribute(self, search):
         return self.dimension.attribute(self, search)
+    """
     
     def __getattr__(self, attr):
-        if (attr in ["label", "name", "dimension"]):
+        if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__getattr__(attr)
         else:
             return getattr(self.dimension, attr)
     
     def __setattr__(self, attr, value):
-        if (attr in ["label", "name", "dimension"]):
+        if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__setattr__(attr, value)
         else:
             return setattr(self.dimension, attr, value) 
@@ -153,6 +154,10 @@ class FactDimension(Dimension):
         
         self.fact = None
         
+        self.dimensions = []
+        self.attributes = []
+        self.measures = []
+        
     def finalize(self, ctx):
         ctx.comp.finalize(self.fact)
         super(FactDimension, self).finalize(ctx)
@@ -164,13 +169,20 @@ class FactDimension(Dimension):
         
         if (len(self.attributes) > 0):
             raise Exception("Cannot define attributes for a FactDimension (it's defined by the linked fact)")
+        
+        self.dimensions = self.fact.dimensions
+        self.measures = self.fact.measures
+        self.attributes = self.fact.attributes
+        
 
+    """
     def attribute(self, search):
         att = [attr for attr in self.fact.attributes if attr["name"] == search]
         if (len(att) != 1):
             raise Exception("Could not find attribute %s in fact dimension %s" % (search, self.name))
         
         return att[0]
+    """
 
 
         
@@ -234,8 +246,9 @@ class OlapMapper(Component):
         """
         
         for mapper in self.mappers:
-            if (mapper.entity.name == entity.name):
-                return mapper
+            #if (mapper.entity.name == entity.name):
+                if (mapper.entity == entity):
+                    return mapper
                 
         for inc in self.include:
             mapper = inc.entity_mapper(entity, False)

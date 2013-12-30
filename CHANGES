@@ -1,4 +1,8 @@
-0.2-devel
+0.3-devel
+    
+0.2
+    + Cubes 0.10 export refactored and working.
+    + Support for mappings reuse. 
     + Table module (standard interface with lookup() and other methods).
     + Use dots (.) to separate namespaces in ids (ie cubetl.util.print)
     + Refactored OLAP model.
@@ -6,7 +10,7 @@
     + Syntax highlighting for print output (when output is a tty).
     + Initial doc generation scripts.
     + Added basic initial CSV support.
-    + Added config instrospection utils (cubetl-list-nodes...).
+    + Added config instrospection utils (cubetl.config.list-nodes...).
     + Added support for parameters in context and command line.
     + Implemented very basic template module (mako)
 0.1

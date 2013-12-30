@@ -80,11 +80,13 @@ class SQLTable(Component):
         
         if (not SQLTable._finalized):
             SQLTable._finalized = True
-            logger.info("SQLTable Totals  inserts/selects: %d/%d " % 
-                        (SQLTable._inserts, SQLTable._selects))
+            if (SQLTable._inserts + SQLTable._selects > 0):
+                logger.info("SQLTable Totals  inserts/selects: %d/%d " % 
+                            (SQLTable._inserts, SQLTable._selects))
         
-        logger.info("SQLTable %-18s inserts/selects: %6d/%-6d " % 
-                        (self.name, self._inserts, self._selects))
+        if (SQLTable._inserts + SQLTable._selects > 0):
+            logger.info("SQLTable %-18s inserts/selects: %6d/%-6d " % 
+                            (self.name, self._inserts, self._selects))
         if (self._unicode_errors > 0):
             logger.warn("SQLTable %s found %d warnings assigning non-unicode fields to unicode columns" % 
                         (self.name, self._unicode_errors))
@@ -99,7 +101,7 @@ class SQLTable(Component):
         
         ctx.comp.initialize(self.connection) 
         
-        logger.debug("Loading table %s on %r" % (self.name, self))
+        logger.debug("Loading table %s on %s" % (self.name, self))
         
         self.sa_metadata = MetaData()
         self.sa_table = Table(self.name, self.sa_metadata)

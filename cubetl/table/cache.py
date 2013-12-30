@@ -54,7 +54,7 @@ class CachedTableLookup(TableLookup):
             self._cache.put(cache_key, result)
 
         if (result):
-            Eval.process_mappings(ctx, m, self.mappings, result)
+            Eval.process_evals(ctx, m, self.mappings, result)
         else:
             m.update({ k: ctx.interpolate(m, v) for k,v in self.default.items() })
 

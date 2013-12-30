@@ -21,7 +21,8 @@ class Bootstrap:
         
         # In absence of file config
         defaul_level = logging.INFO if ctx.debug == False else logging.DEBUG  
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=defaul_level)
+        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=defaul_level)
+        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=defaul_level)
         #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
         
         springpython_logger = logging.getLogger("springpython")
@@ -37,12 +38,18 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print "cubetl [-d] [-q] [-p property=value ...] [-m attribute=value] [config.xml ...] <start-node>"
+        print "cubetl [-dd] [-q] [-h] [-p property=value] [-m attribute=value] [config.xml ...] <start-node>"
         print ""
         print "    -p   set a context property"
         print "    -m   set an attribute for the start message"
         print "    -d   debug mode (can be used twice for more debug)"
-        print "    -q   quiet mode (print utils disabled)"        
+        print "    -q   quiet mode (bypass print nodes)"
+        print "    -h   show this help and exit"
+        print ""
+        print "  Internal nodes: "
+        print "      cubetl.config.list-nodes"
+        print "      cubetl.config.list-components"
+        print ""        
 
     def _split_keyvalue(self, text):
         """Return key=value pair, or key=None if format is incorrect
@@ -55,13 +62,16 @@ class Bootstrap:
     def parse_args(self, ctx):
         
         try:
-            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:dq", [ ])
+            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:dqh", [ "help"])
         except getopt.GetoptError as err:
             print str(err) 
             self.usage()
             sys.exit(2)
             
         for o,a  in opts:
+            if o in ("-h", "--help"):
+                self.usage()
+                sys.exit(0)
             if o == "-d":
                 if (ctx.debug):
                     ctx.debug2 = True
@@ -94,6 +104,11 @@ class Bootstrap:
                     print ("Only one start node can be specified (second found: '%s')" % (argument))
                     self.usage()
                     sys.exit(2) 
+        
+        if (ctx.startprocess == None):
+            print "One starting node must be specified, but none found."
+            self.usage()
+            sys.exit(2)
         
 
     def init_container(self, ctx):
@@ -131,7 +146,7 @@ class Bootstrap:
         # Init logging
         self.configure_logging(ctx)
         logger = logging.getLogger(__name__)
-        logger.info ("Starting CubETL")
+        logger.info ("Starting %s" % cubetl.APP_NAME_VERSION)
         logger.debug ("Debug logging level enabled")
         
         # TODO: Character encoding considerations? warnings?
@@ -156,7 +171,7 @@ class Bootstrap:
         
         # Launch process and consume messages
         try:
-            logger.info ("Initializing components")
+            logger.debug ("Initializing components")
             ctx.comp.initialize(process)
             
             logger.info ("Processing %s" % ctx.startprocess)
@@ -173,8 +188,6 @@ class Bootstrap:
             
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            if (ctx.debug):
-                traceback.print_exception(exc_type, exc_value, exc_traceback)
-
             logger.fatal("Error during process: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
             

@@ -66,6 +66,7 @@ class Filter(Node):
         super(Filter, self).__init__()
         
         self.condition = None
+        self.message = None
     
     def process(self, ctx, m):
 
@@ -75,7 +76,10 @@ class Filter(Node):
         if (parsebool(ctx.interpolate(m, self.condition))):
             yield m
         else:
-            if (ctx.debug2): logger.debug("Filtering out message")
+            if (self.message):
+                logger.info(ctx.interpolate(m, self.message))
+            elif (ctx.debug2): 
+                logger.debug("Filtering out message")
             return
 
         
@@ -128,7 +132,7 @@ class SplitEval(Node):
             
             m = ctx.copy_message(mo)
 
-            Eval.process_mappings(ctx, m, instance)
+            Eval.process_evals(ctx, m, instance)
             
             yield m
                   

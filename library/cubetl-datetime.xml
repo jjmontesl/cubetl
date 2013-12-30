@@ -110,4 +110,42 @@
         </property>
     </object>        
             
+    <object id="cubetl.mappings.datetime.date" class="cubetl.core.Mappings" >
+        <property name="mappings">
+            <list>
+                <dict>
+                    <entry><key><value>name</value></key><value>id</value></entry>
+                    <!-- <entry><key><value>column</value></key><value>date_published_id</value></entry>  -->
+                    <entry><key><value>value</value></key><value>${ text.slugu(m["_cubetl_datetime_date"].strftime('%Y-%m-%d')) }</value></entry>
+                    <entry><key><value>pk</value></key><value>True</value></entry>
+                    <entry><key><value>type</value></key><value>String</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>year</value></entry>
+                    <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].year }</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>quarter</value></entry>
+                    <entry><key><value>value</value></key><value>${ int(m["_cubetl_datetime_date"].month / 4) + 1 }</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>month</value></entry>
+                    <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].month }</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>week</value></entry>
+                    <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].strftime('%W') }</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>day</value></entry>
+                    <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].day }</value></entry>
+                </dict>
+                <dict>
+                    <entry><key><value>name</value></key><value>dow</value></entry>
+                    <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].isoweekday() }</value></entry>
+                </dict>
+            </list>
+        </property>        
+    </object>            
+            
 </objects>

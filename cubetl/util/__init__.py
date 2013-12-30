@@ -10,6 +10,7 @@ import pprint
 import simplejson
 import sys
 from pygments.lexers.agile import PythonLexer
+from pygments.formatters.terminal256 import Terminal256Formatter
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -42,7 +43,14 @@ class Print(Node):
     """
     
     def __init__(self):
+        
         self.eval = None
+        
+        self.truncate_line = 120
+        
+        self._lexer = PythonLexer()
+        self._formatter = TerminalFormatter()
+        #self._formatter = Terminal256Formatter()
     
     def initialize(self, ctx):
         
@@ -50,30 +58,46 @@ class Print(Node):
         
         logger.debug("Initializing Print node %s" % (self))    
     
+    def _prepare_res(self, obj):
+        return obj
+    
     def process(self, ctx, m):
         
         if (not ctx.quiet):
         
             if (self.eval):
-                print ctx.interpolate(m, self.eval)
+                obj = ctx.interpolate(m, self.eval)
             else:
-                print m
+                obj = m
+            
+            res = self._prepare_res(obj)
+        
+            if (self.truncate_line):
+                truncated = ""
+                for line in res.split("\n"):
+                    if (len(line) > self.truncate_line):
+                        line = line[:self.truncate_line - 2] + ".."
+                    truncated = truncated + line + "\n"
+                res = truncated
+
+                        
+            if sys.stdout.isatty():                    
+                print highlight(res, self._lexer, self._formatter)
+                #print res
+            else:
+                print res
         
         yield m
 
-class PrettyPrint(Node):
+class PrettyPrint(Print):
     """
-    This class simply prints a message. Accepts an 'eval' property to evaluate.
-    A default instance can be found in CubETL default objects.
+    This class prints an object using pretty print.
     """
     
     def __init__(self):
         
-        self.eval = None
-        
         self.depth = 2
         self.indent = 4
-        self.truncate_line = 120
         
         self._pp = None
     
@@ -81,36 +105,11 @@ class PrettyPrint(Node):
         
         super(PrettyPrint, self).initialize(ctx)
         
-        if (ctx.debug2): logger.debug("Initializing Print node %s" % (self))   
-         
         self._pp = pprint.PrettyPrinter(indent=self.indent, depth = self.depth)
         
-        self._python_lexer = PythonLexer()
-        self._terminal_formatter = TerminalFormatter()
+    def _prepare_res(self, obj):
     
-    def process(self, ctx, m):
-    
-        if (not ctx.quiet): 
-        
-            if (self.eval):
-                obj = ctx.interpolate(m, self.eval)
-            else:
-                obj = m
+        res = self._pp.pformat(obj)
             
-            res = self._pp.pformat(obj)
-            
-            if (self.truncate_line):
-                truncated = ""
-                for line in res.split("\n"):
-                    if (len(line) > self.truncate_line):
-                        line = line[:self.truncate_line - 2] + ".."
-                    truncated = truncated + line + "\n"
-                res = truncated 
-                        
-            if sys.stdout.isatty():                    
-                print highlight(res, self._python_lexer, self._terminal_formatter)
-            else:
-                print res
-        
-        yield m
+        return res
         

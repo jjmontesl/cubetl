@@ -1,11 +1,11 @@
 import cubetl
 from abc import ABCMeta, abstractmethod
-from cubetl.core import Component, Node
+from cubetl.core import Component, Node, Mappings
 from cubetl.functions.text import parsebool
 from cubetl.sql import SQLTable
 from cubetl.sql.cache import CachedSQLTable
 import logging
-from yaml.events import MappingStartEvent
+from cubetl.script import Eval
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 class TableMapper(Component):
     
     __metaclass__ = ABCMeta
+    
+    STORE_MODE_LOOKUP = "lookup"
+    STORE_MODE_INSERT = "insert"
+    STORE_MODE_UPSERT = "upsert"
     
     def __init__(self):
         
@@ -24,13 +28,16 @@ class TableMapper(Component):
         self.connection = None
         self.table = None
         
+        self.eval = []
         self.mappings = []
         
         self.lookup_cols = None
         
         self.auto_store = None
+        self.store_mode = "lookup"
         
         self._sqltable = None
+        self._lookup_changed_fields = []
         
         self.olapmapper = None    
 
@@ -50,19 +57,26 @@ class TableMapper(Component):
                   "entity": self.entity,
                   "name": self.entity.name,
                   "column": self.entity.name + "_id",
-                  "value": pk['value'], # '${ m["' + self.entity.name + "_id" + '"] }',
-                  "type": ctype 
+                  "type": ctype, 
+                  #"value": '${ m["' + self.entity.name + "_id" + '"] }'
+                  "value": pk['value'] if (pk['value']) else '${ m["' + self.entity.name + "_id" + '"] }'
                  }]
     
     def _mappings(self, ctx):
+        """
+        Note: _ensure_mappings() shall be called only as the last
+        step in the eval resolution chain, to avoid setting defaults
+        before all consumers had an opportunity to override values.
+        """
+        
+        #logger.debug("Calculating eval (TableMapper) for %s" % self)
         
         mappings = [mapping.copy() for mapping in self.mappings]
-        self._ensure_mappings (ctx, mappings)
-        return mappings
+        return self._ensure_mappings(ctx, mappings)
     
     def _joins(self, ctx, master = None):
         """
-        Joins that can be done with this entity.
+        Joins related to this entity.
         """
         if (master != None):
             return [{
@@ -77,31 +91,42 @@ class TableMapper(Component):
     def _extend_mappings(self, ctx, mappings, newmappings):
         
         for nm in newmappings:
-            found = False
+            found = None
             for m in mappings:
-                if (not "entity" in m):
-                    raise Exception("No entity defined for mapping %s" % m)
-                if (not "entity" in nm):
-                    raise Exception("No entity defined for mapping %s" % nm)
-                if (not isinstance(m["entity"], Component)):
-                    raise Exception("No correct entity defined for mapping %s" % m)
-                if (not isinstance(nm["entity"], Component)):
-                    raise Exception("No correct entity defined for mapping %s" % nm)                
-                if (m["name"] == nm["name"] and m["entity"] == nm["entity"]):
-                    found = True
+                if (not "entity" in m): raise Exception("No entity defined for mapping %s" % m)
+                if (not "entity" in nm): raise Exception("No entity defined for mapping %s" % nm)
+                if (not isinstance(m["entity"], Component)): raise Exception("No correct entity defined for mapping %s" % m)
+                if (not isinstance(nm["entity"], Component)): raise Exception("No correct entity defined for mapping %s" % nm)                
+                
+                if (m["name"] == nm["name"] and m["entity"].name == nm["entity"].name):
+                    found = m
                     break
             
             if not found:
-                mappings.append(nm)        
+                mappings.append(nm)  
+            else:
+                # Update missing properties
+                if (not "type" in m and "type" in nm): m["type"] = nm ["type"]
+                if (not "value" in m and "value" in nm): m["value"] = nm ["value"]
+                if (not "label" in m and "label" in nm): m["label"] = nm ["label"]
+                if (not "column" in m and "column" in nm): m["column"] = nm ["column"]  
     
     def _ensure_mappings(self, ctx, mappings):
         
         for mapping in mappings:
             mapping["pk"] = (False if (not "pk" in mapping) else parsebool(mapping["pk"]))  
-            if (not "entity" in mapping): mapping["entity"] = self.entity  
             if (not "column" in mapping): mapping["column"] = mapping["name"]
             if (not "value" in mapping): mapping["value"] = None
+
+            if (mapping["pk"] and not "type" in mapping):
+                if (not "value" in mapping or mapping["value"] == None):
+                    mapping["type"] = "AutoIncrement"
+            
+            if (not "column" in mapping): mapping["column"] = mapping["name"]
             if (not "type" in mapping): mapping["type"] = "String"
+            
+        return mappings
+
                  
     def initialize(self, ctx):
         
@@ -114,11 +139,13 @@ class TableMapper(Component):
         self._sqltable.name = self.table
         self._sqltable.connection = self.connection
         
-        self._lookup_changed_fields = []
-
-        for mapping in self._mappings(ctx):
-            self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
+        Mappings.includes(ctx, self.mappings)
+        for mapping in self.mappings:
+            if (not "entity" in mapping): mapping["entity"] = self.entity
         
+        mappings = self._mappings(ctx)
+        for mapping in mappings:
+            self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
             
         # If lookup_cols is a string, split by commas
         if (isinstance(self.lookup_cols, basestring)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
@@ -126,9 +153,9 @@ class TableMapper(Component):
         # If no key, use pk()
         if (self.lookup_cols == None):
             pk = self.pk(ctx)
-            if (pk == None): raise Exception ("No pk (primary key) or lookup keys defined for %s " % self)
+            if ((pk == None) or (pk["type"] == "AutoIncrement")): raise Exception ("No lookup cols defined for %s " % self)
             self.lookup_cols = [ pk["name"] ]
-            
+        
         ctx.comp.initialize(self._sqltable)     
     
     def finalize(self, ctx):
@@ -147,13 +174,16 @@ class TableMapper(Component):
                     pk_mappings.append(mapping)
                         
         if (len(pk_mappings) > 1):
-            raise Exception("Entity %s has multiple primary keys mapped: %s" % (self.name, pk_mappings))
+            raise Exception("%s has multiple primary keys mapped: %s" % (self, pk_mappings))
         elif (len(pk_mappings) == 1):
             return pk_mappings[0]
         else:
             return None    
     
     def store(self, ctx, m):
+
+        # Resolve evals
+        Eval.process_evals(ctx, m, self.eval)
 
         # Store automatically or include dimensions
         if (self.auto_store != None):
@@ -170,22 +200,25 @@ class TableMapper(Component):
                 if (did != None): m[dim.name + "_id"] = did
 
         
-        logger.debug("Storing entity in %s (lookup: %s)" % (self, self.lookup_cols))
+        logger.debug("Storing entity in %s (mode: %s, lookup: %s)" % (self, self.store_mode, self.lookup_cols))
         
         data = {}
+        mappings = self._mappings(ctx)
 
         # First try to look it up
-        for mapping in self._mappings(ctx):
+        for mapping in mappings:
             if (mapping["column"] in self.lookup_cols):
                 if (mapping["type"] != "AutoIncrement"):
                     if (mapping["value"] == None):
                         data[mapping["column"]] = m[mapping["name"]]
                     else:
                         data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+
+        row = None
+        if (self.store_mode == TableMapper.STORE_MODE_LOOKUP):        
+            row = self._sqltable.lookup(ctx, data) 
         
-        row = self._sqltable.lookup(ctx, data) 
-        
-        for mapping in self._mappings(ctx):
+        for mapping in mappings:
             if (mapping["type"] != "AutoIncrement"):
                 if (mapping["value"] == None):
                     if (not mapping["name"] in m):
@@ -194,8 +227,13 @@ class TableMapper(Component):
                 else:
                     data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
 
+
         if (not row):
-            row = self._sqltable.insert(ctx, data)
+            if (ctx.debug2): logger.debug("Storing data in %s (data: %s)" % (self, data))
+            if (self.store_mode in [TableMapper.STORE_MODE_LOOKUP, TableMapper.STORE_MODE_INSERT]):
+                row = self._sqltable.insert(ctx, data)
+            else:
+                raise Exception("Update store mode used at %s (%s) not implemented (available 'lookup', 'insert')" % (self, self.store_mode))
         else:
             # Check row is identical
             for mapping in self._mappings(ctx):
@@ -211,11 +249,6 @@ class TableMapper(Component):
                             self._lookup_changed_fields.append(mapping["column"])
         
         return row[self.pk(ctx)["column"]]    
-    
-    
-    def attributes(self, ctx):
-        
-        pass
     
     
 class FactMapper(TableMapper):
@@ -241,7 +274,7 @@ class FactMapper(TableMapper):
         for measure in self.entity.measures:
             self._extend_mappings(ctx, mappings, [{ 
                                   "name": measure["name"] , 
-                                  "type": measure["type"] if ("type" in measure) else "Float",
+                                  "type": measure["type"] if ("type" in measure  and  measure["type"] != None) else "Float",
                                   "entity": self.entity
                                   }])
         for attribute in self.entity.attributes:
@@ -274,12 +307,17 @@ class DimensionMapper(TableMapper):
         
     def _mappings(self, ctx):
         
+        #logger.debug("Calculating eval (DimensionMapper) for %s" % self)
+        
         mappings = [mapping.copy() for mapping in self.mappings]
         for mapping in mappings:
             if (not "entity" in mapping): mapping["entity"] = self.entity
+        
         for attribute in self.entity.attributes:
+            
+            # Add dimension attributes as fields for the mapper if not existing
             mapping = { "name": attribute["name"], "entity": self.entity }
-            if ("type" in attribute): mapping["type"] = attribute["type"]
+            if ("type" in attribute and attribute["type"] != None): mapping["type"] = attribute["type"]
             self._extend_mappings(ctx, mappings, [ mapping ])
         
         self._ensure_mappings (ctx, mappings)
@@ -296,9 +334,9 @@ class CompoundDimensionMapper(TableMapper):
         self._created_mappers = []
 
     def initialize(self, ctx):
-        
-        super(CompoundDimensionMapper, self).initialize(ctx)
 
+        super(CompoundDimensionMapper, self).initialize(ctx)
+        
     def finalize(self, ctx):
         
         for cm in self._created_mappers:
@@ -307,17 +345,20 @@ class CompoundDimensionMapper(TableMapper):
     
     def _mappings(self, ctx):
         
+        #logger.debug("Calculating eval (CompoundDimensionMapper) for %s" % self)
+        
         if (len(self.dimensions) == 0):
             raise Exception("No dimensions found in %s" % self)
         
-        mappings = super(CompoundDimensionMapper, self)._mappings(ctx)
+        #eval = super(CompoundDimensionMapper, self)._mappings(ctx)
+        mappings = [mapping.copy() for mapping in self.mappings]
         
         for dimension in self.dimensions:
             dimension_mapper = self.olapmapper.entity_mapper(dimension, False)
             
             if (dimension_mapper == None):
                 # Create dimension mapper
-                logger.debug("No mapper found for %s in %s, creating a default EmbeddeDimension mapper for it." % (dimension, self))
+                logger.debug("No mapper found for %s in %s, creating a default embedded dimension mapper for it." % (dimension, self))
                 dimension_mapper = EmbeddedDimensionMapper()
                 dimension_mapper.entity = dimension
                 self.olapmapper.mappers.append(dimension_mapper)
@@ -329,12 +370,15 @@ class CompoundDimensionMapper(TableMapper):
             if (self.entity):
                 for mapping in dimension_mappings:
                     mapping["entity"] = self.entity
-            
+
             #for dm in dimension_mappings:
             #    dm["pk"] = False
+            #print [dimension["name"] + " " + dimension["type"] for dimension in eval]
+            #print [dimension["name"] + " " + dimension["type"] for dimension in dimension_mappings]
+             
             self._extend_mappings(ctx, mappings, dimension_mappings)
-        
-        return mappings    
+            
+        return self._ensure_mappings(ctx, mappings)    
 
 class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
     """This maps all dimension levels on a CompoundDimensionMapper.""" 
@@ -353,10 +397,6 @@ class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
             
         super(CompoundHierarchyDimensionMapper, self).initialize(ctx)
         
-    def _mappings(self, ctx):
-        
-        mappings = super(CompoundHierarchyDimensionMapper, self)._mappings(ctx)
-        return mappings
         
 class MultiTableHierarchyDimensionMapper(TableMapper):
     
@@ -382,7 +422,9 @@ class MultiTableHierarchyDimensionMapper(TableMapper):
         mappings = []
         for dimension in self.entity.levels:
             dimension_mapper = self.olapmapper.entity_mapper(dimension, False)
-            self._extend_mappings(ctx, mappings, dimension_mapper._mappings_join(ctx))
+            mappings_join = dimension_mapper._mappings_join(ctx)
+            #for mj in mappings_join: mj["entity"] = self.entity
+            self._extend_mappings(ctx, mappings, mappings_join)
             
         return mappings
     
@@ -447,58 +489,41 @@ class EmbeddedDimensionMapper(DimensionMapper):
         pass
 
 
-
-        
-"""
-class SQLFactDimensionMapper(SQLEmbeddedDimensionMapper):
+class FactDimensionMapper(FactMapper):
     
     def __init__(self):
         
-        super(SQLFactDimensionMapper, self).__init__()
-        
-        self.dimension = None
-        self.mappings = []
-
-    def finalize(self, ctx):
-        ctx.comp.finalize(self.olapmapper.getFactMapper(self.dimension.fact))
-        ctx.comp.finalize(self.dimension)
-        super(SQLFactDimensionMapper, self).finalize(ctx)
+        super(FactDimensionMapper, self).__init__()
         
     def initialize(self, ctx):
-        
-        ctx.comp.initialize(self.dimension)
-        ctx.comp.initialize(self.olapmapper.getFactMapper(self.dimension.fact))
-        
-        if (len(self.mappings) != 1):
-            raise Exception("SQLFactDimensionMapper must contain a single mapping for the Fact-to-Fact relation.")
-        
-        for mapping in self.mappings:
-            if (not (("name" in mapping) and (mapping["name"] == self.dimension.fact.name))):
-                logger.warn("Attribute 'name' for the mapping must exist and match the associated fact name: " + self.dimension.fact.name)
-            
-            mapping["name"] = self.dimension.fact.name
-            mapping["pk"] = False
 
-            if (not "column" in mapping): mapping["column"] = self.dimension.fact.name + "_id"
-            if (not "value" in mapping): mapping["value"] = None 
-            if (not "type" in mapping): 
-                # Infer type
-                mapping["type"] = self.olapmapper.getFactMapper(self.dimension.fact).pk(ctx)["type"]
-                
-        super(SQLFactDimensionMapper, self).initialize(ctx)
-                 
-    def pk(self, ctx):
-        raise Exception("Method pk() not implemented for %s" % self)
-    
+        if (not self.entity):
+            raise Exception("No entity defined for %s" % self)
+
+        if (self.table):
+            raise Exception("Cannot define table in %s." % self)
+        if (self.connection):
+            raise Exception("Cannot define connection in %s." % self)        
+
+
+        # No call to constructor. No need for connection and table 
+        ctx.comp.initialize(self.entity)
+        
+        # Check no PK in initialize?
+        self.table = self.olapmapper.entity_mapper(self.entity.fact).table
+        
+        # If lookup_cols is a string, split by commas
+        if (self.lookup_cols != None):
+            raise Exception("No lookup_cols can be defined for an embedded dimension.")
+
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.entity)
+        # Do no call super (no table or connection)
+
     def store(self, ctx, data):
-        
-        mapping = self.mappings[0]
-        
-        if (mapping["value"] == None):
-            return data[mapping["column"]]
-        else:
-            return ctx.interpolate(data, mapping["value"])
-        
-"""
+        # TODO: This shall not even be called, and raise an exception instead?
+        #raise Exception ("Cannot store an embedded dimension") 
+        pass
 
+        
 

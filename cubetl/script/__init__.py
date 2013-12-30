@@ -1,6 +1,12 @@
 import logging
 from cubetl.core import Node
 import cubetl
+import sys
+import inspect
+from inspect import isclass
+from aptsources.distinfo import Component
+import traceback
+from cubetl.core.context import Context
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -13,10 +19,16 @@ class Script(Node):
         
         self.script = None
         self.refs = {}
-    
+        
     def process(self, ctx, m):
 
-        exec self.code in { "m": m, "ctx": ctx, "cubetl": cubetl, "refs": self.refs }
+        try:
+            exec self.code in { "m": m, "ctx": ctx, "cubetl": cubetl, "refs": self.refs, "logger": logger }
+        except (Exception) as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            #logger.error("Error evaluating expression %s on data: %s" % (expr, m))
+            #raise Exception('Error evaluating script at %s:\n%s' % (self, ("".join(traceback.format_exception_only(exc_type, exc_value)))) ) 
+            raise
         
         yield m
         
@@ -30,37 +42,48 @@ class Eval(Node):
         
         super(Eval, self).__init__()
     
-        self.mappings = []
+        self.eval = []
+    
+    def initialize(self, ctx):
+        super(Eval, self).initialize(ctx)
+        
+        if (hasattr(self, "mappings")):
+            raise Exception ("%s config contains a mappings element which is not allowed (use 'eval' element)" % self)
+        
     
     @staticmethod
-    def process_mappings(ctx, m, mappings, data = {}):
+    def process_evals(ctx, m, evals, data = {}):
         
-        if (len(mappings) == 0):
+        # Accept a single dict as eval (convert to list)
+        if (isinstance(evals, dict)):
+            evals = [ evals ] 
+        
+        if (len(evals) == 0):
             if (m != data):
                 m.update(data)
         
         else:
         
-            for mapping in mappings:
+            for evalitem in evals:
                 
-                if ("value" in mapping):
-                    m[mapping["name"]] = ctx.interpolate(m, mapping["value"], { "d": data })
+                if ("value" in evalitem):
+                    m[evalitem["name"]] = ctx.interpolate(m, evalitem["value"], data)
                 else:
-                    if (mapping["name"] in data):
-                        m[mapping["name"]] = data[mapping["name"]]
+                    if (evalitem["name"] in data):
+                        m[evalitem["name"]] = data[evalitem["name"]]
                     else:
-                        if (not "default" in mapping): 
-                            logging.warn("Mapping with no value and no default: %s" % mapping)
-                        m[mapping["name"]] = None
+                        if (not "default" in evalitem): 
+                            logging.warn("Mapping with no value and no default: %s" % evalitem)
+                        m[evalitem["name"]] = None
                 
-                if ("default" in mapping):
-                    if (not m[mapping["name"]]):
-                        m[mapping["name"]] = ctx.interpolate(data, mapping["default"])  
+                if ("default" in evalitem):
+                    if (not m[evalitem["name"]]):
+                        m[evalitem["name"]] = ctx.interpolate(data, evalitem["default"])  
             
 
     def process(self, ctx, m):
 
-        Eval.process_mappings(ctx, m, self.mappings)
+        Eval.process_evals(ctx, m, self.eval)
             
         yield m
         

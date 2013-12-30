@@ -13,6 +13,10 @@ def slug(value):
 def slugu(value):
     return slug(value).replace("-", "_")
 
+def re_search(pattern, text, match = 0):
+    m = re.search(pattern, text)
+    return m.group(match)
+
 def parsebool (value):
     
     if (isinstance(value, bool)): return value
