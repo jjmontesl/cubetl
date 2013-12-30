@@ -134,7 +134,7 @@
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>week</value></entry>
-                    <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].strftime('%W') }</value></entry>
+                    <entry><key><value>value</value></key><value>${ int(m["_cubetl_datetime_date"].strftime('%W')) }</value></entry>
                 </dict>
                 <dict>
                     <entry><key><value>name</value></key><value>day</value></entry>
