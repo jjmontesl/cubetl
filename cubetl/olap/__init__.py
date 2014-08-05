@@ -31,7 +31,7 @@ class Dimension(Component):
                     attr["label"] = self.label
                 else:
                     attr["label"] = attr["name"]
-
+        
     """        
     def has_attribute(self, search):
         return (search in [attr["name"] for attr in self.attributes])
@@ -144,6 +144,10 @@ class Fact(Component):
         for attr in self.attributes:
             if (not "label" in attr):
                 attr["label"] = attr["name"] 
+                
+        for measure in self.measures:
+            if (not "label" in measure):
+                measure["label"] = measure["name"]
 
 
 class FactDimension(Dimension):

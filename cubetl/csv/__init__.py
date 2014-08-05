@@ -27,6 +27,7 @@ class CsvReader(Node):
         self.row_delimiter = "\n"
         
         self.count = 0
+        self._linenumber = 0
 
     def _utf_8_encoder(self, unicode_csv_data):
         for line in unicode_csv_data:
@@ -46,17 +47,20 @@ class CsvReader(Node):
             else:
                 header = self.headers
         
-        
         #census_year = 0
         rows = iter (self._utf_8_encoder(data.split(self.row_delimiter)))
         
         reader = csv.reader(rows, delimiter = self.delimiter)
         for row in reader:
             
+            self._linenumber = self._linenumber + 1            
+
             if (header == None):
                 header = [v.encode('utf-8') for v in row]
                 logger.debug ("CSV header is: %s" % header)
                 continue
+
+            if (self._linenumber == 1) and (self.header): continue
             
             #arow = {}
             if (len(row) > 0):

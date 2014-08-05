@@ -170,8 +170,16 @@ class Cubes10ModelWriter(Node):
         for measure in mapper.entity.measures:
             c_measure = {}
             c_measure["name"] = measure["name"]
-            c_measure["aggregations"] = ["sum", "avg", "max", "min"]
+            c_measure["label"] = measure["label"]
             cube["measures"].append(c_measure)
+        
+        cube["aggregates"] = [ ]
+        for measure in mapper.entity.measures:
+            for func in ["sum", "avg", "max", "min"]:
+                c_aggregate = { "name": measure["name"] + "_" + func, "label": measure["name"] + " " + func, "function": func, "measure": measure["name"] }
+                cube["aggregates"].append(c_aggregate)
+        c_aggregate = { "name": "record_count", "label": "Record Count", "function": "count" }
+        cube["aggregates"].append(c_aggregate)
         
         # Joins
         cube["joins"] = self._get_joins(ctx, mapper)
