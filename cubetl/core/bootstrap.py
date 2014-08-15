@@ -10,6 +10,7 @@ import sys
 import traceback
 from cubetl.core import ContextProperties
 import yaml
+from cubetl import APP_NAME_VERSION
 
 
 
@@ -46,6 +47,7 @@ class Bootstrap:
         print "    -d   debug mode (can be used twice for more debug)"
         print "    -q   quiet mode (bypass print nodes)"
         print "    -h   show this help and exit"
+        print "    -v   print version and exit"
         print ""
         print "  Internal nodes: "
         print "      cubetl.config.list-nodes"
@@ -63,7 +65,7 @@ class Bootstrap:
     def parse_args(self, ctx):
         
         try:
-            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:dqh", [ "help"])
+            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:dqhv", [ "help", "version"])
         except getopt.GetoptError as err:
             print str(err) 
             self.usage()
@@ -72,6 +74,9 @@ class Bootstrap:
         for o,a  in opts:
             if o in ("-h", "--help"):
                 self.usage()
+                sys.exit(0)
+            if o in ("-v", "--version"):
+                print APP_NAME_VERSION
                 sys.exit(0)
             if o == "-d":
                 if (ctx.debug):
