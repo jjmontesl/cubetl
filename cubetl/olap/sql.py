@@ -83,7 +83,7 @@ class TableMapper(Component):
                   "master_entity": master,
                   "master_column": self.entity.name + "_id",
                   "detail_entity": self.entity,
-                  "detail_column": self.pk(ctx)['column'],
+                  "detail_column": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx)["column"]) if (hasattr(self.entity, "fact")) else self.pk(ctx)['column'],
                   }]
         else:
             return []
@@ -519,6 +519,7 @@ class FactDimensionMapper(FactMapper):
     def finalize(self, ctx):
         ctx.comp.finalize(self.entity)
         # Do no call super (no table or connection)
+
 
     def store(self, ctx, data):
         # TODO: This shall not even be called, and raise an exception instead?
