@@ -1,8 +1,10 @@
 0.3-devel
-    
+    + Added basic GeoIP support.
+    + Added RegExp processor.
+    + Support for cubes 1.0 export, including time roles.
 0.2
     + Cubes 0.10 export refactored and working.
-    + Support for mappings reuse. 
+    + Support for mappings reuse.
     + Table module (standard interface with lookup() and other methods).
     + Use dots (.) to separate namespaces in ids (ie cubetl.util.print)
     + Refactored OLAP model.

@@ -5,7 +5,7 @@ import itertools
 import re
 from cubetl.core import Node
 import time
-from cubetl.functions.text import parsebool
+from cubetl.text.functions import parsebool
 
 import psutil
 import os

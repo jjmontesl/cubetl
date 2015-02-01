@@ -11,7 +11,7 @@
         <property name="label" value="Date" ></property>
 
         <property name="role" value="date"></property>
-       
+
         <property name="hierarchies">
             <list>
 	            <dict>
@@ -25,7 +25,7 @@
 	                <entry><key><value>levels</value></key><value>year, week</value></entry>
 	            </dict>
             </list>
-        </property> 
+        </property>
 
         <property name="levels">
             <list>
@@ -36,7 +36,7 @@
                 <ref object="cubetl.dim.datetime.day" />
             </list>
         </property>
-        
+
     </object>
 
     <object id="cubetl.dim.datetime.year" class="cubetl.olap.Dimension">
@@ -108,8 +108,8 @@
                 </dict>
             </list>
         </property>
-    </object>        
-            
+    </object>
+
     <object id="cubetl.mappings.datetime.date" class="cubetl.core.Mappings" >
         <property name="mappings">
             <list>
@@ -145,7 +145,7 @@
                     <entry><key><value>value</value></key><value>${ m["_cubetl_datetime_date"].isoweekday() }</value></entry>
                 </dict>
             </list>
-        </property>        
-    </object>            
-            
+        </property>
+    </object>
+
 </objects>
