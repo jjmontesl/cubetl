@@ -10,8 +10,11 @@ from cubetl.script import Eval
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-# Abstract class
+
 class TableMapper(Component):
+    """
+    Abstract class.
+    """
 
     __metaclass__ = ABCMeta
 
@@ -19,27 +22,24 @@ class TableMapper(Component):
     STORE_MODE_INSERT = "insert"
     STORE_MODE_UPSERT = "upsert"
 
-    def __init__(self):
+    entity = None
 
-        super(TableMapper, self).__init__()
+    connection = None
+    table = None
 
-        self.entity = None
+    eval = []
+    mappings = []
 
-        self.connection = None
-        self.table = None
+    lookup_cols = None
 
-        self.eval = []
-        self.mappings = []
+    auto_store = None
+    store_mode = "lookup"
 
-        self.lookup_cols = None
+    _sqltable = None
+    _lookup_changed_fields = []
 
-        self.auto_store = None
-        self.store_mode = "lookup"
+    olapmapper = None
 
-        self._sqltable = None
-        self._lookup_changed_fields = []
-
-        self.olapmapper = None
 
     def __str__(self, *args, **kwargs):
 
@@ -141,7 +141,8 @@ class TableMapper(Component):
 
         Mappings.includes(ctx, self.mappings)
         for mapping in self.mappings:
-            if (not "entity" in mapping): mapping["entity"] = self.entity
+            if (not "entity" in mapping):
+                mapping["entity"] = self.entity
 
         mappings = self._mappings(ctx)
         for mapping in mappings:
@@ -253,9 +254,6 @@ class TableMapper(Component):
 
 class FactMapper(TableMapper):
 
-    def __init__(self):
-
-        super(FactMapper, self).__init__()
 
     def _mappings(self, ctx):
 
@@ -303,13 +301,8 @@ class FactMapper(TableMapper):
 
 class DimensionMapper(TableMapper):
 
-    def __init__(self):
-
-        super(DimensionMapper, self).__init__()
 
     def _mappings(self, ctx):
-
-        logger.debug("Returning mappings for %s" % self)
 
         mappings = [mapping.copy() for mapping in self.mappings]
         for mapping in mappings:
@@ -452,11 +445,7 @@ class MultiTableHierarchyDimensionMapper(TableMapper):
 
 class EmbeddedDimensionMapper(DimensionMapper):
 
-    def __init__(self):
-
-        super(EmbeddedDimensionMapper, self).__init__()
-
-        self.key = ""
+    key = ""
 
     def finalize(self, ctx):
         ctx.comp.finalize(self.entity)

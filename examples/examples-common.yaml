@@ -1,0 +1,28 @@
+
+---
+
+!!python/object:cubetl.sql.Connection
+id: example.sql.connection
+url: sqlite:///cubetl-examples.sqlite
+#url: mysql://user@localhost/database?charset=utf8
+
+---
+
+!!python/object:cubetl.core.ContextProperties
+id: example.contextproperties
+path_data: .
+---
+
+!!python/object:cubetl.sql.Transaction
+id: example.sql.transaction
+connection: !ref example.sql.connection
+# enabled: False
+
+---
+
+!!python/object:cubetl.util.log.LogPerformance
+id: example.logperformance
+path_data: .
+
+---
+

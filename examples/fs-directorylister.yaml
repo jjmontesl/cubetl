@@ -1,0 +1,23 @@
+
+---
+
+!!python/object:cubetl.flow.Chain
+id: example.directorylister
+
+steps:
+
+- !!python/object:cubetl.fs.DirectoryLister
+  path: /
+
+- !!python/object:cubetl.script.Script
+  code: |
+
+    import random
+    m["id"] = text.slugu(m["path"])
+    m["fruit"] = random.choice(['apples', 'oranges', 'bananas'])
+    m["number"] = random.randint(0,10)
+
+- !ref cubetl.util.print
+
+---
+

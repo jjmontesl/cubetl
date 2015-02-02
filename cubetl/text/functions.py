@@ -18,10 +18,10 @@ def re_search(pattern, text, match = 0):
     return m.group(match)
 
 def parsebool (value):
-    
+
     if (isinstance(value, bool)): return value
 
-    try:    
+    try:
         v = value.strip().lower()
         if (v == "true"):
             return True
@@ -31,22 +31,22 @@ def parsebool (value):
             raise Exception("Invalid boolean value '%s' (valid values are 'True' or 'False')" % value)
     except Exception, e:
         raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
-    
+
 def extract_date(value):
-    
+
     datetime = parser.parse(value, fuzzy = True)
     return datetime
 
 def extract_number(value):
-    
+
     if (value == None): return None
     if (isinstance(value, int)): return value
     if (isinstance(value, float)): return value
-        
+
     text = value
     text = re.sub(r'\&\#[0-9A-Fa-f]+', '', text)
     text = re.sub(r' +', ' ', text)
-    
+
     _pattern = r"""(?x)       # enable verbose mode (which ignores whitespace and comments)
         ^                     # start of the input
         [^\d+-\.]*            # prefixed junk
@@ -80,13 +80,13 @@ def extract_number(value):
         [^\d]*                # suffixed junk
         $                     # end of the input
     """
-    
+
     match = re.match(_pattern, text)
     if match is None or not (match.group("integer_part") or
                              match.group("decimal_part")):    # failed to match
         return None                      # consider raising an exception instead
 
-    
+
 
     num_str = match.group("number")      # get all of the number, without the junk
     sep = match.group("sep")
@@ -107,6 +107,6 @@ def extract_number(value):
         if (sep and sep != ' ' and sep_count == 1 ):
             return float (match.group("number").replace(sep, ".")) # regularize the decimal point
 
-    return int(num_str)   
+    return int(num_str)
 
 

@@ -15,11 +15,10 @@ logger = logging.getLogger(__name__)
 
 class DirectoryLister(Node):
 
-    def __init__(self):
+    path = None
+    filter_re = None
 
-        self.path = None
-        self.filter_re = None
-        self.name = "path"
+    name = "path"
 
     def process(self, ctx, m):
 
@@ -43,15 +42,14 @@ class DirectoryLister(Node):
 
 class FileReader(Node):
 
-    def __init__(self):
+    path = None
 
-        self.path = None
+    encoding = "detect"
+    encoding_errors = "strict" # strict, ignore, replace
+    encoding_abort = True
 
-        self.encoding = "detect"
-        self.encoding_errors = "strict" # strict, ignore, replace
-        self.encoding_abort = True
+    name = "data"
 
-        self.name = "data"
 
     def initialize(self, ctx):
 
@@ -107,9 +105,6 @@ class FileReader(Node):
 
 class FileLineReader(FileReader):
 
-    def __init__(self):
-
-        super(FileLineReader, self).__init__()
 
     def initialize(self, ctx):
 

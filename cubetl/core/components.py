@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class ComponentDescriptor():
     pass
 
+
 class Components():
 
     def __init__(self, context):

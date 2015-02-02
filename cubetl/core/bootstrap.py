@@ -1,15 +1,15 @@
 
 from cubetl.core.context import Context
-from springpython.config import XMLConfig
-from springpython.context import ApplicationContext
 import cubetl
 import getopt
 import logging
 import os
 import sys
 import traceback
+import yaml
 from cubetl.core import ContextProperties
 from cubetl import APP_NAME_VERSION
+from cubetl.core.container import Container
 
 
 
@@ -39,7 +39,7 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print "cubetl [-dd] [-q] [-h] [-p property=value] [-m attribute=value] [config.xml ...] <start-node>"
+        print "cubetl [-dd] [-q] [-h] [-p property=value] [-m attribute=value] [config.yaml ...] <start-node>"
         print ""
         print "    -p   set a context property"
         print "    -m   set an attribute for the start message"
@@ -102,7 +102,7 @@ class Bootstrap:
                 ctx.start_message[key] = value
 
         for argument in arguments:
-            if (argument.endswith('.xml')):
+            if (argument.endswith('.yaml')):
                 ctx.config_files.append(argument)
             else:
                 if (ctx.start_node == None):
@@ -120,11 +120,20 @@ class Bootstrap:
 
     def init_container(self, ctx):
 
-        try:
-            configs = [XMLConfig(os.path.dirname(os.path.realpath(__file__)) + "/../cubetl-context.xml")]
-            configs.extend ([XMLConfig(config_file) for config_file in ctx.config_files])
+        cubetl.container = Container()
 
-            cubetl.container = ApplicationContext( configs )
+        try:
+            configs = [os.path.dirname(os.path.realpath(__file__)) + "/../cubetl-context.yaml"]
+            configs.extend([config_file for config_file in ctx.config_files])
+
+            for config in configs:
+                stream = file(config, 'r')
+                for comp in yaml.load_all(stream):
+                    try:
+                        if comp != None:
+                            cubetl.container.add_component(comp)
+                    except Exception as e:
+                        raise Exception("Could not load config %s: %s" % (config, e))
 
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -137,8 +146,9 @@ class Bootstrap:
     def init_properties(self, ctx):
 
         # Returns all instances of MyClass and of its subclasses.
-        for obj in cubetl.container.get_objects_by_type(ContextProperties):
-            cubetl.container.get_object(obj).load_properties(ctx)
+        for obj in cubetl.container.components:
+            if isinstance(obj, ContextProperties):
+                obj.load_properties(ctx)
 
 
     def start(self, argv):
@@ -167,7 +177,7 @@ class Bootstrap:
 
         # Launch process
         try:
-            process = cubetl.container.get_object(ctx.start_node)
+            process = cubetl.container.get_component_by_id(ctx.start_node)
         except KeyError, e:
             logger.error ("Start process '%s' not found in configuration" % ctx.start_node)
             sys.exit(1)

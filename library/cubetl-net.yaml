@@ -1,0 +1,50 @@
+#
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.net.domain.tld
+name: tld
+label: TLD
+attributes:
+- name: tld
+- label: TLD
+- type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.net.domain.domain
+name: domain
+label: Domain
+attributes:
+- name: domain
+- label: Domain
+- type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.net.domain.subdomain
+name: subdomain
+label: Subdomain
+attributes:
+- name: subdomain
+- label: Subdomain
+- type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.net.domain3
+name: domain3
+label: Domain
+hierarchies:
+- name: domain3
+  label: Domain
+  levels: tld, domain, subdomain
+levels:
+- !ref cubetl.net.domain.tld
+- !ref cubetl.net.domain.domain
+- !ref cubetl.net.domain.subdomain
+

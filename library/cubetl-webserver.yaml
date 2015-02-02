@@ -1,0 +1,131 @@
+
+---
+
+!!python/object:cubetl.olap.AliasDimension
+id: cubetl.webserver.request.datetime
+label: Time
+dimension: !ref cubetl.dim.datetime.date
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.client_address
+name: client_address
+label: Client Address
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.client_domain
+name: client_domain
+label: Client Domain
+
+---
+
+!!python/object:cubetl.olap.AliasDimension
+id: cubetl.webserver.request.client_country
+name: client_country
+label: Client Country
+dimension: !ref cubetl.geo.contcountry
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.username
+name: username
+label: Username
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.method
+name: method
+label: Method
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.path
+name: path
+label: Path
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.protocol
+name: protocol
+label: Protocol
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.result
+name: result
+label: Result
+attributes:
+- name: code
+  label: Result Code
+  type: Integer
+- name: name
+  label: Result
+  type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.webserver.request.referer
+name: referer
+label: Referer
+
+---
+
+!!python/object:cubetl.olap.Fact
+id: cubetl.webserver.request
+name: web_request
+label: Web Request
+dimensions:
+- !ref cubetl.webserver.request.datetime
+- !ref cubetl.webserver.request.client_address
+#- !ref cubetl.webserver.request.client_domain
+#- !ref cubetl.webserver.request.client_country
+#- !ref cubetl.webserver.request.rlogname
+#- !ref cubetl.webserver.request.username
+
+#- !ref cubetl.webserver.request.method
+#- !ref cubetl.webserver.request.path
+#- !ref cubetl.webserver.request.protocol
+
+#- !ref cubetl.webserver.request.result
+
+# <!-- <ref object="cubetl.webserver.request.user_agent" /> levels type + version  -->
+#<!-- <ref object="cubetl.webserver.request.referer" />  2 levels domain + path -->
+#<!-- internal/external referer? -->
+#<!-- organic/etc referer? -->
+#<!-- search referer + search phrases facts + search terms facts -->
+#<!-- bots -->
+#<!-- mime types/grouped +  /   file transfers flag -->
+#                <!-- response size (small, medium, large...) -->
+#                <!--  first visit, last visit, entry pages/exit pages  -->
+#                <!--  visits / hists - track each user entry (ip+time /  no-referer??)  -->
+#                <!--  remove params from URL in process -->
+#                <!--  tracking javascript ??? (screen size, browser size, support, sessions, etc) -->
+
+measures:
+- name: served_bytes
+  type: Integer
+attributes:
+- name: user_agent_string
+  type: String
+# Contains method, url, params and protocol/version
+- name: verb
+  type: String
+
+---
+
+!!python/object:cubetl.text.RegExp
+id: cubetl.webserver.parse_apache_combined
+regexp: ([\d\.]+) (-) (-) \[(.*?)\] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)"
+names: address, rlogname, username, date, verb, result_code, served_bytes, referer, user_agent
+
+---
+

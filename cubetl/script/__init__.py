@@ -10,14 +10,11 @@ from cubetl.core.context import Context
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class Script(Node):
 
-    def __init__(self):
-
-        super(Script, self).__init__()
-
-        self.script = None
-        self.refs = {}
+    script = None
+    refs = {}
 
     def process(self, ctx, m):
 
@@ -32,6 +29,7 @@ class Script(Node):
             raise
 
         yield m
+
 
 class Eval(Node):
     """

@@ -1,0 +1,49 @@
+
+---
+
+!!python/object:cubetl.olap.OlapMapper
+id: cubetl.webserver.request.olapmapper
+mappers:
+- !!python/object:cubetl.olap.sql.EmbeddedDimensionMapper
+  entity: !ref cubetl.webserver.request.datetime
+  eval:
+  - name: _cubetl_datetime_date
+    value: ${ m['request_date'] }
+  include:
+  - !ref cubetl.datetime.mappings
+- !!python/object:cubetl.olap.sql.DimensionMapper
+  entity: !ref cubetl.webserver.request.client_address
+  table: client_address
+  connection: !ref example.sql.connection
+  mappings:
+  - name: address
+    value: ${ m["address"] }
+    pk: True
+    type: String
+- !!python/object:cubetl.olap.sql.FactMapper
+  entity: !ref cubetl.webserver.request
+  table: web_request
+  connection: !ref example.sql.connection
+  #store_mode: insert
+  lookup_cols: datetime
+  mappings:
+  - name: id
+    pk: True
+
+---
+
+!!python/object:cubetl.flow.Chain
+id: example.webserverlog
+steps:
+- !!python/object:cubetl.fs.FileLineReader
+  path: examples/apache2-access.log
+- !ref cubetl.webserver.parse_apache_combined
+- !!python/object:cubetl.geoip.GeoIPFromAddress
+  data: ${ m['address'] }
+- !ref cubetl.util.print
+- !!python/object:cubetl.olap.Store
+  entity: !ref cubetl.webserver.request
+  mapper: !ref cubetl.webserver.request.olapmapper
+
+---
+

@@ -1,0 +1,56 @@
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.geo.continent
+label: Continent
+attributes:
+- name: continent
+  label: Continent
+  type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.geo.country
+label: Continent
+attributes:
+- name: code
+  label: Country Code
+  type: String
+- name: country
+  label: Country
+  type: String
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.geo.contcountry
+name: contcountry
+label: Country
+hierarchies:
+- name: contcountry
+  label: Country
+  levels: continent, country
+levels:
+- !ref cubetl.geo.continent
+- !ref cubetl.geo.country
+
+---
+
+!!python/object:cubetl.core.Mappings
+id: cubetl.geo.mappings
+mappings:
+- name: id
+  value: ${ text.slugu(m["country_continent"]) }
+  pk: True
+  type: String
+- name: continent_name
+  value: ${ m["country_continent"] }
+- name: country_code
+  value: ${ m["country_code"] }
+- name: country_name
+  value: ${ m["country_name"] }
+
+---
+

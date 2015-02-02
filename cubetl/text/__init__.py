@@ -34,13 +34,11 @@ class RegExp(Node):
     Splits text into lines.
     """
 
-    def __init__(self):
 
-        super(RegExp, self).__init__()
+    regexp = None
+    names = None
+    data = '${ m["data"] }'
 
-        self.regexp = None
-        self.names = None
-        self.data = '${ m["data"] }'
 
     def initialize(self, ctx):
 

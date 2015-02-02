@@ -1,0 +1,22 @@
+
+---
+
+!!python/object:cubetl.util.PrettyPrint
+id: cubetl.util.print
+
+---
+
+!!python/object:cubetl.util.config.PrintConfig
+id: cubetl.util.list_nodes
+
+---
+
+!!python/object:cubetl.util.config.PrintConfig
+id: cubetl.config.list_components
+
+---
+
+!!python/object:cubetl.util.config.PrintConfig
+id: cubetl.config.list_objects
+
+---

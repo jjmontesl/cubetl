@@ -10,12 +10,9 @@ logger = logging.getLogger(__name__)
 
 class Chain(Node):
 
-    def __init__(self):
+    fork = False
+    steps = []
 
-        super(Chain, self).__init__()
-
-        self.fork = False
-        self.steps=[]
 
     def initialize(self, ctx):
         super(Chain, self).initialize(ctx)

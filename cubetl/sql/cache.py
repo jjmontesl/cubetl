@@ -1,26 +1,16 @@
 import logging
-from sqlalchemy.engine import create_engine
-from sqlalchemy.schema import Table, MetaData, Column
-from sqlalchemy.types import Integer, String, Float
-import sys
-from cubetl.core import Node
-from sqlalchemy.sql.expression import and_
 from cubetl.sql import SQLTable, QueryLookup
-from repoze.lru import LRUCache
 from cubetl.util.cache import Cache
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class CachedSQLTable(SQLTable):
 
-    def __init__(self):
-
-        super(CachedSQLTable, self).__init__()
-
-        self._cache = None
-        self.cache_hits = 0
-        self.cache_misses = 0
+    _cache = None
+    cache_hits = 0
+    cache_misses = 0
 
         # TODO: Note: this caches only when there are results (for OLAP classes). At least this shall be optional.
 
@@ -42,7 +32,7 @@ class CachedSQLTable(SQLTable):
         cache_key = tuple(sorted(attribs.items()))
 
         # Check if using primary key
-        if (len(attribs.keys()) >0):
+        if (len(attribs.keys()) > 0):
                 rows = self._cache.get(cache_key)
                 if (rows != None) and (ctx.debug2):
                     logger.debug("Returning row from cache for search attibs: %s" % (attribs))
@@ -73,20 +63,17 @@ class CachedSQLTable(SQLTable):
 
         return iter(rows)
 
+
 class CachedQueryLookup(QueryLookup):
 
     NOT_CACHED = "NOT_CACHED"
 
-    def __init__(self):
+    connection = None
+    query = None
 
-        super(CachedQueryLookup, self).__init__()
-
-        self.connection = None
-        self.query = None
-
-        self._cache = None
-        self.cache_hits = 0
-        self.cache_misses = 0
+    _cache = None
+    cache_hits = 0
+    cache_misses = 0
 
     def initialize(self, ctx):
 

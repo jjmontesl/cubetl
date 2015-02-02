@@ -42,17 +42,14 @@ class Print(Node):
     A default instance can be found in CubETL default objects.
     """
 
-    def __init__(self):
+    eval = None
 
-        super(Print, self).__init__()
+    truncate_line = 120
 
-        self.eval = None
+    _lexer = PythonLexer()
+    _formatter = TerminalFormatter()
+    _formatter = Terminal256Formatter()
 
-        self.truncate_line = 120
-
-        self._lexer = PythonLexer()
-        self._formatter = TerminalFormatter()
-        #self._formatter = Terminal256Formatter()
 
     def initialize(self, ctx):
 
@@ -91,19 +88,16 @@ class Print(Node):
 
         yield m
 
+
 class PrettyPrint(Print):
     """
     This class prints an object using pretty print.
     """
 
-    def __init__(self):
+    depth = 2
+    indent = 4
 
-        super(PrettyPrint, self).__init__()
-
-        self.depth = 2
-        self.indent = 4
-
-        self._pp = None
+    _pp = None
 
     def initialize(self, ctx):
 

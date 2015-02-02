@@ -10,16 +10,12 @@ from cubetl.text.functions import parsebool
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class Connection(Component):
 
-    def __init__(self):
-
-        super(Connection, self).__init__()
-
-        self.url = None
-        self._engine = None
-        self._connection = None
-
+    url = None
+    _engine = None
+    _connection = None
 
     def lazy_init(self):
         if (self._engine == None):
@@ -35,37 +31,37 @@ class Connection(Component):
         self.lazy_init()
         return self._engine
 
+
 class SQLTable(Component):
 
     _selects = 0
     _inserts = 0
     _finalized = False
 
-    def __init__(self):
 
-        super(SQLTable, self).__init__()
+    _pk = False
 
-        self._pk = False
+    name = None
+    connection = None
+    columns = [ ]
 
-        self.name = None
-        self.connection = None
-        self.columns = [ ]
+    create = True
 
-        self.create = True
+    sa_table = None
+    sa_metadata = None
 
-        self.sa_table = None
-        self.sa_metadata = None
+    _selects = 0
+    _inserts = 0
+    _unicode_errors = 0
 
-        self._selects = 0
-        self._inserts = 0
-        self._unicode_errors = 0
 
     def _get_sa_type(self, column):
 
         if (column["type"] == "Integer"):
             return Integer
         elif (column["type"] == "String"):
-            if (not "length" in column): column["length"] = 128
+            if (not "length" in column):
+                column["length"] = 128
             return Unicode(length = column["length"])
         elif (column["type"] == "Float"):
             return Float
@@ -172,6 +168,7 @@ class SQLTable(Component):
 
         d = {}
         for column in self.columns:
+            #print column
             d[column["name"]] = getattr(row, column["name"])
 
         return d
@@ -194,7 +191,7 @@ class SQLTable(Component):
         logger.debug ("Lookup on '%s' attribs: %s" % (self, attribs))
 
         if (len(attribs.keys()) == 0):
-            raise Exception("Cannot lookup on table with no criteria (empty attribute set)")
+            raise Exception("Cannot lookup on table '%s' with no criteria (empty attribute set)" % self.name)
 
         rows = self._find(ctx, attribs)
         rows = list(rows)
@@ -265,17 +262,15 @@ class SQLTable(Component):
         else:
             return None
 
+
 class Transaction(Node):
 
-    def __init__(self):
 
-        super(Transaction, self).__init__()
+    connection = None
 
-        self.connection = None
+    _transaction = None
 
-        self._transaction = None
-
-        self.enabled = True
+    enabled = True
 
     def initialize(self, ctx):
 
