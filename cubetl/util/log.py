@@ -47,6 +47,9 @@ class LogPerformance(Node):
     _lastTime = time.time()
     _lastCount = 0
 
+    def __init__(self):
+        self._startTime = time.time()
+        self._lastTime = time.time()
 
     def memory_usage_psutil(self):
         # return the memory usage in MB
@@ -78,7 +81,12 @@ class LogPerformance(Node):
 
     def process(self, ctx, m):
 
+        if (self._count == 0):
+            _startTime = time.time()
+            _lastTime = time.time()
+
         self._count = self._count + 1
+
         current = time.time()
         if (current - self._lastTime > self.interval):
             self.loginfo(ctx)

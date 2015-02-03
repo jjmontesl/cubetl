@@ -240,22 +240,21 @@ class Cubes10ModelWriter(Node):
         dim["levels"] = []
 
         # Aliased dimensions
-        if (mapper.entity != mapper.entity.aliased_entity()):
-            mapper = mapper.olapmapper.entity_mapper(mapper.entity.aliased_entity())
+        if (mapper.entity != mapper.entity):
+            mapper = mapper.olapmapper.entity_mapper(mapper.entity)
 
         print mapper
         print mapper.entity
-        print mapper.entity.aliased_entity()
 
         # Attributes are levels
 
-        if (not hasattr(mapper.entity.aliased_entity(), "hierarchies")):
+        if (not hasattr(mapper.entity, "hierarchies")):
             c_lev = self._export_level(ctx, mapper)
             dim["levels"].append (c_lev)
         else:
 
             levels = []
-            for level in mapper.entity.aliased_entity().levels:
+            for level in mapper.entity.levels:
                 print level
                 level_mapper = mapper.olapmapper.entity_mapper(level)
                 c_lev = self._export_level(ctx, level_mapper)
@@ -264,9 +263,9 @@ class Cubes10ModelWriter(Node):
 
             # Hierarchies
             finest_hierarchy = None
-            if (len(mapper.entity.aliased_entity().hierarchies) > 0):
+            if (len(mapper.entity.hierarchies) > 0):
                 dim["hierarchies"] = []
-                for hierarchy in mapper.entity.aliased_entity().hierarchies:
+                for hierarchy in mapper.entity.hierarchies:
 
                     if ((finest_hierarchy == None) or (len(hierarchy["levels"]) > len(finest_hierarchy["levels"]))):
                         finest_hierarchy = hierarchy
@@ -280,7 +279,7 @@ class Cubes10ModelWriter(Node):
                     dim["hierarchies"].append(chierarchy)
 
             # Add cubesviewer datefilter info
-            if (mapper.entity.aliased_entity().role == "date"):
+            if (mapper.entity.role == "date"):
                 dim["role"] = "time"
                 dim["info"] = {
                                "cv-datefilter": True,

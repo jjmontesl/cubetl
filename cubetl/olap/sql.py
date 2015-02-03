@@ -330,9 +330,9 @@ class DimensionMapper(TableMapper):
         mappings = [mapping.copy() for mapping in self.mappings]
         for mapping in mappings:
             if (not "entity" in mapping):
-                mapping["entity"] = self.entity.aliased_entity()
+                mapping["entity"] = self.entity
 
-        for attribute in self.entity.aliased_entity().attributes:
+        for attribute in self.entity.attributes:
 
             # Add dimension attributes as fields for the mapper if not existing
             mapping = { "name": attribute["name"], "entity": self.entity }
@@ -495,11 +495,11 @@ class EmbeddedDimensionMapper(DimensionMapper):
         if (self.lookup_cols != None):
             raise Exception("No lookup_cols can be defined for an embedded dimension.")
 
-        if (hasattr(self.entity.aliased_entity(), "hierarchies")):
+        if (hasattr(self.entity, "hierarchies")):
             logger.debug("Creating CompoundHierarchyDimensionMapper for %s." % (self))
             self._back_mapper = CompoundHierarchyDimensionMapper()
-            self._back_mapper.entity = self.entity.aliased_entity()
-            self._back_mapper.entity = self.entity.aliased_entity()
+            self._back_mapper.entity = self.entity
+            self._back_mapper.entity = self.entity
             self._back_mapper.olapmapper = self.olapmapper
             self.olapmapper.mappers.append(self._back_mapper)
             self._back_mapper._uses_table = False

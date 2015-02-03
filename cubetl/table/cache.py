@@ -31,7 +31,7 @@ class CachedTableLookup(TableLookup):
 
     def finalize(self, ctx):
 
-        logger.info ("%s  hits/misses: %d/%d" % (self, self.cache_hits, self.cache_misses))
+        logger.info("%s  hits/misses: %d/%d (%.2f%%)" % (self, self.cache_hits, self.cache_misses, float(self.cache_hits) / (self.cache_hits + self.cache_misses) * 100))
 
         super(CachedTableLookup, self).finalize(ctx)
 

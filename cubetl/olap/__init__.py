@@ -34,9 +34,6 @@ class Dimension(Component):
                         raise Exception("Attribute %s of %s has no 'name' attribute" % (attr, self))
                     attr["label"] = attr["name"]
 
-    def aliased_entity(self):
-        return self
-
 
     """
     def has_attribute(self, search):
@@ -109,9 +106,6 @@ class AliasDimension(Dimension):
         ctx.comp.finalize(self.dimension)
         #super(AliasDimension, self).finalize(ctx)
 
-    def aliased_entity(self):
-        return self.dimension.aliased_entity()
-
     """
     def has_attribute(self, search):
         return self.dimension.has_attribute(search)
@@ -124,13 +118,13 @@ class AliasDimension(Dimension):
         if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__getattr__(attr)
         else:
-            return getattr(self.dimension.aliased_entity(), attr)
+            return getattr(self.dimension, attr)
 
     def __setattr__(self, attr, value):
         if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__setattr__(attr, value)
         else:
-            return setattr(self.dimension.aliased_entity(), attr, value)
+            return setattr(self.dimension, attr, value)
 
 
 class Fact(Component):
@@ -147,9 +141,6 @@ class Fact(Component):
         self.dimensions = []
         self.attributes = []
         self.measures = []
-
-    def aliased_entity(self):
-        return self
 
     def initialize(self, ctx):
 
@@ -245,7 +236,7 @@ class OlapMapper(Component):
 
         for mapper in self.mappers:
             #if (mapper.entity.name == entity.name):
-            if (mapper.entity == entity) or (mapper.entity.aliased_entity() == entity):
+            if (mapper.entity == entity) or (mapper.entity == entity):
                 return mapper
 
         for inc in self.include:
