@@ -8,8 +8,8 @@ label: year
 role: year
 attributes:
 - name: year
-- label: Year
-- type: Integer
+  label: Year
+  type: Integer
 
 ---
 
@@ -20,8 +20,8 @@ label: Quarter
 role: quarter
 attributes:
 - name: quarter
-- label: Quarter
-- type: Integer
+  label: Quarter
+  type: Integer
 
 ---
 
@@ -32,8 +32,8 @@ label: Month
 role: month
 attributes:
 - name: month
-- label: Month
-- type: Integer
+  label: Month
+  type: Integer
 
 ---
 
@@ -44,8 +44,8 @@ label: Week
 role: week
 attributes:
 - name: week
-- label: Week
-- type: Integer
+  label: Week
+  type: Integer
 
 ---
 
@@ -56,13 +56,13 @@ label: Day
 role: day
 attributes:
 - name: day
-- label: Day
-- type: Integer
+  label: Day
+  type: Integer
 
 ---
 
 !!python/object:cubetl.olap.HierarchyDimension
-id: cubetl.dim.datetime.date
+id: cubetl.datetime.date
 name: date
 label: Date
 role: date

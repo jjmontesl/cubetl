@@ -11,11 +11,10 @@ from repoze.lru import LRUCache
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class Cache():
 
-    def __init__(self):
-
-        self._cache = None
+    _cache = None
 
     def initialize(self):
 

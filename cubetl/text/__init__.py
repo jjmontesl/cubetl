@@ -21,8 +21,6 @@ class LineReader(Node):
     Splits text into lines.
     """
 
-    def __init__(self):
-        pass
 
     def process(self, ctx, m):
         # TODO: Implement

@@ -26,6 +26,7 @@ class GeoIPFromAddress(Node):
     data = '${ m["data"] }'
     prefix = 'geoip'
 
+    _extract_error = False
 
     def initialize(self, ctx):
 
@@ -49,7 +50,9 @@ class GeoIPFromAddress(Node):
             try:
                 m[self.prefix + "_cont_name"] = transformations.ccn_to_ctn(transformations.cca2_to_ccn(m[self.prefix + "_country_code"])) #.decode("latin1")
             except Exception as e:
-                logger.error(e)
+                if not self._extract_error and not ctx.debug2:
+                    self._extract_error = True
+                    logger.warn("Could not extract continent name from country code '%s' (reported only once per run) Error: %s" % (m[self.prefix + "_country_code"], e))
 
         #gir = self._gi.region_by_addr(data)
         #m["geo_region_code"] = gir['region']

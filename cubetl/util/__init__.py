@@ -20,9 +20,8 @@ class Assert(Node):
     Evaluates and expression and
     """
 
-    def __init__(self):
-        self.eval = None
-        self.message = None
+    eval = None
+    message = None
 
     def process(self, ctx, m):
 
@@ -46,14 +45,17 @@ class Print(Node):
 
     truncate_line = 120
 
-    _lexer = PythonLexer()
-    _formatter = TerminalFormatter()
-    _formatter = Terminal256Formatter()
+    _lexer = None
+    _formatter = None
 
 
     def initialize(self, ctx):
 
         super(Print, self).initialize(ctx)
+
+        self._lexer = PythonLexer()
+        #self._formatter = TerminalFormatter()
+        self._formatter = Terminal256Formatter()
 
         logger.debug("Initializing Print node %s" % (self))
 

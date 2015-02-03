@@ -4,28 +4,33 @@
 !!python/object:cubetl.olap.OlapMapper
 id: cubetl.webserver.request.olapmapper
 mappers:
+#- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
 - !!python/object:cubetl.olap.sql.EmbeddedDimensionMapper
   entity: !ref cubetl.webserver.request.datetime
+  #table: date
+  #connection: !ref example.sql.connection
   eval:
   - name: _cubetl_datetime_date
-    value: ${ m['request_date'] }
-  include:
+    value: ${ m['datetime'] }
+  mappings:
   - !ref cubetl.datetime.mappings
 - !!python/object:cubetl.olap.sql.DimensionMapper
   entity: !ref cubetl.webserver.request.client_address
   table: client_address
   connection: !ref example.sql.connection
+  lookup_cols: address
   mappings:
+  - name: id
+    pk: True
   - name: address
     value: ${ m["address"] }
-    pk: True
     type: String
 - !!python/object:cubetl.olap.sql.FactMapper
   entity: !ref cubetl.webserver.request
   table: web_request
   connection: !ref example.sql.connection
-  #store_mode: insert
-  lookup_cols: datetime
+  store_mode: insert
+  lookup_cols: id
   mappings:
   - name: id
     pk: True
@@ -35,15 +40,26 @@ mappers:
 !!python/object:cubetl.flow.Chain
 id: example.webserverlog
 steps:
+- !ref example.sql.transaction
 - !!python/object:cubetl.fs.FileLineReader
   path: examples/apache2-access.log
 - !ref cubetl.webserver.parse_apache_combined
+- !!python/object:cubetl.script.Eval
+  eval:
+  - name: datetime
+    value: ${ text.extract_date(m['date_string']) }
 - !!python/object:cubetl.geoip.GeoIPFromAddress
   data: ${ m['address'] }
 - !ref cubetl.util.print
 - !!python/object:cubetl.olap.Store
   entity: !ref cubetl.webserver.request
   mapper: !ref cubetl.webserver.request.olapmapper
+- !ref cubetl.util.logperformance
 
 ---
 
+!!python/object:cubetl.cubes.Cubes10ModelWriter
+id: example.webserver.export-cubes
+olapmapper: !ref cubetl.webserver.request.olapmapper
+
+---

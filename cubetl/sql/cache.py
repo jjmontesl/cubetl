@@ -12,7 +12,7 @@ class CachedSQLTable(SQLTable):
     cache_hits = 0
     cache_misses = 0
 
-        # TODO: Note: this caches only when there are results (for OLAP classes). At least this shall be optional.
+    # TODO: Note: this caches only when there are results (for OLAP classes). At least this shall be optional.
 
     def initialize(self, ctx):
 

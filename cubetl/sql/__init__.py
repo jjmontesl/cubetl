@@ -43,7 +43,7 @@ class SQLTable(Component):
 
     name = None
     connection = None
-    columns = [ ]
+    columns = []
 
     create = True
 
@@ -54,6 +54,9 @@ class SQLTable(Component):
     _inserts = 0
     _unicode_errors = 0
 
+    def __init__(self):
+        super(SQLTable, self).__init__()
+        self.columns = []
 
     def _get_sa_type(self, column):
 
@@ -99,6 +102,7 @@ class SQLTable(Component):
 
         logger.debug("Loading table %s on %s" % (self.name, self))
 
+
         self.sa_metadata = MetaData()
         self.sa_table = Table(self.name, self.sa_metadata)
 
@@ -107,16 +111,17 @@ class SQLTable(Component):
         columns_ex = []
         for column in self.columns:
 
+            logger.debug("Adding column to %s: %s" % (self, column))
+
             # Check for duplicate names
             if (column["name"] in columns_ex):
-                raise Exception("Duplicate column name %s in %s" % (column["name"], self))
+                raise Exception("Duplicate column name '%s' in %s" % (column["name"], self))
             columns_ex.append(column["name"])
 
             # Configure column
             column["pk"] = False if (not "pk" in column) else parsebool(column["pk"])
             if (not "type" in column): column["type"] = "String"
             #if (not "value" in column): column["value"] = None
-            logger.debug("Adding column %s" % column)
             self.sa_table.append_column( Column(column["name"],
                                                 self._get_sa_type(column),
                                                 primary_key = column["pk"],
@@ -302,11 +307,7 @@ class Transaction(Node):
 
 class StoreRow(Node):
 
-    def __init__(self):
-
-        super(StoreRow, self).__init__()
-
-        self.table = None
+    table = None
 
     def process(self, ctx, m):
 
@@ -315,14 +316,11 @@ class StoreRow(Node):
 
         yield m
 
+
 class QueryLookup(Node):
 
-    def __init__(self):
-
-        super(QueryLookup, self).__init__()
-
-        self.connection = None
-        self.query = None
+    connection = None
+    query = None
 
     def initialize(self, ctx):
 

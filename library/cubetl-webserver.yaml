@@ -4,7 +4,7 @@
 !!python/object:cubetl.olap.AliasDimension
 id: cubetl.webserver.request.datetime
 label: Time
-dimension: !ref cubetl.dim.datetime.date
+dimension: !ref cubetl.datetime.date
 
 ---
 
@@ -125,7 +125,10 @@ attributes:
 !!python/object:cubetl.text.RegExp
 id: cubetl.webserver.parse_apache_combined
 regexp: ([\d\.]+) (-) (-) \[(.*?)\] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)"
-names: address, rlogname, username, date, verb, result_code, served_bytes, referer, user_agent
+names: address, rlogname, username, date_string, verb, result_code, served_bytes, referer, user_agent_string
 
 ---
+
+
+
 

@@ -6,17 +6,13 @@ from mako import template
 logger = logging.getLogger(__name__)
 
 class Template(Component):
-    
-    def __init__(self):
-        
-        super(Template, self).__init__()
-        
-        self.template = None
-        
-        self._mako_template = None
-        
+
+    template = None
+
+    _mako_template = None
+
     def initialize(self, ctx):
-        
+
         super(Template, self).initialize(ctx)
         self._mako_template = template.Template(filename = self.template)
 
@@ -26,5 +22,5 @@ class Template(Component):
     def render(self, ctx, **kwargs):
         result = self._mako_template.render_unicode(ctx = ctx, **kwargs)
         return result
-        
+
 #class TemplateRenderer(Node):

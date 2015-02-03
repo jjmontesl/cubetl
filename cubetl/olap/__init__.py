@@ -17,6 +17,10 @@ class Dimension(Component):
     attributes = []
     role = None
 
+    def __init__(self):
+        super(Dimension, self).__init__()
+        self.attributes = []
+
     def initialize(self, ctx):
         super(Dimension, self).initialize(ctx)
 
@@ -26,7 +30,13 @@ class Dimension(Component):
                 if ((len(self.attributes) == 1) and (attr["name"] == self.name)):
                     attr["label"] = self.label
                 else:
+                    if (not "name" in attr):
+                        raise Exception("Attribute %s of %s has no 'name' attribute" % (attr, self))
                     attr["label"] = attr["name"]
+
+    def aliased_entity(self):
+        return self
+
 
     """
     def has_attribute(self, search):
@@ -43,16 +53,18 @@ class Dimension(Component):
         return att[0]
     """
 
+
 class HierarchyDimension(Dimension):
     """A non-flat dimension, forming one or more hierarchies.
 
     References subdimensions (levels), usually forming hierarchies.
     """
 
+    levels = None
+    hierarchies = None
+
     def __init__(self):
-
         super(HierarchyDimension, self).__init__()
-
         self.levels = []
         self.hierarchies = []
 
@@ -85,14 +97,20 @@ class AliasDimension(Dimension):
 
         ctx.comp.initialize(self.dimension)
 
-        if (self.role == None): self.role = self.dimension.role
+        if (self.name == None):
+            self.name = self.dimension.name
+        if (self.role == None):
+            self.role = self.dimension.role
 
         if (self.attributes):
-            raise Exception("%s cannot define own attributes." % self)
+            raise Exception("%s cannot define own attributes because it is an AliasDimension, and attributes are aliased from the referenced dimension." % self)
 
     def finalize(self, ctx):
         ctx.comp.finalize(self.dimension)
         #super(AliasDimension, self).finalize(ctx)
+
+    def aliased_entity(self):
+        return self.dimension.aliased_entity()
 
     """
     def has_attribute(self, search):
@@ -106,33 +124,42 @@ class AliasDimension(Dimension):
         if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__getattr__(attr)
         else:
-            return getattr(self.dimension, attr)
+            return getattr(self.dimension.aliased_entity(), attr)
 
     def __setattr__(self, attr, value):
         if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__setattr__(attr, value)
         else:
-            return setattr(self.dimension, attr, value)
+            return setattr(self.dimension.aliased_entity(), attr, value)
 
 
 class Fact(Component):
 
+    name = None
+    label = None
+
+    dimensions = None
+    attributes = None
+    measures = None
+
     def __init__(self):
-
         super(Fact, self).__init__()
-
-        self.name = None
-        self.label = None
-
         self.dimensions = []
         self.attributes = []
         self.measures = []
+
+    def aliased_entity(self):
+        return self
 
     def initialize(self, ctx):
 
         super(Fact, self).initialize(ctx)
 
-        if (self.label == None): self.label = self.name
+        if (self.attributes == None):
+            self.attributes = []
+
+        if (self.label == None):
+            self.label = self.name
         for attr in self.attributes:
             if (not "label" in attr):
                 attr["label"] = attr["name"]
@@ -144,12 +171,14 @@ class Fact(Component):
 
 class FactDimension(Dimension):
 
+    fact = None
+
+    dimensions = None
+    attributes = None
+    measures = None
+
     def __init__(self):
-
-        super(FactDimension, self).__init__()
-
-        self.fact = None
-
+        super(Fact, self).__init__()
         self.dimensions = []
         self.attributes = []
         self.measures = []
@@ -216,8 +245,8 @@ class OlapMapper(Component):
 
         for mapper in self.mappers:
             #if (mapper.entity.name == entity.name):
-                if (mapper.entity == entity):
-                    return mapper
+            if (mapper.entity == entity) or (mapper.entity.aliased_entity() == entity):
+                return mapper
 
         for inc in self.include:
             mapper = inc.entity_mapper(entity, False)

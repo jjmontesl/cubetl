@@ -10,12 +10,15 @@ from slugify import slugify
 def slug(value):
     return unicode(slugify(unicode(value)))
 
+
 def slugu(value):
     return slug(value).replace("-", "_")
+
 
 def re_search(pattern, text, match = 0):
     m = re.search(pattern, text)
     return m.group(match)
+
 
 def parsebool (value):
 
@@ -32,10 +35,12 @@ def parsebool (value):
     except Exception, e:
         raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
 
+
 def extract_date(value):
 
     datetime = parser.parse(value, fuzzy = True)
     return datetime
+
 
 def extract_number(value):
 
@@ -105,7 +110,7 @@ def extract_number(value):
     else:
         # Special case for 1.500 (we want it to be parsed as float)
         if (sep and sep != ' ' and sep_count == 1 ):
-            return float (match.group("number").replace(sep, ".")) # regularize the decimal point
+            return float(match.group("number").replace(sep, "."))  # regularize the decimal point
 
     return int(num_str)
 

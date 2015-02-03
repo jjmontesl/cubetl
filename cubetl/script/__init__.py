@@ -16,6 +16,10 @@ class Script(Node):
     script = None
     refs = {}
 
+    def __init__(self):
+        super(Script, self).__init__()
+        self.refs = {}
+
     def process(self, ctx, m):
 
         try:
@@ -36,6 +40,8 @@ class Eval(Node):
     Note that evaluation is done via ctx.interpolate(), and so
     requires expressions to be delimited by ${}.
     """
+
+    eval = []
 
     def __init__(self):
 

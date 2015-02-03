@@ -82,14 +82,15 @@ class Mappings(Component):
 
     def initialize(self, ctx):
 
-        raise Exception("Mappings initialize method cannot be called.")
+        #raise Exception("Mappings initialize method cannot be called.")
 
-        #super(Mappings, self).initialize(ctx)
-        #Mappings.includes(ctx, self.mappings)
+        super(Mappings, self).initialize(ctx)
+        Mappings.includes(ctx, self.mappings)
 
     def finalize(self, ctx):
-        raise Exception("Mappings finalize method cannot be called.")
-        #super(Mappings, self).finalize(ctx)
+
+        #raise Exception("Mappings finalize method cannot be called.")
+        super(Mappings, self).finalize(ctx)
 
 
     @staticmethod

@@ -90,8 +90,8 @@ class FileReader(Node):
         # Resolve path
         msg_path = ctx.interpolate(m, self.path)
 
-        logger.debug ("Reading file %s" % msg_path)
-        with open (msg_path, "r") as myfile:
+        logger.debug("Reading file %s" % msg_path)
+        with open(msg_path, "r") as myfile:
 
             m[self.name] = myfile.read()
 
@@ -136,12 +136,10 @@ class DirectoryFileReader (Node):
     This class is a shortcut to a DirectoryLister and a FileReader
     """
 
-    def __init__(self):
+    path = None
+    filter_re = None
 
-        self.path = None
-        self.filter_re = None
-
-        self.encoding = None
+    encoding = None
 
     def initialize(self, ctx):
 

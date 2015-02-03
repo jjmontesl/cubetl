@@ -20,9 +20,3 @@ connection: !ref example.sql.connection
 
 ---
 
-!!python/object:cubetl.util.log.LogPerformance
-id: example.logperformance
-path_data: .
-
----
-

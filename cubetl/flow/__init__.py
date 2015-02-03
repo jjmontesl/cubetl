@@ -11,8 +11,11 @@ logger = logging.getLogger(__name__)
 class Chain(Node):
 
     fork = False
-    steps = []
+    steps = None
 
+    def __init__(self):
+        super(Chain, self).__init__()
+        self.steps = []
 
     def initialize(self, ctx):
         super(Chain, self).initialize(ctx)
@@ -56,14 +59,11 @@ class Chain(Node):
             logger.debug("Forked flow end - discarded %d messages" % count)
             yield m
 
+
 class Filter(Node):
 
-    def __init__(self):
-
-        super(Filter, self).__init__()
-
-        self.condition = None
-        self.message = None
+    condition = None
+    message = None
 
     def process(self, ctx, m):
 
@@ -82,12 +82,8 @@ class Filter(Node):
 
 class Iterator(Node):
 
-    def __init__(self):
-
-        super(Iterator, self).__init__()
-
-        self.name = None
-        self.values = None
+    name = None
+    values = None
 
     def initialize(self, ctx):
         super(Iterator, self).initialize(ctx)
@@ -115,10 +111,11 @@ class SplitEval(Node):
     requires expressions to be delimited by ${}.
     """
 
+    instances = None
+
     def __init__(self):
 
         super(SplitEval, self).__init__()
-
         self.instances = []
 
     def process(self, ctx, mo):
