@@ -79,7 +79,7 @@ class Eval(Node):
                     else:
                         if (not "default" in evalitem):
                             logging.warn("Mapping with no value and no default: %s" % evalitem)
-                        m[evalitem["name"]] = None
+                        #m[evalitem["name"]] = None
 
                 if ("default" in evalitem):
                     if (not m[evalitem["name"]]):

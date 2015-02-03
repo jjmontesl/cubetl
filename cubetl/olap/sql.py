@@ -356,6 +356,11 @@ class CompoundDimensionMapper(TableMapper):
 
     def initialize(self, ctx):
 
+        if self.dimensions == []:
+            self.dimensions = []
+        if self._created_mappers == []:
+            self._created_mappers = []
+
         super(CompoundDimensionMapper, self).initialize(ctx)
 
     def finalize(self, ctx):
@@ -408,8 +413,13 @@ class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
 
     def initialize(self, ctx):
 
+        if self.dimensions == []:
+            self.dimensions = []
+        if self._created_mappers == []:
+            self._created_mappers = []
+
         if (len(self.dimensions) != 0):
-            raise Exception("Cannot define dimensions in %s. Only one HierarchyDimension can be set as entity." % self)
+            raise Exception("Cannot define dimensions in %s. Only one HierarchyDimension can be set as entity." % (self))
 
         for level in self.entity.levels:
             self.dimensions.append(level)

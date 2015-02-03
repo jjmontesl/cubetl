@@ -10,6 +10,7 @@ from cubetl.fs import FileReader
 import csv
 from abc import abstractmethod, ABCMeta
 from cubetl.script import Eval
+from cubetl.csv import CsvReader
 
 
 # Get an instance of a logger
@@ -99,6 +100,46 @@ class MemoryTable(Table):
     def delete(self, ctx, lookup):
         pass
 
+
+class CsvMemoryTable(MemoryTable):
+    """
+    This component represents an in-memory table which can be defined in CSV format,
+    which is handy to define in-line tables in the configuration files or to quickly read
+    a CSV file in memoryh for lookups.
+
+    The CSV data is processed by a CSVReader.
+
+    Usage:
+
+    """
+
+    data = None  # Interpolated at initialization, no message available
+
+    _csv_reader = None
+
+
+    def initialize(self, ctx):
+        """
+        Reads CSV data on initialization.
+        """
+
+        super(CsvMemoryTable, self).initialize(ctx)
+
+        self._csv_reader = CsvReader()
+        self._csv_reader.data = ctx.interpolate(None, self.data)
+        ctx.comp.initialize(self._csv_reader)
+
+        for m in self._csv_reader.process(ctx, None):
+            self.insert(ctx, m)
+
+    def finalize(self, ctx):
+
+        if self._csv_reader:
+            ctx.comp.finalize(self._csv_reader)
+
+        super(CsvMemoryTable, self).finalize(ctx)
+
+
 class TableInsert(Node):
 
     def __init__(self):
@@ -177,7 +218,7 @@ class TableLookup(Node):
         result = self._do_lookup(ctx, m, keys)
 
         if (result):
-            Eval.process_mappings(ctx, m, self.mappings, result)
+            Eval.process_evals(ctx, m, self.mappings, result)
         else:
             m.update({ k: ctx.interpolate(m, v) for k,v in self.default.items() })
 

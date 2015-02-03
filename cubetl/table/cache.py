@@ -4,7 +4,7 @@ from os.path import isfile, join
 import itertools
 import re
 from cubetl.core import Node, Component
-import chardet    
+import chardet
 from BeautifulSoup import UnicodeDammit
 from cubetl.fs import FileReader
 import csv
@@ -17,33 +17,29 @@ from cubetl.script import Eval
 logger = logging.getLogger(__name__)
 
 class CachedTableLookup(TableLookup):
-    
+
     NOT_CACHED = "NOT_CACHED"
-    
-    def __init__(self):
 
-        super(CachedTableLookup, self).__init__()
+    _cache = None
+    cache_hits = 0
+    cache_misses = 0
 
-        self._cache = None
-        self.cache_hits = 0
-        self.cache_misses = 0
-        
     def initialize(self, ctx):
-        
+
         super(CachedTableLookup, self).initialize(ctx)
-        self._cache = Cache().cache() 
-        
+        self._cache = Cache().cache()
+
     def finalize(self, ctx):
-        
+
         logger.info ("%s  hits/misses: %d/%d" % (self, self.cache_hits, self.cache_misses))
-        
+
         super(CachedTableLookup, self).finalize(ctx)
-        
+
     def process(self, ctx, m):
 
         keys = self._resolve_lookup_keys(ctx, m)
         cache_key = tuple(sorted(keys.items()))
-        
+
         result = self._cache.get(cache_key, CachedTableLookup.NOT_CACHED)
         if (result != CachedTableLookup.NOT_CACHED):
             self.cache_hits = self.cache_hits + 1

@@ -7,17 +7,17 @@ id: cubetl.util.print
 ---
 
 !!python/object:cubetl.util.config.PrintConfig
-id: cubetl.util.list_nodes
+id: cubetl.config.list-nodes
 
 ---
 
 !!python/object:cubetl.util.config.PrintConfig
-id: cubetl.config.list_components
+id: cubetl.config.list-components
 
 ---
 
 !!python/object:cubetl.util.config.PrintConfig
-id: cubetl.config.list_objects
+id: cubetl.config.list-objects
 
 ---
 

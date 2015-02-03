@@ -1,7 +1,10 @@
-0.3-devel
+0.4-devel
+
+0.3
+    + Configuration migrated to YAML.
     + Added basic GeoIP support.
     + Added RegExp processor.
-    + Support for cubes 1.0 export, including time roles.
+    + Support for Cubes 1.0 model export, including time roles.
 0.2
     + Cubes 0.10 export refactored and working.
     + Support for mappings reuse.

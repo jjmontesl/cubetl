@@ -3,9 +3,13 @@
 
 !!python/object:cubetl.olap.Dimension
 id: cubetl.geo.continent
+name: continent
 label: Continent
 attributes:
-- name: continent
+- name: continent_code
+  label: Continent Code
+  type: String
+- name: continent_name
   label: Continent
   type: String
 
@@ -13,12 +17,13 @@ attributes:
 
 !!python/object:cubetl.olap.Dimension
 id: cubetl.geo.country
-label: Continent
+name: country
+label: Country
 attributes:
-- name: code
+- name: country_code
   label: Country Code
   type: String
-- name: country
+- name: country_name
   label: Country
   type: String
 
@@ -41,16 +46,16 @@ levels:
 !!python/object:cubetl.core.Mappings
 id: cubetl.geo.mappings
 mappings:
-- name: id
-  value: ${ text.slugu(m["country_continent"]) }
+- name: continent_code
+  value: ${ text.slugu(m["geoip_cont_name"]) }
+- name: continent_name
+  value: ${ m["geoip_cont_name"] }
+- name: country_code
+  value: ${ m["geoip_country_code"] }
   pk: True
   type: String
-- name: continent_name
-  value: ${ m["country_continent"] }
-- name: country_code
-  value: ${ m["country_code"] }
 - name: country_name
-  value: ${ m["country_name"] }
+  value: ${ m["geoip_country_name"] }
 
 ---
 

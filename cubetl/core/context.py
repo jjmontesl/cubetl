@@ -111,5 +111,8 @@ class Context():
         return result
 
     def copy_message (self, m):
-        return copy.copy (m)
+        if m == None:
+            return {}
+        else:
+            return copy.copy (m)
 

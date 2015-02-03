@@ -14,6 +14,35 @@ mappers:
     value: ${ m['datetime'] }
   mappings:
   - !ref cubetl.datetime.mappings
+- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
+  entity: !ref cubetl.webserver.request.client_country
+  table: country
+  connection: !ref example.sql.connection
+  eval:
+  - name: geoip_cont_name
+    default: Unknown
+  - name: geoip_country_name
+    default: Unknown
+  - name: geoip_country_code
+    default: UNKNOWN
+  mappings:
+  - !ref cubetl.geo.mappings
+- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
+  entity: !ref cubetl.webserver.request.path
+  table: request_path
+  connection: !ref example.sql.connection
+  lookup_cols: path1, path2, path3, path4
+  mappings:
+  - name: id
+    pk: True
+  - name: path1
+    value: ${ m["path1"] }
+  - name: path2
+    value: ${ m["path2"] }
+  - name: path3
+    value: ${ m["path3"] }
+  - name: path4
+    value: ${ m["path4"] }
 - !!python/object:cubetl.olap.sql.DimensionMapper
   entity: !ref cubetl.webserver.request.client_address
   table: client_address
@@ -24,6 +53,42 @@ mappers:
     pk: True
   - name: address
     value: ${ m["address"] }
+    type: String
+- !!python/object:cubetl.olap.sql.DimensionMapper
+  entity: !ref cubetl.webserver.request.protocol
+  table: protocol
+  connection: !ref example.sql.connection
+  mappings:
+  - name: id
+    value: ${ text.slugu(m["protocol"]) }
+    pk: True
+    type: String
+  - name: protocol
+    value: ${ m["protocol"] }
+    type: String
+- !!python/object:cubetl.olap.sql.DimensionMapper
+  entity: !ref cubetl.webserver.request.method
+  table: request_method
+  connection: !ref example.sql.connection
+  lookup_cols: method
+  mappings:
+  - name: id
+    pk: True
+  - name: method
+    value: ${ m["method"] }
+    type: String
+- !!python/object:cubetl.olap.sql.DimensionMapper
+  entity: !ref cubetl.http.status
+  table: http_status
+  connection: !ref example.sql.connection
+  lookup_cols: code
+  mappings:
+  - name: code
+    pk: True
+    type: Integer
+    value: ${ m["status_code"] }
+  - name: description
+    value: ${ m["status_description"] }
     type: String
 - !!python/object:cubetl.olap.sql.FactMapper
   entity: !ref cubetl.webserver.request
@@ -50,11 +115,48 @@ steps:
     value: ${ text.extract_date(m['date_string']) }
 - !!python/object:cubetl.geoip.GeoIPFromAddress
   data: ${ m['address'] }
+- !!python/object:cubetl.script.Eval
+  eval:
+  - name: method
+    value: ${ m['verb'].split(' ')[0] }
+  - name: path
+    value: ${ " ".join(m['verb'].split(' ')[1:-1]).split('?')[0] }
+  - name: path1
+    value: ${ m['path'].split('/')[1] if len(m['path'].split('/')) > 2 else "" }
+  - name: path2
+    value: ${ m['path'].split('/')[2] if len(m['path'].split('/')) > 2 else "" }
+  - name: path3
+    value: ${ m['path'].split('/')[3] if len(m['path'].split('/')) > 3 else "" }
+  - name: path4
+    value: ${ "/".join(m['path'].split('/')[4:]) if len(m['path'].split('/')) > 4 else "" }
+  - name: protocol
+    value: ${ m['verb'].split(' ')[-1] }
+- !!python/object:cubetl.table.cache.CachedTableLookup
+  table: !ref cubetl.http.status.table
+  lookup:
+    status_code: ${ m["status_code"] }
+  default:
+  - status_description: Unknown
+  mappings:
+  - name: status_description
+    value: ${ status_description }
 - !ref cubetl.util.print
 - !!python/object:cubetl.olap.Store
   entity: !ref cubetl.webserver.request
   mapper: !ref cubetl.webserver.request.olapmapper
 - !ref cubetl.util.logperformance
+
+# internal/external referer?
+# organic/etc referer?
+# search referer + search phrases facts + search terms facts
+# bots
+# mime types/grouped +  /   file transfers flag
+# response size (small, medium, large...)
+# first visit, last visit, entry pages/exit pages
+# visits / hists - track each user entry (ip+time /  no-referer??)
+# remove params from URL in process
+# tracking javascript ??? (screen size, browser size, support, sessions, etc)
+# IP PTR -> SOA authority ( IP owner? )
 
 ---
 
