@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class Dimension(Component):
     """A flat dimension.
 
-    Note: This represents a Flat dimension (no hierarchies, only one level of attributes).
+    Note: This represents a Flat dimension (no hierarchies, only one level with attributes).
     """
 
     name = None
@@ -22,17 +22,31 @@ class Dimension(Component):
         self.attributes = []
 
     def initialize(self, ctx):
+
         super(Dimension, self).initialize(ctx)
 
-        if (self.label == None): self.label = self.name
-        for attr in self.attributes:
-            if (not "label" in attr):
-                if ((len(self.attributes) == 1) and (attr["name"] == self.name)):
-                    attr["label"] = self.label
-                else:
-                    if (not "name" in attr):
-                        raise Exception("Attribute %s of %s has no 'name' attribute" % (attr, self))
-                    attr["label"] = attr["name"]
+        # FIXME: Added because PyYAML didn't call init
+        if self.attributes == []: self.attributes = []
+
+        if (self.label == None):
+            self.label = self.name
+
+        if len(self.attributes) == 0 and type(self) is Dimension:
+            # If attributes are not defined, this is a shortcut for simple dimensions
+            attr = { "name": self.name, "label": self.label, "type": "String" }
+            logger.debug("Automatically adding a default String attribute to dimension %s" % self)
+            self.attributes.append(attr)
+            #raise Exception("Dimension has no attributes: %s" % self)
+            pass
+        else:
+            for attr in self.attributes:
+                if (not "label" in attr):
+                    if ((len(self.attributes) == 1) and (attr["name"] == self.name)):
+                        attr["label"] = self.label
+                    else:
+                        if (not "name" in attr):
+                            raise Exception("Attribute %s of %s has no 'name' attribute" % (attr, self))
+                        attr["label"] = attr["name"]
 
 
     """

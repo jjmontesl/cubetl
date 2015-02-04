@@ -31,21 +31,21 @@ mappers:
   entity: !ref cubetl.webserver.request.path
   table: request_path
   connection: !ref example.sql.connection
-  lookup_cols: path1, path2, path3, path4
+  lookup_cols: request_path1, request_path2, request_path3, request_path4
   mappings:
   - name: id
     pk: True
-  - name: path1
+  - name: request_path1
     value: ${ m["path1"] }
-  - name: path2
+  - name: request_path2
     value: ${ m["path2"] }
-  - name: path3
+  - name: request_path3
     value: ${ m["path3"] }
-  - name: path4
+  - name: request_path4
     value: ${ m["path4"] }
 - !!python/object:cubetl.olap.sql.DimensionMapper
   entity: !ref cubetl.webserver.request.client_address
-  table: client_address
+  table: address
   connection: !ref example.sql.connection
   lookup_cols: address
   mappings:
@@ -68,14 +68,14 @@ mappers:
     type: String
 - !!python/object:cubetl.olap.sql.DimensionMapper
   entity: !ref cubetl.webserver.request.method
-  table: request_method
+  table: http_method
   connection: !ref example.sql.connection
-  lookup_cols: method
+  lookup_cols: http_method
   mappings:
   - name: id
     pk: True
-  - name: method
-    value: ${ m["method"] }
+  - name: http_method
+    value: ${ m["http_method"] }
     type: String
 - !!python/object:cubetl.olap.sql.DimensionMapper
   entity: !ref cubetl.http.status
@@ -117,7 +117,7 @@ steps:
   data: ${ m['address'] }
 - !!python/object:cubetl.script.Eval
   eval:
-  - name: method
+  - name: http_method
     value: ${ m['verb'].split(' ')[0] }
   - name: path
     value: ${ " ".join(m['verb'].split(' ')[1:-1]).split('?')[0] }

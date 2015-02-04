@@ -10,7 +10,7 @@ dimension: !ref cubetl.datetime.date
 
 !!python/object:cubetl.olap.Dimension
 id: cubetl.webserver.request.client_address
-name: client_address
+name: address
 label: Client Address
 
 ---
@@ -39,8 +39,8 @@ label: Username
 
 !!python/object:cubetl.olap.Dimension
 id: cubetl.webserver.request.method
-name: request_method
-label: Method
+name: http_method
+label: HTTP Method
 
 ---
 

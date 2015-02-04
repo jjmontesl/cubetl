@@ -294,7 +294,7 @@ class FactMapper(TableMapper):
 
         for measure in self.entity.measures:
             self._extend_mappings(ctx, mappings, [{
-                                  "name": measure["name"] ,
+                                  "name": measure["name"],
                                   "type": measure["type"] if ("type" in measure  and  measure["type"] != None) else "Float",
                                   "entity": self.entity
                                   }])
@@ -305,7 +305,7 @@ class FactMapper(TableMapper):
                                   "entity": self.entity
                                   }])
 
-        self._ensure_mappings (ctx, mappings)
+        self._ensure_mappings(ctx, mappings)
         return mappings
 
     def _joins(self, ctx, master = None):
@@ -413,10 +413,12 @@ class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
 
     def initialize(self, ctx):
 
+        # FIXME: Init code added because Yaml didn't run init
         if self.dimensions == []:
             self.dimensions = []
         if self._created_mappers == []:
             self._created_mappers = []
+
 
         if (len(self.dimensions) != 0):
             raise Exception("Cannot define dimensions in %s. Only one HierarchyDimension can be set as entity." % (self))

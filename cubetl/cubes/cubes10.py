@@ -13,6 +13,7 @@ from cubetl.util import PrettyPrint, Print
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class Cubes10ModelWriter(Node):
 
     olapmapper = None
@@ -49,7 +50,7 @@ class Cubes10ModelWriter(Node):
             c_join = {
                       "master": mapper.olapmapper.entity_mapper(join["master_entity"]).table + "." + join["master_column"],
                       "detail": mapper.olapmapper.entity_mapper(join["detail_entity"]).table + "." + join["detail_column"],
-                      "alias":  mapper.olapmapper.entity_mapper(join["detail_entity"]).entity.name
+                      "alias": mapper.olapmapper.entity_mapper(join["detail_entity"]).entity.name
                       }
             c_joins.append(c_join)
 
@@ -100,7 +101,7 @@ class Cubes10ModelWriter(Node):
         elif (isinstance(mapper, EmbeddedDimensionMapper)):
             mappings = mapper._mappings_join(ctx)
             for mapping in mappings:
-                c_mappings[base_mapper.entity.name + "." + mapping["name"]] = parent_mapper.table + "." + mapping["column"]
+                c_mappings[mapper.entity.name + "." + mapping["name"]] = parent_mapper.table + "." + mapping["column"]
 
         elif (isinstance(mapper, DimensionMapper) or (isinstance(mapper, CompoundHierarchyDimensionMapper))):
             mappings = mapper._mappings(ctx)
@@ -202,6 +203,7 @@ class Cubes10ModelWriter(Node):
     def _export_level(self, ctx, mapper):
 
         level = {}
+        logger.debug("Exporting level %s" % mapper.entity)
 
         pk = mapper.pk(ctx)
         mappings = mapper._mappings(ctx)
@@ -243,9 +245,6 @@ class Cubes10ModelWriter(Node):
         if (mapper.entity != mapper.entity):
             mapper = mapper.olapmapper.entity_mapper(mapper.entity)
 
-        print mapper
-        print mapper.entity
-
         # Attributes are levels
 
         if (not hasattr(mapper.entity, "hierarchies")):
@@ -255,7 +254,6 @@ class Cubes10ModelWriter(Node):
 
             levels = []
             for level in mapper.entity.levels:
-                print level
                 level_mapper = mapper.olapmapper.entity_mapper(level)
                 c_lev = self._export_level(ctx, level_mapper)
                 dim["levels"].append (c_lev)
