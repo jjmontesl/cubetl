@@ -2,15 +2,15 @@
 from cubetl.core import Node
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
+from pygments.formatters.terminal256 import Terminal256Formatter
+from pygments.lexers.agile import PythonLexer
 from pygments.lexers.web import JsonLexer
 import json
 import logging
 import pprint
+import re
 import simplejson
 import sys
-from pygments.lexers.agile import PythonLexer
-from pygments.formatters.terminal256 import Terminal256Formatter
-import re
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)

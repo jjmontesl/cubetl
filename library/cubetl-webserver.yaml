@@ -96,9 +96,8 @@ label: Protocol
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.http.status
-name: http_status
-label: HTTP Status
+id: cubetl.http.status.code
+name: http_status_code
 attributes:
 - name: code
   label: Status Code
@@ -110,9 +109,111 @@ attributes:
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.referer
+id: cubetl.http.status.type
+name: http_status_type
+attributes:
+- name: type
+  label: Status Type
+  type: String
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.http.status
+name: http_status
+label: HTTP Status
+hierarchies:
+- name: http_status
+  label: HTTP Status
+  levels: http_status_type, http_status_code
+levels:
+- !ref cubetl.http.status.type
+- !ref cubetl.http.status.code
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.http.referer.domain
+name: referer_domain
+label: Referer Domain
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.http.referer.path
+name: referer_path
+label: Referer Path
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.http.referer
 name: referer
 label: Referer
+hierarchies:
+- name: referer
+  label: Referer
+  levels: referer_domain, referer_path
+levels:
+- !ref cubetl.http.referer.domain
+- !ref cubetl.http.referer.path
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.http.user_agent
+name: user_agent
+label: User Agent
+levels:
+- !!python/object:cubetl.olap.Dimension
+  name: user_agent_family
+  label: User Agent
+- !!python/object:cubetl.olap.Dimension
+  name: user_agent_version
+  label: Version
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.os.operating_system
+name: operating_system
+label: Operating System
+levels:
+- !!python/object:cubetl.olap.Dimension
+  name: operating_system_family
+  label: OS
+- !!python/object:cubetl.olap.Dimension
+  name: operating_system_version
+  label: Version
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.os.device
+name: device
+label: Device
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.httprequest.is_bot
+name: is_bot
+label: Is Bot
+attributes:
+- name: is_bot
+  label: Is Bot
+  type: Boolean
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: cubetl.httprequest.referer_origin
+name: referer_origin
+label: Referer Origin
+attributes:
+- name: referer_origin
+  label: Referer Origin
+  type: String
 
 ---
 
@@ -127,17 +228,16 @@ dimensions:
 - !ref cubetl.webserver.request.client_country
 #- !ref cubetl.webserver.request.rlogname
 #- !ref cubetl.webserver.request.username
-
 - !ref cubetl.webserver.request.method
 - !ref cubetl.webserver.request.path
 - !ref cubetl.webserver.request.protocol
-
 - !ref cubetl.http.status
-
-#<!-- <ref object="cubetl.webserver.request.user_agent" /> levels type + version  -->
-#<!-- <ref object="cubetl.webserver.request.referer" />  2 levels domain + path -->
-
-
+- !ref cubetl.http.referer
+- !ref cubetl.http.user_agent
+- !ref cubetl.os.operating_system
+- !ref cubetl.os.device
+- !ref cubetl.httprequest.is_bot
+- !ref cubetl.httprequest.referer_origin
 measures:
 - name: served_bytes
   type: Integer
@@ -145,6 +245,8 @@ attributes:
 - name: user_agent_string
   type: String
 - name: verb
+  type: String
+- name: referer
   type: String
 
 ---

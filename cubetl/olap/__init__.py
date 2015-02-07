@@ -45,7 +45,7 @@ class Dimension(Component):
                         attr["label"] = self.label
                     else:
                         if (not "name" in attr):
-                            raise Exception("Attribute %s of %s has no 'name' attribute" % (attr, self))
+                            raise Exception("Attribute '%s' of %s has no 'name' attribute" % (attr, self))
                         attr["label"] = attr["name"]
 
 
@@ -81,6 +81,10 @@ class HierarchyDimension(Dimension):
 
     def initialize(self, ctx):
         super(HierarchyDimension, self).initialize(ctx)
+
+        # FIXME: Added because PyYAML didn't call init
+        if (self.levels == None): self.levels = []
+        if (self.hierarchies == None): self.hierarchies = []
 
         if (len(self.attributes) > 0):
             raise Exception ("%s is a HierarchyDimension and cannot have attributes." % (self))

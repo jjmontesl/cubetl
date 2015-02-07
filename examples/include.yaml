@@ -1,0 +1,16 @@
+
+---
+
+!include examples-common.yaml
+
+---
+
+!!python/object:cubetl.flow.Chain
+id: example.include
+
+steps:
+
+- !ref example.log.info
+- !ref cubetl.util.print
+
+---

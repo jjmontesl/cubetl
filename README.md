@@ -35,9 +35,11 @@ Documentation
 ** Introduction
 ** Running CubETL
 ** Configuration files
+** Expressions (message, context, ternary operator...)
 ** Process flow
-
 * Component Reference
+
+* Notes to be included:
 
 Support
 =======

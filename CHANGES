@@ -1,5 +1,6 @@
 0.4-devel
-
+    + Added basic support for config file includes (!include).
+    + Added HTTP User Agent parsing.
 0.3
     + Configuration migrated to YAML.
     + Added basic GeoIP support.

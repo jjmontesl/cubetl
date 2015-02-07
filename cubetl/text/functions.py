@@ -1,11 +1,14 @@
 import logging
 import re
 from dateutil import parser
+from urlparse import urlparse as org_ulparse
+from slugify import slugify
+import mimetypes
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-from slugify import slugify
+
 
 def slug(value):
     return unicode(slugify(unicode(value)))
@@ -20,7 +23,15 @@ def re_search(pattern, text, match = 0):
     return m.group(match)
 
 
-def parsebool (value):
+def urlparse(value):
+    return org_ulparse(value)
+
+
+def mimetype_guess(url, strict = False):
+    return mimetypes.guess_type(url, strict)[0]
+
+
+def parsebool(value):
 
     if (isinstance(value, bool)): return value
 

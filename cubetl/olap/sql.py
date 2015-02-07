@@ -58,6 +58,10 @@ class TableMapper(Component):
     def _mappings_join(self, ctx):
 
         pk = self.pk(ctx)
+
+        if pk == None:
+            raise Exception("%s has no primary key and cannot provide join columns." % self)
+
         ctype = pk["type"]
         if (ctype == "AutoIncrement"): ctype = "Integer"
         return [{

@@ -11,6 +11,7 @@ url: sqlite:///cubetl-examples.sqlite
 !!python/object:cubetl.core.ContextProperties
 id: example.contextproperties
 path_data: .
+test_message: This is a test message
 ---
 
 !!python/object:cubetl.sql.Transaction
@@ -20,3 +21,10 @@ connection: !ref example.sql.connection
 
 ---
 
+---
+
+!!python/object:cubetl.util.log.Log
+id: example.log.info
+message: CubETL Example Projects
+
+---

@@ -13,7 +13,7 @@ from BeautifulSoup import UnicodeDammit
 logger = logging.getLogger(__name__)
 
 
-class DirectoryLister(Node):
+class DirectoryList(Node):
 
     path = None
     filter_re = None

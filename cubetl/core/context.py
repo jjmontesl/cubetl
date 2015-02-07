@@ -16,6 +16,7 @@ from inspect import isclass
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class Context():
 
     def __init__(self):
@@ -33,6 +34,7 @@ class Context():
         self.start_message = {}
 
         self.props = {}
+        self.properties = self.props
 
         self._globals = {
                          "text": functions,
@@ -52,6 +54,7 @@ class Context():
             class_type = None
 
         return class_type
+
 
     def interpolate(self, m, value, data = {}):
 
@@ -110,9 +113,9 @@ class Context():
 
         return result
 
-    def copy_message (self, m):
+    def copy_message(self, m):
         if m == None:
             return {}
         else:
-            return copy.copy (m)
+            return copy.copy(m)
 

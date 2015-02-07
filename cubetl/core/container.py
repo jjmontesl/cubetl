@@ -1,37 +1,11 @@
 import logging
 import cubetl
 import yaml
-from copy import deepcopy
 from cubetl.core import Component
+import os.path
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
-
-class YAMLRef(yaml.YAMLObject):
-
-    #yaml_loader = Loader
-    #yaml_dumper = Dumper
-
-    yaml_tag = u'!ref'
-    #yaml_flow_style = ...
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-
-        node_id = node.value
-        #logger.debug("Loading reference: %s" % node.value)
-        try:
-            value = cubetl.container.get_component_by_id(node_id)
-            #value = lambda: cubetl.container.get_component_by_id(node_id)
-        except KeyError as e:
-            raise Exception("Could not find referenced object '%s' at %s:%d" % (node_id, loader.name, loader.line))
-
-        return value
-
-    #@classmethod
-    #def to_yaml(cls, dumper, data):
-    #    return node
 
 
 class Container(object):
@@ -52,6 +26,16 @@ class Container(object):
             raise Exception('Tried to configure a null object')
         if not isinstance(component, Component):
             raise Exception('Tried to configure a non Component object: %s' % component)
+
+        # Search if it exists already
+        if (hasattr(component, "id")):
+            try:
+                if self.get_component_by_id(component.id) != None:
+                    raise Exception("Tried to define an already existing id: " % component.id)
+            except:
+                pass
+
+
         self.components.append(component)
 
 

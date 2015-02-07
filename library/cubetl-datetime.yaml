@@ -4,7 +4,7 @@
 !!python/object:cubetl.olap.Dimension
 id: cubetl.datetime.year
 name: year
-label: year
+label: Year
 role: year
 attributes:
 - name: year

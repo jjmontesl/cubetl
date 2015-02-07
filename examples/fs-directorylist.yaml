@@ -2,11 +2,11 @@
 ---
 
 !!python/object:cubetl.flow.Chain
-id: example.directorylister
+id: example.directorylist
 
 steps:
 
-- !!python/object:cubetl.fs.DirectoryLister
+- !!python/object:cubetl.fs.DirectoryList
   path: /
 
 - !!python/object:cubetl.script.Script

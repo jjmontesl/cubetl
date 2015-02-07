@@ -16,11 +16,17 @@ class Connection(Component):
     url = None
     _engine = None
     _connection = None
+    _ctx = None
+
+    def initialize(self, ctx):
+        super(Connection, self).initialize(ctx)
+        self._ctx = ctx
 
     def lazy_init(self):
         if (self._engine == None):
-                logger.info("Connecting to database: %s" % self.url)
-                self._engine = create_engine(self.url)
+                url = self._ctx.interpolate(None, self.url)
+                logger.info("Connecting to database: %s" % url)
+                self._engine = create_engine(url)
                 self._connection = self._engine.connect()
 
     def connection(self):

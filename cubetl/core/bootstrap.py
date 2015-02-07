@@ -10,11 +10,11 @@ import yaml
 from cubetl.core import ContextProperties
 from cubetl import APP_NAME_VERSION
 from cubetl.core.container import Container
-
-
+from cubetl.core.cubetlconfig import load_config
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+
 
 class Bootstrap:
 
@@ -126,14 +126,9 @@ class Bootstrap:
             configs = [os.path.dirname(os.path.realpath(__file__)) + "/../cubetl-context.yaml"]
             configs.extend([config_file for config_file in ctx.config_files])
 
-            for config in configs:
-                stream = file(config, 'r')
-                for comp in yaml.load_all(stream):
-                    try:
-                        if comp != None:
-                            cubetl.container.add_component(comp)
-                    except Exception as e:
-                        raise Exception("Could not load config %s: %s" % (config, e))
+            for configfile in configs:
+                load_config(ctx, configfile)
+
 
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
