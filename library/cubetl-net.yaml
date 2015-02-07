@@ -1,15 +1,14 @@
-#
 
 ---
 
-!!python/object:cubetl.olap.HierarchyDimension
+!!python/object:cubetl.olap.Dimension
 id: cubetl.net.domain.tld
 name: tld
 label: TLD
 attributes:
 - name: tld
-- label: TLD
-- type: String
+  label: TLD
+  type: String
 
 ---
 
@@ -19,8 +18,8 @@ name: domain
 label: Domain
 attributes:
 - name: domain
-- label: Domain
-- type: String
+  label: Domain
+  type: String
 
 ---
 
@@ -30,12 +29,12 @@ name: subdomain
 label: Subdomain
 attributes:
 - name: subdomain
-- label: Subdomain
-- type: String
+  label: Subdomain
+  type: String
 
 ---
 
-!!python/object:cubetl.olap.Dimension
+!!python/object:cubetl.olap.HierarchyDimension
 id: cubetl.net.domain3
 name: domain3
 label: Domain
@@ -47,4 +46,6 @@ levels:
 - !ref cubetl.net.domain.tld
 - !ref cubetl.net.domain.domain
 - !ref cubetl.net.domain.subdomain
+
+---
 

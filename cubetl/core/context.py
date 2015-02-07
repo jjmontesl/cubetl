@@ -12,6 +12,7 @@ import copy
 import inspect
 from cubetl.core import Component
 from inspect import isclass
+import os
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -35,6 +36,8 @@ class Context():
 
         self.props = {}
         self.properties = self.props
+
+        self.working_dir = os.getcwd()
 
         self._globals = {
                          "text": functions,

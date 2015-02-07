@@ -1,13 +1,12 @@
 import logging
 import cubetl
 from copy import deepcopy
-from cubetl.core.cubetlconfig import YAMLComponent
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
-class Component(YAMLComponent):
+class Component(object):
     """
     Base class for all components.
     """
@@ -68,6 +67,7 @@ class ContextProperties(Component):
                 continue
 
             value = getattr(self, attr)
+            value = ctx.interpolate(None, value)
             logger.debug("Setting context property %s = %s" % (attr, value))
             ctx.props[attr] = ctx.interpolate(None, value)
 

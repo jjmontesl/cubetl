@@ -1,29 +1,41 @@
 
 ---
 
+!include ${ ctx.working_dir }/library/cubetl-datetime.yaml
+
+---
+
+!include ${ ctx.working_dir }/library/cubetl-geo.yaml
+
+---
+
+!include ${ ctx.working_dir }/library/cubetl-net.yaml
+
+---
+
 !!python/object:cubetl.olap.AliasDimension
-id: cubetl.webserver.request.datetime
+id: cubetl.http.request.datetime
 label: Time
 dimension: !ref cubetl.datetime.date
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.client_address
+id: cubetl.http.request.client_address
 name: address
 label: Client Address
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.client_domain
+id: cubetl.http.request.client_domain
 name: client_domain
 label: Client Domain
 
 ---
 
 !!python/object:cubetl.olap.AliasDimension
-id: cubetl.webserver.request.client_country
+id: cubetl.http.request.client_country
 name: client_country
 label: Client Country
 dimension: !ref cubetl.geo.contcountry
@@ -31,49 +43,49 @@ dimension: !ref cubetl.geo.contcountry
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.username
+id: cubetl.http.request.username
 name: request_username
 label: Username
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.method
+id: cubetl.http.request.method
 name: http_method
 label: HTTP Method
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.path1
+id: cubetl.http.request.path1
 name: request_path1
 label: Path 1
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.path2
+id: cubetl.http.request.path2
 name: request_path2
 label: Path 2
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.path3
+id: cubetl.http.request.path3
 name: request_path3
 label: Path 3
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.path4
+id: cubetl.http.request.path4
 name: request_path4
 label: Path 4
 
 ---
 
 !!python/object:cubetl.olap.HierarchyDimension
-id: cubetl.webserver.request.path
+id: cubetl.http.request.path
 name: request_path
 label: Path
 hierarchies:
@@ -81,15 +93,15 @@ hierarchies:
   label: Path
   levels: request_path1, request_path2, request_path3, request_path4
 levels:
-- !ref cubetl.webserver.request.path1
-- !ref cubetl.webserver.request.path2
-- !ref cubetl.webserver.request.path3
-- !ref cubetl.webserver.request.path4
+- !ref cubetl.http.request.path1
+- !ref cubetl.http.request.path2
+- !ref cubetl.http.request.path3
+- !ref cubetl.http.request.path4
 
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.webserver.request.protocol
+id: cubetl.http.request.protocol
 name: protocol
 label: Protocol
 
@@ -132,8 +144,9 @@ levels:
 
 ---
 
-!!python/object:cubetl.olap.Dimension
+!!python/object:cubetl.olap.AliasDimension
 id: cubetl.http.referer.domain
+dimension: !ref cubetl.net.domain3
 name: referer_domain
 label: Referer Domain
 
@@ -188,6 +201,20 @@ levels:
 
 ---
 
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.http.mimetype
+name: mimetype
+label: MIME Type
+levels:
+- !!python/object:cubetl.olap.Dimension
+  name: mimetype_type
+  label: Type
+- !!python/object:cubetl.olap.Dimension
+  name: mimetype_subtype
+  label: Subtype
+
+---
+
 !!python/object:cubetl.olap.Dimension
 id: cubetl.os.device
 name: device
@@ -196,7 +223,7 @@ label: Device
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.httprequest.is_bot
+id: cubetl.http.request.is_bot
 name: is_bot
 label: Is Bot
 attributes:
@@ -207,7 +234,7 @@ attributes:
 ---
 
 !!python/object:cubetl.olap.Dimension
-id: cubetl.httprequest.referer_origin
+id: cubetl.http.request.referer_origin
 name: referer_origin
 label: Referer Origin
 attributes:
@@ -218,26 +245,28 @@ attributes:
 ---
 
 !!python/object:cubetl.olap.Fact
-id: cubetl.webserver.request
-name: web_request
+id: cubetl.http.request
+name: http_request
 label: Web Request
 dimensions:
-- !ref cubetl.webserver.request.datetime
-- !ref cubetl.webserver.request.client_address
-#- !ref cubetl.webserver.request.client_domain
-- !ref cubetl.webserver.request.client_country
-#- !ref cubetl.webserver.request.rlogname
-#- !ref cubetl.webserver.request.username
-- !ref cubetl.webserver.request.method
-- !ref cubetl.webserver.request.path
-- !ref cubetl.webserver.request.protocol
+- !ref cubetl.http.request.datetime
+- !ref cubetl.http.request.client_address
+#- !ref cubetl.http.request.client_domain
+- !ref cubetl.http.request.client_country
+#- !ref cubetl.http.request.rlogname
+#- !ref cubetl.http.request.username
+- !ref cubetl.http.request.method
+- !ref cubetl.http.request.path
+- !ref cubetl.http.request.protocol
 - !ref cubetl.http.status
 - !ref cubetl.http.referer
 - !ref cubetl.http.user_agent
 - !ref cubetl.os.operating_system
 - !ref cubetl.os.device
-- !ref cubetl.httprequest.is_bot
-- !ref cubetl.httprequest.referer_origin
+- !ref cubetl.http.request.is_bot
+- !ref cubetl.http.request.referer_origin
+- !ref cubetl.http.request.referer_origin
+- !ref cubetl.http.mimetype
 measures:
 - name: served_bytes
   type: Integer
@@ -299,7 +328,7 @@ data: |
 ---
 
 !!python/object:cubetl.text.RegExp
-id: cubetl.webserver.parse_apache_combined
+id: cubetl.http.parse_apache_combined
 regexp: ([\d\.]+) (-) (-) \[(.*?)\] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)"
 names: address, rlogname, username, date_string, verb, status_code, served_bytes, referer, user_agent_string
 

@@ -10,19 +10,7 @@ logger = logging.getLogger(__name__)
 
 _ctx = None
 
-class YAMLComponent(yaml.YAMLObject):
 
-    #yaml_loader = Loader
-    #yaml_dumper = Dumper
-
-    #yaml_tag = u'!ref'
-    #yaml_flow_style = ...
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-
-        print "Hey"
-        return node.value
 
 
 class YAMLRef(yaml.YAMLObject):
@@ -56,13 +44,14 @@ class YAMLIncludeLoader(yaml.Loader):
 
     def __init__(self, stream):
 
-        self._root = os.path.split(stream.name)[0]
+        #self._root = os.path.split(stream.name)[0]
 
         super(YAMLIncludeLoader, self).__init__(stream)
 
     def include(self, node):
 
-        filename = os.path.join(self._root, self.construct_scalar(node))
+        #filename = os.path.join(self._root, self.construct_scalar(node))
+        filename = self.construct_scalar(node)
         load_config(_ctx, filename)
 
 YAMLIncludeLoader.add_constructor('!include', YAMLIncludeLoader.include)

@@ -1,7 +1,7 @@
 import logging
 import json
 from cubetl.core import Node
-from cubetl.olap import FactDimension, HierarchyDimension, Fact
+from cubetl.olap import FactDimension, HierarchyDimension, Fact, AliasDimension
 from cubetl.olap.sql import FactMapper, CompoundDimensionMapper,\
     MultiTableHierarchyDimensionMapper, EmbeddedDimensionMapper, DimensionMapper,\
     CompoundHierarchyDimensionMapper
@@ -205,9 +205,9 @@ class Cubes10ModelWriter(Node):
         level = {}
         logger.debug("Exporting level %s" % mapper.entity)
 
+
         pk = mapper.pk(ctx)
         mappings = mapper._mappings(ctx)
-
         level["name"] = mapper.entity.name
         level["label"] = mapper.entity.label
         level["attributes"] = []

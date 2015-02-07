@@ -1,10 +1,16 @@
 
 ---
 
+!include examples-common.yaml
+
+---
+
 !!python/object:cubetl.flow.Chain
 id: example.directorylist
 
 steps:
+
+- !ref example.log.info
 
 - !!python/object:cubetl.fs.DirectoryList
   path: /

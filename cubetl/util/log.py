@@ -62,6 +62,8 @@ class LogPerformance(Node):
         super(LogPerformance, self).finalize(ctx)
 
         current = time.time()
+        logger.info("Context expression cache usage - size: %d evictions: %d hits/misses: %d/%d" %
+                    (ctx._compiled.size, ctx._compiled.evictions, ctx._compiled.hits, ctx._compiled.misses))
         logger.info("Total time: %d  Total messages: %d  Global rate: %.3f msg/s" % (
                     current - self._startTime,
                     self._count,
@@ -94,5 +96,4 @@ class LogPerformance(Node):
             self._lastCount = self._count
 
         yield m
-
 

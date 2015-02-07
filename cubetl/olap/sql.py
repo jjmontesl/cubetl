@@ -391,6 +391,7 @@ class CompoundDimensionMapper(TableMapper):
                 logger.debug("No mapper found for %s in %s, creating a default embedded dimension mapper for it." % (dimension, self))
                 dimension_mapper = EmbeddedDimensionMapper()
                 dimension_mapper.entity = dimension
+                dimension_mapper.olapmapper = self.olapmapper
                 self.olapmapper.mappers.append(dimension_mapper)
                 self._created_mappers.append(dimension_mapper)
                 ctx.comp.initialize(dimension_mapper)
