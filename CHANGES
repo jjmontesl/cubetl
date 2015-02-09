@@ -1,4 +1,5 @@
 0.4-devel
+    + Added CSVFileWriter, FileWriter and SQLQuery.
     + Added basic support for config file includes (!include).
     + Added HTTP User Agent parsing.
 0.3

@@ -3,11 +3,12 @@ import re
 from dateutil import parser
 from urlparse import urlparse as org_ulparse
 from slugify import slugify
+import HTMLParser
 import mimetypes
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
 
 
 def slug(value):
@@ -25,6 +26,11 @@ def re_search(pattern, text, match = 0):
 
 def urlparse(value):
     return org_ulparse(value)
+
+
+_html_parser = HTMLParser.HTMLParser()
+def html_unescape(value):
+    return _html_parser.unescape(value)
 
 
 def mimetype_guess(url, strict = False):
@@ -47,9 +53,9 @@ def parsebool(value):
         raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
 
 
-def extract_date(value):
+def extract_date(value, dayfirst, fuzzy=True):
 
-    datetime = parser.parse(value, fuzzy = True)
+    datetime = parser.parse(value, dayfirst = dayfirst, fuzzy = fuzzy)
     return datetime
 
 

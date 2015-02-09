@@ -6,6 +6,7 @@ import re
 from cubetl.core import Node
 import chardet
 from BeautifulSoup import UnicodeDammit
+import os
 
 
 
@@ -103,8 +104,69 @@ class FileReader(Node):
         yield m
 
 
+class FileWriter(Node):
+
+    path = None
+    #encoding = None
+    overwrite = False
+
+    _open_records = 0
+    _open_file = None
+    _open_path = None
+
+    data = '${ m["data"] }'
+    newline = True
+
+    def initialize(self, ctx):
+        super(FileWriter, self).initialize(ctx)
+
+    def finalize(self, ctx):
+
+        self._close()
+        super(FileWriter, self).finalize(ctx)
+
+    def _close(self):
+        if self._open_file:
+            self._open_file.close()
+            self._open_records = 0
+            self._open_path = None
+
+    def _close_reopen_file(self, ctx, m):
+
+        path = ctx.interpolate(None, self.path)
+
+        if (not self._open_file or path != self._open_path):
+
+            self._close()
+
+            # Check if file exists
+            file_exists = os.path.isfile(path)
+            if file_exists and not self.overwrite:
+                raise Exception("Cannot open file '%s' for writing as it already exists (you may wish to use 'overwrite: True')" % path)
+
+            if file_exists:
+                logger.info("Opening (overwriting) file '%s'" % path)
+            else:
+                logger.info("Creating file '%s' for writing" % path)
+            self._open_records = 0
+            self._open_path = path
+            self._open_file = open(path, "w")
+
+    def process(self, ctx, m):
+
+        self._close_reopen_file(ctx, m)
+        self._open_records = self._open_records + 1
+
+        # Close/Open file if necessary
+        value = ctx.interpolate(m, self.data)
+        #if (self.encoding):
+        #    value = value.encode(self.encoding)
+        self._open_file.write(value + "\n" if self.newline else value)
+
+
 class FileLineReader(FileReader):
 
+    _line = 0
 
     def initialize(self, ctx):
 
@@ -115,10 +177,12 @@ class FileLineReader(FileReader):
         # Resolve path
         msg_path = ctx.interpolate(m, self.path)
 
-        logger.debug ("Reading file %s lines" % msg_path)
-        with open (msg_path, "r") as myfile:
+        logger.debug("Reading file %s lines" % msg_path)
+        with open(msg_path, "r") as myfile:
 
             for line in myfile:
+
+                self._line = self._line + 1
 
                 m2 = ctx.copy_message(m)
                 m2[self.name] = line
@@ -145,7 +209,7 @@ class DirectoryFileReader (Node):
 
         super(DirectoryFileReader, self).initialize(ctx)
 
-        self.directoryLister = DirectoryLister()
+        self.directoryLister = DirectoryList()
         self.directoryLister.filter_re = self.filter_re
         self.directoryLister.path = self.path
 

@@ -6,8 +6,9 @@ import re
 from cubetl.core import Node
 import chardet
 from BeautifulSoup import UnicodeDammit
-from cubetl.fs import FileReader
+from cubetl.fs import FileReader, FileWriter
 import csv
+import StringIO
 
 
 
@@ -56,7 +57,7 @@ class CsvReader(Node):
 
             if (header == None):
                 header = [v.encode('utf-8') for v in row]
-                logger.debug ("CSV header is: %s" % header)
+                logger.debug("CSV header is: %s" % header)
                 continue
 
             if (self._linenumber == 1) and (self.header): continue
@@ -64,7 +65,7 @@ class CsvReader(Node):
             #arow = {}
             if (len(row) > 0):
                 arow = ctx.copy_message(m)
-                for header_index in range (0,  len(header)):
+                for header_index in range(0, len(header)):
                     arow[(header[header_index])] = unicode(row[header_index], "utf-8")
 
                 self.count = self.count + 1
@@ -77,7 +78,6 @@ class CsvFileReader (CsvReader):
     """
 
     path = None
-    filter_re = None
 
     encoding = "detect"
     encoding_errors = "strict" # strict, ignore, replace
@@ -89,7 +89,8 @@ class CsvFileReader (CsvReader):
 
         self._fileReader = FileReader()
         self._fileReader.path = self.path
-        if (self.encoding): self._fileReader.encoding = self.encoding
+        if (self.encoding):
+            self._fileReader.encoding = self.encoding
 
         ctx.comp.initialize(self._fileReader)
 
@@ -106,5 +107,84 @@ class CsvFileReader (CsvReader):
             csv_rows = super(CsvFileReader, self).process(ctx, m)
             for csv_row in csv_rows:
                 yield csv_row
+
+
+class CsvFileWriter(Node):
+
+    data = '${ m }'
+    headers = None
+    write_headers = True
+    path = "-"
+
+    _row = 0
+
+    delimiter = ","
+    row_delimiter = "\n"
+
+    overwrite = False
+    encoding = None #"utf-8"
+
+    _output = None
+    _csvwriter = None
+
+    columns = None
+
+    def initialize(self, ctx):
+
+        super(CsvFileWriter, self).initialize(ctx)
+
+        self._fileWriter = FileWriter()
+        self._fileWriter.path = self.path
+        self._fileWriter.data = "${ m['_csvdata'] }"
+        if (self.encoding):
+            self._fileWriter.encoding = self.encoding
+            self._fileWriter.overwrite = self.overwrite
+            self._fileWriter.newline = False
+
+        # Process columns
+        for c in self.columns:
+            if not "label" in c:
+                c["label"] = c["name"]
+            if not "value" in c:
+                c["value"] = '${ m["' + c["name"] + '"] }'
+
+        ctx.comp.initialize(self._fileWriter)
+
+    def finalize(self, ctx):
+        ctx.comp.finalize(self._fileWriter)
+        super(CsvFileWriter, self).finalize(ctx)
+
+    def _csv_row(self, ctx, row):
+
+        if self.encoding:
+            row = [(r.encode(self.encoding) if isinstance(r, basestring) else r) for r in row]
+
+        self._csvwriter.writerow(row)
+        result = self._output.getvalue()
+        self._output.truncate(0)
+        return result
+
+    def process(self, ctx, m):
+
+        if not self._csvwriter:
+            self._output = StringIO.StringIO()
+            self._csvwriter = csv.writer(self._output, delimiter=self.delimiter,
+                              quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        if (self._row == 0):
+            if (self.write_headers):
+                row = [c["label"] for c in self.columns]
+                m['_csvdata'] = self._csv_row(ctx, row)
+                self._fileWriter.process(ctx, m)
+
+        self._row = self._row + 1
+
+        row = [ctx.interpolate(m, c["value"]) for c in self.columns]
+        m['_csvdata'] = self._csv_row(ctx, row)
+        self._fileWriter.process(ctx, m)
+        del (m['_csvdata'])
+
+        yield m
+
 
 

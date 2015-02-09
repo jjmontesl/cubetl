@@ -60,7 +60,7 @@ class Print(Node):
         logger.debug("Initializing Print node %s" % (self))
 
     def _prepare_res(self, obj):
-        return obj
+        return str(obj)
 
     def process(self, ctx, m):
 

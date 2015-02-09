@@ -11,6 +11,7 @@ from cubetl.core import ContextProperties
 from cubetl import APP_NAME_VERSION
 from cubetl.core.container import Container
 from cubetl.core.cubetlconfig import load_config
+import pprint
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -197,8 +198,16 @@ class Bootstrap:
 
             ctx.comp.cleanup()
 
+        except KeyboardInterrupt as e:
+            logger.error("User interrupted")
+
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logger.fatal("Error during process: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
+
+            if hasattr(ctx, "eval_error_message"):
+                pp = pprint.PrettyPrinter(indent=4, depth=2)
+                print pp.pformat(ctx._eval_error_message)
+
             traceback.print_exception(exc_type, exc_value, exc_traceback)
 

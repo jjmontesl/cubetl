@@ -102,9 +102,8 @@ class Context():
                             break
 
                     #logger.error("Error evaluating expression %s on data: %s" % (expr, m))
+                    self._eval_error_message = m
                     raise Exception('Error evaluating expression "%s" called from %s:\n%s' % (expr, caller_component, ("".join(traceback.format_exception_only(exc_type, exc_value)))) )
-
-
 
                 if ((pos>0) or (pos_end < len(result) - (len(dend)))):
                     result = result[0:pos] + unicode(res) + result[pos_end + (len(dend)):]

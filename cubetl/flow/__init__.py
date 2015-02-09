@@ -96,8 +96,12 @@ class Iterator(Node):
 
     def process(self, ctx, m):
 
-        val_list = [ v.strip() for v in self.values.split(",") ]
-        for val in val_list:
+        pvalues = self.values
+        if (isinstance(pvalues, basestring)):
+            pvalues = ctx.interpolate(m, self.values)
+        if (isinstance(pvalues, basestring)):
+            pvalues = [ v.strip() for v in pvalues.split(",") ]
+        for val in pvalues:
             # Copy message and set value
             logger.debug("Iterating: %s = %s" % (self.name, val))
             m2 = ctx.copy_message(m)

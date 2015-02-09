@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.engine import create_engine
 from sqlalchemy.schema import Table, MetaData, Column
-from sqlalchemy.types import Integer, String, Float, Boolean, Unicode
+from sqlalchemy.types import Integer, String, Float, Boolean, Unicode, Date, Time, DateTime
 import sys
 from cubetl.core import Node, Component
 from sqlalchemy.sql.expression import and_
@@ -78,6 +78,12 @@ class SQLTable(Component):
             return Boolean
         elif (column["type"] == "AutoIncrement"):
             return Integer
+        elif (column["type"] == "Date"):
+            return Date
+        elif (column["type"] == "Time"):
+            return Time
+        elif (column["type"] == "DateTime"):
+            return DateTime
         else:
             raise Exception("Invalid data type: %s" % column["type"])
 
@@ -230,9 +236,12 @@ class SQLTable(Component):
                     raise Exception("Could not find attribute '%s' in data when storing row data: %s" % (key, data))
 
             row = self.lookup(ctx, qfilter)
-            if (row): return row
+            if (row):
+                # TODO: Shall update the row
+                logger.warn("(Not implemented)  Not updating row: %s" % data)
+                return row
 
-        row_with_id =  self.insert(ctx, data)
+        row_with_id = self.insert(ctx, data)
 
         return row_with_id
 
@@ -259,7 +268,7 @@ class SQLTable(Component):
 
         row = self._prepare_row(ctx, data)
 
-        logger.debug ("Inserting in table '%s' row: %s" % (self.name, row))
+        logger.debug("Inserting in table '%s' row: %s" % (self.name, row))
         res = self.connection.connection().execute(self.sa_table.insert(row))
 
         pk = self.pk(ctx)
@@ -286,10 +295,13 @@ class Transaction(Node):
     def initialize(self, ctx):
 
         super(Transaction, self).initialize(ctx)
+        ctx.comp.initialize(self.connection)
         self.enabled = parsebool(self.enabled)
 
+
     def finalize(self, ctx):
-        pass
+        ctx.comp.finalize(self.connection)
+        #super(Transaction, self).finalize(ctx)
 
     def process(self, ctx, m):
 
@@ -315,12 +327,23 @@ class StoreRow(Node):
 
     table = None
 
+
+    def initialize(self, ctx):
+        super(StoreRow, self).initialize(ctx)
+        ctx.comp.initialize(self.table)
+
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.table)
+        super(StoreRow, self).finalize(ctx)
+
     def process(self, ctx, m):
 
         # Store
-        self.table.store(ctx, m)
+        self.table.upsert(ctx, m)
 
         yield m
+
+
 
 
 class QueryLookup(Node):
@@ -331,9 +354,10 @@ class QueryLookup(Node):
     def initialize(self, ctx):
 
         super(QueryLookup, self).initialize(ctx)
+        ctx.comp.initialize(self.connection)
 
     def finalize(self, ctx):
-
+        ctx.comp.finalize(self.connection)
         super(QueryLookup, self).finalize(ctx)
 
     def _rowtodict(self, row):
@@ -367,7 +391,77 @@ class QueryLookup(Node):
 
         result = self._do_query(query)
 
-        if (result != None): m.update(result)
+        if (result != None):
+            m.update(result)
         yield m
+
+
+class Query(Node):
+
+    connection = None
+    query = None
+    embed = False
+    singlerow = False
+    failifempty = True
+
+    def initialize(self, ctx):
+
+        super(Query, self).initialize(ctx)
+        ctx.comp.initialize(self.connection)
+
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.connection)
+        super(Query, self).finalize(ctx)
+
+    def _rowtodict(self, row):
+
+        d = {}
+        for column, value in row.items():
+            d[column] = value
+
+        return d
+
+    def process(self, ctx, m):
+
+        query = ctx.interpolate(m, self.query)
+
+        logger.debug("Running query: %s" % query.strip())
+        rows = self.connection.connection().execute(query)
+
+        if self.embed:
+            result = []
+            for r in rows:
+                result.append(self._rowtodict(r))
+
+            if self.singlerow and len(result) > 1:
+                raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
+            if len(result) == 0:
+                if self.failifempty:
+                    raise Exception("Error: %s query returned no results: %s" % (self, query))
+                else:
+                    result = None
+
+            m[self.embed] = result[0] if self.singlerow else result
+            yield m
+
+        else:
+            result = None
+            for r in rows:
+                if self.singlerow and result != None:
+                    raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
+
+                m2 = ctx.copy_message(m)
+                result = self._rowtodict(r)
+
+                if (result != None):
+                    m.update(result)
+                    yield m
+
+            if not result:
+                if self.failifempty:
+                    raise Exception("Error: %s query returned no results: %s" % (self, query))
+                else:
+                    yield m
+
 
 

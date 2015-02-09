@@ -1,7 +1,7 @@
 CubETL
 ======
 
-CubETL is a tool for data ETL (Extract, Transform and Load).
+CubETL is a *lighweigh* tool for data ETL (Extract, Transform and Load).
 
 Features:
 
@@ -10,14 +10,18 @@ Features:
 * Support for templating, GeoIP, network queries
 * Caching at several levels
 * OLAP support:
-** Star-schema generation and transparent data loading
-** Cubes OLAP Server model export
+  * Star-schema generation and transparent data loading
+  * Cubes OLAP Server model export
 * Library of common types and processes
 * Modular, extensible architecture
 * Flexible configuration via YAML
 
 Usage
 -----
+
+For installation instructions, see "Download / Install" below.
+
+
 
 
 Download / Install
@@ -32,11 +36,11 @@ Documentation
 * Quick Start
 
 * Usage
-** Introduction
-** Running CubETL
-** Configuration files
-** Expressions (message, context, ternary operator...)
-** Process flow
+  * Introduction
+  * Running CubETL
+  * Configuration files
+  * Expressions (message, context, ternary operator...)
+  * Process flow
 * Component Reference
 
 * Notes to be included:

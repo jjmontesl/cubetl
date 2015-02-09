@@ -57,6 +57,8 @@ class RegExp(Node):
             logger.debug("Searching regexp %s into %s found %d matches" % (self.regexp, data, len(matches)))
 
         # Copy matches to message
+        if isinstance(matches, basestring):
+            matches = [ matches ]
         for i in range(0, len(matches)):
             match_name = "regexp_match_" + str(i + 1)
             if (self.names):

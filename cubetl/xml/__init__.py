@@ -1,9 +1,15 @@
 import logging
 from cubetl.core import Node
-from elementtidy.TidyHTMLTreeBuilder import TidyHTMLTreeBuilder as TB
+#from elementtidy.TidyHTMLTreeBuilder import TidyHTMLTreeBuilder as TB
 from xml.etree import ElementTree
 import lxml
 from BeautifulSoup import BeautifulSoup
+
+import beautifulsoupselect as soupselect
+# Monkeypatch BeautifulSoup
+BeautifulSoup.findSelect = soupselect.select
+
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -68,7 +74,7 @@ class XPathExtract(Node):
 
         yield m
 
-
+"""
 class TidyHtmlParser(Node):
 
     encoding = 'utf-8' #'${ m["encoding"] }'
@@ -82,6 +88,7 @@ class TidyHtmlParser(Node):
         m["tidy"] = tb.close()
 
         yield m
+"""
 
 
 class BeautifulSoupParser(Node):
@@ -89,9 +96,6 @@ class BeautifulSoupParser(Node):
     def __init__(self):
 
         super(BeautifulSoupParser, self).__init__()
-
-        #self.parser = "html.parser"
-        #self.encoding = 'utf-8' #'${ m["encoding"] }'
 
     def process(self, ctx, m):
 

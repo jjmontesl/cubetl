@@ -8,9 +8,9 @@ import pprint
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
+# Global:( reference to CubETL context
 _ctx = None
-
-
 
 
 class YAMLRef(yaml.YAMLObject):
