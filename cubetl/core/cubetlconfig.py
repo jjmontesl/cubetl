@@ -4,6 +4,8 @@ import logging
 import os
 import yaml
 import pprint
+from cubetl.core import ContextProperties
+from copy import deepcopy
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -39,13 +41,35 @@ class YAMLRef(yaml.YAMLObject):
     #    return node
 
 
+class YAMLClone(yaml.YAMLObject):
+
+    #yaml_loader = Loader
+    #yaml_dumper = Dumper
+
+    yaml_tag = u'!clone'
+    #yaml_flow_style = ...
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+
+        node_id = node.value
+        #logger.debug("Loading reference: %s" % node.value)
+        try:
+            value = cubetl.container.get_component_by_id(node_id)
+            value = deepcopy(value)
+            value.id = value.id + "_clone" + str(id(value))
+            #value = lambda: cubetl.container.get_component_by_id(node_id)
+        except KeyError as e:
+            raise Exception("Could not find referenced object '%s' at %s:%d" % (node_id, loader.name, loader.line))
+
+        return value
+
 
 class YAMLIncludeLoader(yaml.Loader):
 
     def __init__(self, stream):
 
         #self._root = os.path.split(stream.name)[0]
-
         super(YAMLIncludeLoader, self).__init__(stream)
 
     def include(self, node):
@@ -62,9 +86,9 @@ def load_config(ctx, filename):
     global _ctx
     _ctx = ctx
 
-    logger.debug("Loading config file %s" % filename)
-
     file_exp = ctx.interpolate(None, filename)
+    logger.debug("Loading config file %s" % file_exp)
+
     stream = open(file_exp, 'r')
 
     comps = yaml.load_all(stream, YAMLIncludeLoader)
@@ -72,6 +96,8 @@ def load_config(ctx, filename):
         try:
             if comp != None:
                 cubetl.container.add_component(comp)
+            if isinstance(comp, ContextProperties):
+                comp.load_properties(ctx)
         except Exception as e:
             raise Exception("Could not load config %s: %s" % (file_exp, e))
 

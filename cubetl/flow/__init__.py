@@ -80,13 +80,13 @@ class Filter(Node):
             return
 
 
-class Iterator(Node):
+class Multiplier(Node):
 
     name = None
     values = None
 
     def initialize(self, ctx):
-        super(Iterator, self).initialize(ctx)
+        super(Multiplier, self).initialize(ctx)
 
         if (self.name == None):
             raise Exception("Iterator field 'name' not set in node %s" % (self))
@@ -103,34 +103,84 @@ class Iterator(Node):
             pvalues = [ v.strip() for v in pvalues.split(",") ]
         for val in pvalues:
             # Copy message and set value
-            logger.debug("Iterating: %s = %s" % (self.name, val))
+            if (ctx.debug2):
+                logger.debug("Multiplying: %s = %s" % (self.name, val))
             m2 = ctx.copy_message(m)
             m2[self.name] = val
             yield m2
 
 
-class SplitEval(Node):
-    """
-    Note that evaluation is done via ctx.interpolate(), and so
-    requires expressions to be delimited by ${}.
-    """
+class Iterator(Node):
 
-    instances = None
+    name = None
+    values = None
+    node = None
 
     def __init__(self):
 
-        super(SplitEval, self).__init__()
-        self.instances = []
+        super(Iterator, self).__init__()
 
-    def process(self, ctx, mo):
+    def initialize(self, ctx):
+        super(Iterator, self).initialize(ctx)
+        ctx.comp.initialize(self.node)
 
-        logger.debug ("MultiEval (%s mappings)" % len(self.instances))
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.node)
+        super(Iterator, self).finalize(ctx)
 
-        for instance in self.instances:
+    def process(self, ctx, m):
 
-            m = ctx.copy_message(mo)
+        pvalues = self.values
+        if (isinstance(pvalues, basestring)):
+            pvalues = ctx.interpolate(m, self.values)
+        if (isinstance(pvalues, basestring)):
+            pvalues = [ v.strip() for v in pvalues.split(",") ]
 
-            Eval.process_evals(ctx, m, instance)
+        mes = m
+        for val in pvalues:
 
-            yield m
+            if (ctx.debug2):
+                logger.debug("Iterating %s = %s" % (self.name, val))
+
+            # Message is not copied as we are iterating over the same message
+            mes[self.name] = val
+
+            result_msgs = ctx.comp.process(self.node, mes)
+            result_msgs = list(result_msgs)
+            if len(result_msgs) != 1:
+                logger.error("No message or more than one message obtained from Iterator node %s (%d messages received)" % (self, len(result_msgs)))
+            mes = result_msgs[0]
+
+        yield mes
+
+
+class Union(Node):
+
+    steps = None
+
+    def __init__(self):
+        super(Union, self).__init__()
+        self.steps = []
+
+    def initialize(self, ctx):
+        super(Union, self).initialize(ctx)
+        for p in self.steps:
+            ctx.comp.initialize(p)
+
+    def finalize(self, ctx):
+        for p in self.steps:
+            ctx.comp.finalize(p)
+        super(Union, self).finalize(ctx)
+
+    def process(self, ctx, m):
+
+        if (len(self.steps) <= 0):
+            raise Exception("Union with no steps.")
+
+        for step in self.steps:
+            m2 = ctx.copy_message(m)
+            result_msgs = ctx.comp.process(step, m2)
+            for m3 in result_msgs:
+                yield m3
+
 

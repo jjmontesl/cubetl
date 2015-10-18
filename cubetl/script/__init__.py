@@ -1,5 +1,5 @@
 import logging
-from cubetl.core import Node
+from cubetl.core import Node, ContextProperties
 import cubetl
 import sys
 import inspect
@@ -22,17 +22,38 @@ class Script(Node):
 
     def process(self, ctx, m):
 
+        # TODO: Cache code?
+
         try:
-            e_locals = { "m": m, "ctx": ctx, "refs": self.refs, "logger": logger }
+            e_locals = { "m": m, "ctx": ctx, "props": ctx.props, "var": ctx.var, "refs": self.refs, "logger": logger }
             e_globals = ctx._globals
             exec (self.code, e_locals, e_globals)
-        except (Exception) as e:
+        except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            #logger.error("Error evaluating expression %s on data: %s" % (expr, m))
+            logger.error("Error in script %s" % self)
+            #print self.code
             #raise Exception('Error evaluating script at %s:\n%s' % (self, ("".join(traceback.format_exception_only(exc_type, exc_value)))) )
             raise
 
         yield m
+
+
+class ContextScript(ContextProperties):
+
+    #def after_properties_set(self):
+    code = None
+
+    def load_properties(self, ctx):
+
+        try:
+            e_locals = { "ctx": ctx, "props": ctx.props, "var": ctx.var, "logger": logger }
+            e_globals = ctx._globals
+            exec (self.code, e_locals, e_globals)
+        except (Exception) as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            #logger.error("Error evaluating script")
+            raise Exception('Error evaluating script at %s: %s' % (self, ("".join(traceback.format_exception_only(exc_type, exc_value)))) )
+            #raise
 
 
 class Eval(Node):

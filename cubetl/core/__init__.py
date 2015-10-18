@@ -68,8 +68,12 @@ class ContextProperties(Component):
 
             value = getattr(self, attr)
             value = ctx.interpolate(None, value)
-            logger.debug("Setting context property %s = %s" % (attr, value))
-            ctx.props[attr] = ctx.interpolate(None, value)
+
+            if attr not in ctx.props:
+                logger.debug("Setting context property %s = %s" % (attr, value))
+                ctx.props[attr] = value
+            else:
+                logger.debug("Not setting context property %s as it is already defined with value %s" % (attr, ctx.props[attr]))
 
 
 class Mappings(Component):

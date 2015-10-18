@@ -22,14 +22,10 @@ class Bootstrap:
     def configure_logging(self, ctx):
 
         # In absence of file config
-        defaul_level = logging.INFO if ctx.debug == False else logging.DEBUG
-        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=defaul_level)
-        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=defaul_level)
+        default_level = logging.INFO if ctx.debug == False else logging.DEBUG
+        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
+        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
         #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-        springpython_logger = logging.getLogger("springpython")
-        if (not ctx.debug2):
-            springpython_logger.setLevel(logging.INFO)
 
         #logging.basicConfig(
         #    level=logging.DEBUG,
@@ -139,13 +135,6 @@ class Bootstrap:
             else:
                 sys.exit(3)
 
-    def init_properties(self, ctx):
-
-        # Returns all instances of MyClass and of its subclasses.
-        for obj in cubetl.container.components:
-            if isinstance(obj, ContextProperties):
-                obj.load_properties(ctx)
-
 
     def start(self, argv):
 
@@ -165,11 +154,8 @@ class Bootstrap:
         # TODO: Character encoding considerations? warnings?
 
 
-        # Init container
+        # Init container (reads config)
         self.init_container(ctx)
-
-        # Init property components
-        self.init_properties(ctx)
 
         # Launch process
         try:

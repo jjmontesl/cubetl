@@ -28,11 +28,12 @@ class DirectoryList(Node):
 
         # Check m is empty, etc
 
-        logger.info ("Listing directory %s (mask '%s')" % (path, self.filter_re))
+        filter_re = ctx.interpolate(m, self.filter_re)
+        logger.info ("Listing directory %s (mask '%s')" % (path, filter_re))
 
         files = [ f for f in listdir(path) if isfile(join(path, f)) ]
-        if (self.filter_re != None):
-            regex = re.compile(self.filter_re)
+        if (filter_re != None):
+            regex = re.compile(filter_re)
             files = [m.group(0) for m in [regex.match(f) for f in files] if m]
         files = [join(path, f) for f in files]
 
@@ -97,7 +98,7 @@ class FileReader(Node):
             m[self.name] = myfile.read()
 
             # Encoding
-            encoding = ctx.interpolate(m, self.encoding)
+            encoding = ctx.interpolate(m, self.encoding) if self.encoding else None
             m[self.name] = self._solve_encoding(encoding, m[self.name])
             m["_encoding"] = encoding
 
@@ -105,9 +106,12 @@ class FileReader(Node):
 
 
 class FileWriter(Node):
+    """
+    This class is encoding-agnostic.
+    TODO: Create an EncodingFileWriter if needed.
+    """
 
     path = None
-    #encoding = None
     overwrite = False
 
     _open_records = 0
@@ -125,15 +129,22 @@ class FileWriter(Node):
         self._close()
         super(FileWriter, self).finalize(ctx)
 
+    def on_open(self):
+        pass
+
+    def on_close(self):
+        pass
+
     def _close(self):
         if self._open_file:
+            self.on_close()
             self._open_file.close()
             self._open_records = 0
             self._open_path = None
 
     def _close_reopen_file(self, ctx, m):
 
-        path = ctx.interpolate(None, self.path)
+        path = ctx.interpolate(m, self.path)
 
         if (not self._open_file or path != self._open_path):
 
@@ -152,15 +163,16 @@ class FileWriter(Node):
             self._open_path = path
             self._open_file = open(path, "w")
 
-    def process(self, ctx, m):
+            self.on_open()
+
+    def process(self, ctx, m, value = None):
 
         self._close_reopen_file(ctx, m)
         self._open_records = self._open_records + 1
 
-        # Close/Open file if necessary
-        value = ctx.interpolate(m, self.data)
-        #if (self.encoding):
-        #    value = value.encode(self.encoding)
+        if not value:
+            value = ctx.interpolate(m, self.data)
+
         self._open_file.write(value + "\n" if self.newline else value)
 
 
@@ -203,7 +215,7 @@ class DirectoryFileReader (Node):
     path = None
     filter_re = None
 
-    encoding = None
+    encoding = "detect"
 
     def initialize(self, ctx):
 
@@ -215,7 +227,7 @@ class DirectoryFileReader (Node):
 
         self.fileReader = FileReader()
         self.fileReader.path = "${ m['path'] }"
-        if (self.encoding): self.fileReader.encoding = self.encoding
+        self.fileReader.encoding = self.encoding
 
         ctx.comp.initialize(self.directoryLister)
         ctx.comp.initialize(self.fileReader)

@@ -45,6 +45,8 @@ class Print(Node):
 
     truncate_line = 120
 
+    condition = None
+
     _lexer = None
     _formatter = None
 
@@ -66,27 +68,36 @@ class Print(Node):
 
         if (not ctx.quiet):
 
-            if (self.eval):
-                obj = ctx.interpolate(m, self.eval)
-            else:
-                obj = m
+            do_print = True
 
-            res = self._prepare_res(obj)
+            if (self.condition):
+                cond = ctx.interpolate(m, self.condition)
+                if (not cond):
+                    do_print = False
 
-            if (self.truncate_line):
-                truncated = []
-                for line in res.split("\n"):
-                    if (len(line) > self.truncate_line):
-                        line = line[:self.truncate_line - 2] + ".."
-                    truncated.append(line)
-                res = "\n".join(truncated)
+            if do_print:
+
+                if (self.eval):
+                    obj = ctx.interpolate(m, self.eval)
+                else:
+                    obj = m
+
+                res = self._prepare_res(obj)
+
+                if (self.truncate_line):
+                    truncated = []
+                    for line in res.split("\n"):
+                        if (len(line) > self.truncate_line):
+                            line = line[:self.truncate_line - 2] + ".."
+                        truncated.append(line)
+                    res = "\n".join(truncated)
 
 
-            if sys.stdout.isatty():
-                print highlight(res, self._lexer, self._formatter) #[:-1]
-                #print res
-            else:
-                print res
+                if sys.stdout.isatty():
+                    print highlight(res, self._lexer, self._formatter) #[:-1]
+                    #print res
+                else:
+                    print res
 
         yield m
 

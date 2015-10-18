@@ -7,7 +7,6 @@ from cubetl.sql.cache import CachedSQLTable
 import logging
 from cubetl.script import Eval
 
-# Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
@@ -18,9 +17,10 @@ class TableMapper(Component):
 
     __metaclass__ = ABCMeta
 
-    STORE_MODE_LOOKUP = "lookup"
-    STORE_MODE_INSERT = "insert"
-    STORE_MODE_UPSERT = "upsert"
+    STORE_MODE_LOOKUP = SQLTable.STORE_MODE_LOOKUP
+    STORE_MODE_INSERT = SQLTable.STORE_MODE_INSERT
+    STORE_MODE_UPSERT = SQLTable.STORE_MODE_UPSERT
+
 
     entity = None
 
@@ -165,8 +165,11 @@ class TableMapper(Component):
 
         Mappings.includes(ctx, self.mappings)
         for mapping in self.mappings:
-            if (not "entity" in mapping):
-                mapping["entity"] = self.entity
+            try:
+                if (not "entity" in mapping):
+                    mapping["entity"] = self.entity
+            except TypeError as e:
+                raise Exception("Could not initialize mapping '%s' of '%s': %s" % (mapping, self, e))
 
 
         if self._uses_table:
@@ -179,7 +182,7 @@ class TableMapper(Component):
             # If no key, use pk()
             if (self.lookup_cols == None):
                 pk = self.pk(ctx)
-                if ((pk == None) or (pk["type"] == "AutoIncrement")): raise Exception ("No lookup cols defined for %s " % self)
+                if ((pk == None) or (pk["type"] == "AutoIncrement")): raise Exception ("No lookup cols defined for %s (use lookup_cols=[...])" % self)
                 self.lookup_cols = [ pk["name"] ]
 
             ctx.comp.initialize(self._sqltable)
@@ -428,8 +431,11 @@ class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
         if (len(self.dimensions) != 0):
             raise Exception("Cannot define dimensions in %s. Only one HierarchyDimension can be set as entity." % (self))
 
-        for level in self.entity.levels:
-            self.dimensions.append(level)
+        try:
+            for level in self.entity.levels:
+                self.dimensions.append(level)
+        except AttributeError as e:
+            raise Exception("DimensionMapper '%s' could not iterate over the levels of the entity '%s': %s" % (self, self.entity, e))
 
         super(CompoundHierarchyDimensionMapper, self).initialize(ctx)
 

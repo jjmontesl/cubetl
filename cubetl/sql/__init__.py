@@ -42,8 +42,12 @@ class SQLTable(Component):
 
     _selects = 0
     _inserts = 0
+    _updates = 0
     _finalized = False
 
+    STORE_MODE_LOOKUP = "lookup"
+    STORE_MODE_INSERT = "insert"
+    STORE_MODE_UPSERT = "upsert"
 
     _pk = False
 
@@ -59,12 +63,14 @@ class SQLTable(Component):
     _selects = 0
     _inserts = 0
     _unicode_errors = 0
+    _lookup_changed_fields = None
 
     def __init__(self):
         super(SQLTable, self).__init__()
         self.columns = []
 
     def _get_sa_type(self, column):
+
 
         if (column["type"] == "Integer"):
             return Integer
@@ -92,12 +98,12 @@ class SQLTable(Component):
         if (not SQLTable._finalized):
             SQLTable._finalized = True
             if (SQLTable._inserts + SQLTable._selects > 0):
-                logger.info("SQLTable Totals  inserts/selects: %d/%d " %
-                            (SQLTable._inserts, SQLTable._selects))
+                logger.info("SQLTable Totals  ins/upd/sel: %d/%d/%d " %
+                            (SQLTable._inserts, SQLTable._updates, SQLTable._selects))
 
         if (self._inserts + self._selects > 0):
-            logger.info("SQLTable %-18s inserts/selects: %6d/%-6d " %
-                            (self.name, self._inserts, self._selects))
+            logger.info("SQLTable %-18s ins/upd/sel: %6d/%6d/%-6d " %
+                            (self.name, self._inserts, self._updates, self._selects))
         if (self._unicode_errors > 0):
             logger.warn("SQLTable %s found %d warnings assigning non-unicode fields to unicode columns" %
                         (self.name, self._unicode_errors))
@@ -109,6 +115,9 @@ class SQLTable(Component):
     def initialize(self, ctx):
 
         super(SQLTable, self).initialize(ctx)
+
+        if self._lookup_changed_fields == None:
+            self._lookup_changed_fields = []
 
         ctx.comp.initialize(self.connection)
 
@@ -223,6 +232,10 @@ class SQLTable(Component):
         return row
 
     def upsert(self, ctx, data, keys = []):
+        """
+        Upsert checks if the row exists and has changed. It does a lookup
+        followe by an update or insert as appropriate.
+        """
 
         # TODO: Check for AutoIncrement in keys, shall not be used
 
@@ -234,15 +247,37 @@ class SQLTable(Component):
                     qfilter[key] = data[key]
                 except KeyError as e:
                     raise Exception("Could not find attribute '%s' in data when storing row data: %s" % (key, data))
+        else:
+            pk = self.pk(ctx)
+            qfilter[pk["name"]] = data[pk["name"]]
+
+        # Do lookup
+        if len(qfilter) > 0:
 
             row = self.lookup(ctx, qfilter)
+
             if (row):
-                # TODO: Shall update the row
-                logger.warn("(Not implemented)  Not updating row: %s" % data)
+                # Check row is identical
+                for c in self.columns:
+                    if c["type"] != "AutoIncrement":
+                        v1 = row[c['name']]
+                        v2 = data[c['name']]
+                        if c["type"] == "Date":
+                            v1 = row[c['name']].strftime('%Y-%m-%d')
+                            v2 = data[c['name']].strftime('%Y-%m-%d')
+                        if (isinstance(v1, basestring) or isinstance(v2, basestring)):
+                            if (not isinstance(v1, basestring)): v1 = str(v1)
+                            if (not isinstance(v2, basestring)): v2 = str(v2)
+                        if (v1 != v2):
+                            if (c["name"] not in self._lookup_changed_fields):
+                                logger.warn("%s updating an entity that exists with different attributes, overwriting (field=%s, existing_value=%s, tried_value=%s)" % (self, c["name"], v1, v2))
+                                #self._lookup_changed_fields.append(c["name"])
+
+                # Update the row
+                row = self.update(ctx, data, keys)
                 return row
 
         row_with_id = self.insert(ctx, data)
-
         return row_with_id
 
     def _prepare_row(self, ctx, data):
@@ -276,6 +311,33 @@ class SQLTable(Component):
 
         self._inserts = self._inserts +1
         SQLTable._inserts = SQLTable._inserts + 1
+
+        if (pk != None):
+            return row
+        else:
+            return None
+
+    def update(self, ctx, data, keys = []):
+
+        row = self._prepare_row(ctx, data)
+
+        # Automatically calculate lookup if necessary
+        qfilter = {}
+        if (len(keys) > 0):
+            for key in keys:
+                try:
+                    qfilter[key] = data[key]
+                except KeyError as e:
+                    raise Exception("Could not find attribute '%s' in data when storing row data: %s" % (key, data))
+        else:
+            pk = self.pk(ctx)
+            qfilter[pk["name"]] = data[pk["name"]]
+
+        logger.debug("Updating in table '%s' row: %s" % (self.name, row))
+        res = self.connection.connection().execute(self.sa_table.update(self._attribsToClause(qfilter), row))
+
+        self._updates = self._updates +1
+        SQLTable._updates = SQLTable._updates + 1
 
         if (pk != None):
             return row
@@ -326,7 +388,7 @@ class Transaction(Node):
 class StoreRow(Node):
 
     table = None
-
+    store_mode = SQLTable.STORE_MODE_INSERT
 
     def initialize(self, ctx):
         super(StoreRow, self).initialize(ctx)
@@ -339,11 +401,12 @@ class StoreRow(Node):
     def process(self, ctx, m):
 
         # Store
-        self.table.upsert(ctx, m)
+        if self.store_mode == SQLTable.STORE_MODE_UPSERT:
+            self.table.upsert(ctx, m)
+        elif self.store_mode == SQLTable.STORE_MODE_INSERT:
+            self.table.insert(ctx, m)
 
         yield m
-
-
 
 
 class QueryLookup(Node):
@@ -454,8 +517,8 @@ class Query(Node):
                 result = self._rowtodict(r)
 
                 if (result != None):
-                    m.update(result)
-                    yield m
+                    m2.update(result)
+                    yield m2
 
             if not result:
                 if self.failifempty:

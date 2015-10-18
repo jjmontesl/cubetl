@@ -1,18 +1,6 @@
 
 ---
 
-!include ${ ctx.working_dir }/library/cubetl-datetime.yaml
-
----
-
-!include ${ ctx.working_dir }/library/cubetl-geo.yaml
-
----
-
-!include ${ ctx.working_dir }/library/cubetl-net.yaml
-
----
-
 !!python/object:cubetl.olap.AliasDimension
 id: cubetl.http.request.datetime
 label: Time
@@ -146,7 +134,7 @@ levels:
 
 !!python/object:cubetl.olap.AliasDimension
 id: cubetl.http.referer.domain
-dimension: !ref cubetl.net.domain3
+dimension: !ref cubetl.net.domain
 name: referer_domain
 label: Referer Domain
 

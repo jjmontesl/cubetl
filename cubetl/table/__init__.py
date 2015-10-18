@@ -73,7 +73,6 @@ class MemoryTable(Table):
 
     def find(self, ctx, attribs):
         logger.debug("Searching %s in %s" % (attribs, self))
-
         for row in self._rows:
             match = True
             for key in attribs.keys():
@@ -87,7 +86,6 @@ class MemoryTable(Table):
 
     def insert(self, ctx, attribs):
         if (ctx.debug2): logger.debug("Inserting %s in %s" % (attribs, self))
-
         # TODO: Copy?
         self._rows.append(attribs)
 
@@ -223,3 +221,40 @@ class TableLookup(Node):
             m.update({ k: ctx.interpolate(m, v) for k,v in self.default.items() })
 
         yield m
+
+
+class TableList(Node):
+
+    table = None
+
+    def initialize(self, ctx):
+
+        super(TableList, self).initialize(ctx)
+        ctx.comp.initialize(self.table)
+
+    def finalize(self, ctx):
+        ctx.comp.finalize(self.table)
+        super(TableList, self).finalize(ctx)
+
+    def _rowtodict(self, row):
+
+        d = {}
+        for column, value in row.items():
+            d[column] = value
+
+        return d
+
+    def process(self, ctx, m):
+
+        attribs = {}
+        rows = self.table.find(ctx, attribs)
+        for r in rows:
+
+            m2 = ctx.copy_message(m)
+            result = self._rowtodict(r)
+            if (result != None):
+                m2.update(result)
+
+            yield m2
+
+

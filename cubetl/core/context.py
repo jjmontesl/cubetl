@@ -37,6 +37,8 @@ class Context():
         self.props = {}
         self.properties = self.props
 
+        self.var = {}
+
         self.working_dir = os.getcwd()
 
         self._globals = {
@@ -65,6 +67,9 @@ class Context():
 
         # TODO: We are enforcing unicode working around Python Spring seems to give strings, not unicode
         # This shall not be necessary and it's possibly bad practice
+        if value == None:
+            return None
+
         pos = -1
         result = unicode(value)
 
@@ -80,7 +85,7 @@ class Context():
                         compiled = compile(expr, '', 'eval')
                         self._compiled.put(expr, compiled)
 
-                    c_locals = { "m": m, "ctx": self, "cubetl": cubetl }
+                    c_locals = { "m": m, "ctx": self, "props": self.props, "var": self.var, "cubetl": cubetl }
                     c_locals.update(data)
                     res = eval (compiled, self._globals ,  c_locals)
 
