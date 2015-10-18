@@ -59,7 +59,7 @@ class CsvReader(Node):
                 logger.debug("CSV header is: %s" % header)
                 continue
 
-            if (self._linenumber == 0) and (self.header): continue
+            #if (self._linenumber == 0) and (self.header): continue
 
             self._linenumber = self._linenumber + 1
 

@@ -1,0 +1,331 @@
+---
+
+!!python/object:cubetl.core.ContextProperties
+id: webshop.contextproperties
+path_data: webshop-facts.csv
+
+---
+
+!!python/object:cubetl.sql.Connection
+id: webshop.sql.connection
+url: sqlite:///webshop.sqlite
+
+---
+
+!!python/object:cubetl.sql.Transaction
+id: webshop.sql.transaction
+connection: !ref webshop.sql.connection
+#enabled: False
+
+---
+
+!!python/object:cubetl.olap.AliasDimension
+id: webshop.dim.date_sale
+name: date_sale
+label: Sale Date
+dimension: !ref cubetl.datetime.date
+
+---
+
+!!python/object:cubetl.olap.AliasDimension
+id: webshop.dim.date_visit
+name: date_visit
+label: Visit Date
+dimension: !ref cubetl.datetime.date
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: webshop.dim.customer
+name: customer
+label: Customer
+attributes:
+- name: name
+  type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: webshop.dim.product_category
+name: product_category
+label: Product Category
+attributes:
+- name: category_label
+  type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: webshop.dim.product_product
+name: product_product
+label: Product
+attributes:
+- name: product_label
+  type: String
+
+---
+
+!!python/object:cubetl.olap.HierarchyDimension
+id: webshop.dim.product
+name: product
+label: Product
+hierarchies:
+- name: product
+  label: Product
+  levels: product_category, product_product
+levels:
+- !ref webshop.dim.product_category
+- !ref webshop.dim.product_product
+
+---
+
+!!python/object:cubetl.olap.AliasDimension
+id: webshop.dim.country
+name: country
+label: Country
+dimension: !ref cubetl.geo.contcountry
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: webshop.dim.source
+name: source
+label: Source
+attributes:
+- name: label
+  type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: webshop.dim.browser
+name: browser
+label: Browser
+attributes:
+- name: name
+  type: String
+
+---
+
+!!python/object:cubetl.olap.Dimension
+id: webshop.dim.newsletter
+name: newsletter
+label: Newsletter
+attributes:
+- name: newsletter
+  type: Boolean
+
+---
+
+!!python/object:cubetl.olap.Fact
+id: webshop.fact.sales
+name: webshop_sales
+label: Webshop / Sales
+dimensions:
+- !ref webshop.dim.date_sale
+- !ref webshop.dim.customer
+- !ref webshop.dim.product
+- !ref webshop.dim.country
+
+measures:
+- name: quantity
+  type: Integer
+- name: price_total
+  type: Float
+
+---
+
+!!python/object:cubetl.olap.Fact
+id: webshop.fact.visits
+name: webshop_visits
+label: Webshop / Visits
+dimensions:
+- !ref webshop.dim.date_visit
+- !ref webshop.dim.country
+- !ref webshop.dim.browser
+- !ref webshop.dim.newsletter
+measures:
+- name: pageviews
+  type: Integer
+
+---
+
+!!python/object:cubetl.olap.OlapMapper
+id: webshop.olapmapper
+#include:
+mappers:
+- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
+  entity: !ref webshop.dim.date_sale
+  table: dates
+  connection: !ref webshop.sql.connection
+  eval:
+  - name: _cubetl_datetime_date
+    value: ${ m['date_sale'] }
+  mappings:
+  - !ref cubetl.datetime.mappings
+- !!python/object:cubetl.olap.sql.DimensionMapper
+  entity: !ref webshop.dim.customer
+  table: customer
+  lookup_cols: name
+  connection: !ref webshop.sql.connection
+  mappings:
+  - name: id
+    pk: True
+    type: AutoIncrement
+  - name: name
+    value: ${ m["customer.name"] }
+- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
+  entity: !ref webshop.dim.product
+  table: product
+  connection: !ref webshop.sql.connection
+  lookup_cols: [ 'product_label' ]
+  mappings:
+  - name: id
+    pk: True
+    type: AutoIncrement
+  - name: category_label
+    value: ${ m["product.category"] }
+  - name: product_label
+    value: ${ m["product.name"] }
+- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
+  entity: !ref webshop.dim.country
+  table: country
+  connection: !ref webshop.sql.connection
+  mappings:
+  - name: continent_code
+    value: ${ text.slugu(m["country.region"]) }
+  - name: continent_name
+    value: ${ m["country.region"] }
+  - name: country_code
+    value: ${ text.slugu(m["country.country"]) }
+    pk: True
+    type: String
+  - name: country_name
+    value: ${ m["country.country"] }
+- !!python/object:cubetl.olap.sql.FactMapper
+  entity: !ref webshop.fact.sales
+  table: webshop_sales
+  connection: !ref webshop.sql.connection
+  lookup_cols: date_sale_id, product_id
+  mappings:
+  - name: id
+    pk: True
+    type: AutoIncrement
+- !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
+  entity: !ref webshop.dim.date_visit
+  table: dates
+  connection: !ref webshop.sql.connection
+  eval:
+  - name: _cubetl_datetime_date
+    value: ${ m['date_visit'] }
+  mappings:
+  - !ref cubetl.datetime.mappings
+- !!python/object:cubetl.olap.sql.DimensionMapper
+  entity: !ref webshop.dim.browser
+  table: browser
+  lookup_cols: name
+  connection: !ref webshop.sql.connection
+  mappings:
+  - name: id
+    pk: True
+    type: AutoIncrement
+  - name: name
+    value: ${ m["browser"] }
+- !!python/object:cubetl.olap.sql.EmbeddedDimensionMapper
+  entity: !ref webshop.dim.newsletter
+- !!python/object:cubetl.olap.sql.FactMapper
+  entity: !ref webshop.fact.visits
+  table: webshop_visits
+  connection: !ref webshop.sql.connection
+  lookup_cols: visit_id
+  mappings:
+  - name: visit_id
+    pk: True
+    type: Integer
+
+---
+
+!!python/object:cubetl.cubes.Cubes10ModelWriter
+id: webshop.export-cubes
+olapmapper:
+  !!python/object:cubetl.olap.OlapMapper
+  include:
+  - !ref webshop.olapmapper
+
+---
+
+!!python/object:cubetl.flow.Chain
+id: webshop.process
+steps:
+- !!python/object:cubetl.flow.Chain
+  fork: True
+  steps:
+  - !!python/object:cubetl.script.Script
+    code: |
+        dates = []
+        date_cur = datetime.datetime(2014, 1, 1, 0, 0, 0)
+        date_end = datetime.datetime(2015, 12, 31, 0, 0, 0)
+        while date_cur <= date_end:
+          dates.append(date_cur)
+          date_cur = date_cur + datetime.timedelta(days=1)
+        ctx.props["dates"] = dates
+  - !ref webshop.sql.transaction
+  - !!python/object:cubetl.flow.Multiplier
+    name: date_sale
+    values: ${ ctx.props["dates"] }
+  - !!python/object:cubetl.olap.Store
+    entity: !ref webshop.dim.date_sale
+    mapper: !ref webshop.olapmapper
+- !!python/object:cubetl.flow.Chain
+  fork: True
+  steps:
+  - !ref webshop.sql.transaction
+  - !!python/object:cubetl.csv.CsvFileReader
+    path: ${ ctx.props['path_data'] }
+    header: True
+  - !!python/object:cubetl.script.Eval
+    eval:
+    - name: date_sale
+      value: ${ datetime.datetime(int(m['date_created.year']) + 2, int(m['date_created.month']), int(m['date_created.day']), 0, 0, 0) }
+    - name: price_total
+      value: ${ text.extract_number(m['price_total']) }
+  - !ref cubetl.util.print
+  - !!python/object:cubetl.olap.Store
+    entity: !ref webshop.fact.sales
+    mapper: !ref webshop.olapmapper
+  - !ref cubetl.util.logperformance
+- !!python/object:cubetl.flow.Chain
+  fork: True
+  steps:
+  - !ref webshop.sql.transaction
+  - !!python/object:cubetl.flow.Multiplier
+    name: visit
+    values: ${ range(1, 1018) }
+  - !!python/object:cubetl.script.Script
+    code: |
+        import random
+
+        m['visit_id'] = m['visit']
+
+        m["date_visit"] = random.choice (ctx.props["dates"])
+        m["country"] = random.choice([
+          ['Europe', 'Spain'], ['Europe', 'Denmark'], ['South America', 'Ecuador'], ['North America', 'United States of America'],
+          ['Europe', 'Ireland'], ['Europe', 'Germany'],
+          ['Europe', 'Netherlands'], ['South America', 'Brazil'], ['North America', 'Canada'], ['Europe', 'Switzerland'],
+          ['Europe', 'Portugal'], ['Europe', 'France'], ['Europe', 'Hungary'] ])
+        m["country.region"] = m["country"][0]
+        m["country.country"] = m["country"][1]
+
+        m["browser"] = random.choice (["Lynx", "Firefox", "Firefox", "Chrome", "Chrome", "Chrome"])
+        m["newsletter"] = random.choice([1, 0, 0, 0])  # ["Yes", "No", "No", "No"]
+        m["source_label"] = random.choice(["Web search", "Web search", "Direct link", "Unknown"])
+
+        m["pageviews"] = abs(int (random.gauss (7, 6))) + 1
+
+  - !ref cubetl.util.print
+  - !!python/object:cubetl.olap.Store
+    entity: !ref webshop.fact.visits
+    mapper: !ref webshop.olapmapper
+  - !ref cubetl.util.logperformance
+
+---

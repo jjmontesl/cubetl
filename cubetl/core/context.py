@@ -12,6 +12,7 @@ import copy
 import inspect
 from cubetl.core import Component
 from inspect import isclass
+import datetime
 import os
 
 # Get an instance of a logger
@@ -43,7 +44,8 @@ class Context():
 
         self._globals = {
                          "text": functions,
-                         "cubetl": cubetl
+                         "cubetl": cubetl,
+                         "datetime": datetime
                          }
 
         self._compiled = LRUCache(512)  # TODO: Configurable
