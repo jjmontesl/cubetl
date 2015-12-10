@@ -54,7 +54,10 @@ class LogPerformance(Node):
     def memory_usage_psutil(self):
         # return the memory usage in MB
         process = psutil.Process(os.getpid())
-        mem = process.get_memory_info()[0] / float(2 ** 20)
+        if hasattr(process, 'get_memory_info'):
+            mem = process.get_memory_info()[0] / float(2 ** 20)
+        else:
+            mem = 0
         return mem
 
     def finalize(self, ctx):
