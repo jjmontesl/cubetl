@@ -35,7 +35,7 @@ class HttpReader(FileReader):
         # Resolve path
         url = ctx.interpolate(m, self.url)
 
-        logger.debug("Requesting URL: %s" % url)
+        logger.debug("Requesting URL: %r" % url)
 
         headers = {}
         if self.user_agent:
