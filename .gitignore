@@ -51,3 +51,7 @@ datospublicos
 /quini
 
 /virtualenv
+/env
+
+*~
+
