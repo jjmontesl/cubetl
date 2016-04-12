@@ -1,32 +1,39 @@
-0.4-devel
-    + Added CSVFileWriter, FileWriter and SQLQuery.
-    + Added basic support for config file includes (!include).
-    + Added HTTP User Agent parsing.
-0.3
-    + Configuration migrated to YAML.
-    + Added basic GeoIP support.
-    + Added RegExp processor.
-    + Support for Cubes 1.0 model export, including time roles.
-0.2
-    + Cubes 0.10 export refactored and working.
-    + Support for mappings reuse.
-    + Table module (standard interface with lookup() and other methods).
-    + Use dots (.) to separate namespaces in ids (ie cubetl.util.print)
-    + Refactored OLAP model.
-    + Quiet mode added to avoid helper printing nodes.
-    + Syntax highlighting for print output (when output is a tty).
-    + Initial doc generation scripts.
-    + Added basic initial CSV support.
-    + Added config instrospection utils (cubetl.config.list-nodes...).
-    + Added support for parameters in context and command line.
-    + Implemented very basic template module (mako)
-0.1
-    + Improved cubes export (datetime filters, levels, hierarchies).
-    + Initial version of the build script, reorganised.
-    + Replaced signalling with lifecycle methods.
-    + Adding Unicode support.
-    + Initial import.
-    + Added SQL stats shown on finalization.
-    + Importing to cubes works. Transactions. Proof of concept ready.
-    + Some complex processing working (inserting data from XML into Star Schema)
-    + Application prototype and proof of concept.
+[1.0.4]
+
+    * Added PCAxis format reader and iterator.
+    * Added CSVFileWriter, FileWriter and SQLQuery.
+    * Added basic support for config file includes (!include).
+    * Added HTTP User Agent parsing.
+
+[1.0.3]
+
+    * Configuration migrated to YAML.
+    * Added basic GeoIP support.
+    * Added RegExp processor.
+    * Support for Cubes 1.0 model export, including time roles.
+
+[1.0.2]
+    * Cubes 0.10 export refactored and working.
+    * Support for mappings reuse.
+    * Table module (standard interface with lookup() and other methods).
+    * Use dots (.) to separate namespaces in ids (ie cubetl.util.print)
+    * Refactored OLAP model.
+    * Quiet mode added to avoid helper printing nodes.
+    * Syntax highlighting for print output (when output is a tty).
+    * Initial doc generation scripts.
+    * Added basic initial CSV support.
+    * Added config instrospection utils (cubetl.config.list-nodes...).
+    * Added support for parameters in context and command line.
+    * Implemented very basic template module (mako)
+
+[1.0.1]
+
+    * Improved cubes export (datetime filters, levels, hierarchies).
+    * Initial version of the build script, reorganised.
+    * Replaced signalling with lifecycle methods.
+    * Adding Unicode support.
+    * Initial import.
+    * Added SQL stats shown on finalization.
+    * Importing to cubes works. Transactions. Proof of concept ready.
+    * Some complex processing working (inserting data from XML into Star Schema)
+    * Application prototype and proof of concept.

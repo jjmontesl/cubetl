@@ -18,22 +18,13 @@ class PrintConfig(Node):
 
     def process(self, ctx, m):
 
-        if (self.type == None):
-            class_parent = object
-        elif (self.type == "components"):
-            class_parent = Component
-        elif (self.type == "nodes"):
-            class_parent = Node
-        else:
-            logger.error("Invalid PrintConfig object type '%s' (valid values are None, components, nodes)" % self.type)
-
         obj_list = cubetl.container.components
         #obj_list = cubetl.container.object_defs.keys()
 
-        obj_list.sort()
+        obj_list.sort(key=lambda x: x.id)
         for e in obj_list:
             #if (not e.endswith('<anonymous>')):
-            print "  %s" % (e)
+            print "  %s (%s)" % (e.id, e.__class__.__name__)
 
         yield m
 

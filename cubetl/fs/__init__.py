@@ -8,8 +8,6 @@ import chardet
 from BeautifulSoup import UnicodeDammit
 import os
 
-
-
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -92,7 +90,7 @@ class FileReader(Node):
         # Resolve path
         msg_path = ctx.interpolate(m, self.path)
 
-        logger.debug("Reading file %s" % msg_path)
+        logger.debug("Reading file %s (encoding=%s)" % (msg_path, self.encoding))
         with open(msg_path, "r") as myfile:
 
             m[self.name] = myfile.read()
@@ -207,7 +205,7 @@ class FileLineReader(FileReader):
                 yield m2
 
 
-class DirectoryFileReader (Node):
+class DirectoryFileReader(Node):
     """
     This class is a shortcut to a DirectoryLister and a FileReader
     """

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
 
     name = 'CubETL',
-    version = '0.3.1',
+    version = '1.0.4',
 
     author = 'Jose Juan Montes',
     author_email = 'jjmontes@gmail.com',

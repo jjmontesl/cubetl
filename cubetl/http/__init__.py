@@ -65,6 +65,6 @@ class HttpReader(FileReader):
             m[self.name] = html
             yield m
         else:
-            logger.error("Coudl not retrieve HTTP document in %d attempts (blocking message)." % (self.attempts))
+            logger.error("Could not retrieve HTTP document in %d attempts (blocking message)." % (self.attempts))
 
 
