@@ -16,6 +16,7 @@ from cubetl.script import Eval
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class CachedTableLookup(TableLookup):
 
     NOT_CACHED = "NOT_CACHED"
@@ -43,7 +44,8 @@ class CachedTableLookup(TableLookup):
         result = self._cache.get(cache_key, CachedTableLookup.NOT_CACHED)
         if (result != CachedTableLookup.NOT_CACHED):
             self.cache_hits = self.cache_hits + 1
-            if (ctx.debug2): logger.debug("Query cache hit: %s" % (result))
+            if (ctx.debug2):
+                logger.debug("Query cache hit: %s" % (result))
         else:
             self.cache_misses = self.cache_misses + 1
             result = self._do_lookup(ctx, m, keys)

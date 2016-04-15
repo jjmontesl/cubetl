@@ -3,6 +3,7 @@ import cubetl
 import logging
 
 from cubetl.text import functions
+from cubetl.xml import functions as xmlfunctions
 import sys
 import traceback
 
@@ -14,6 +15,7 @@ from cubetl.core import Component
 from inspect import isclass
 import datetime
 import os
+import re
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -44,8 +46,10 @@ class Context():
 
         self._globals = {
                          "text": functions,
+                         "xml": xmlfunctions,
                          "cubetl": cubetl,
-                         "datetime": datetime
+                         "datetime": datetime,
+                         "re": re
                          }
 
         self._compiled = LRUCache(512)  # TODO: Configurable
@@ -65,10 +69,6 @@ class Context():
 
     def interpolate(self, m, value, data = {}):
 
-        # TODO: Naive interpolation
-
-        # TODO: We are enforcing unicode working around Python Spring seems to give strings, not unicode
-        # This shall not be necessary and it's possibly bad practice
         if value == None:
             return None
 
@@ -76,10 +76,11 @@ class Context():
         result = unicode(value)
 
         for dstart,dend in (('${|', '|}'), ('${', '}')):
-            if (pos >= -1): pos = result.find(dstart)
+            if (pos >= -1):
+                pos = result.find(dstart)
             while (pos >= 0):
                 pos_end = result.find(dend)
-                expr = result[pos+len(dstart):pos_end].strip()
+                expr = result[pos + len(dstart):pos_end].strip()
 
                 compiled = self._compiled.get(expr)
                 try:
@@ -93,9 +94,9 @@ class Context():
 
                     if (self.debug2):
                         if (isinstance(res, basestring)):
-                            logger.debug ('Evaluated: %s = %r' % (expr, res if (len(res) < 100) else res[:100] + ".."))
+                            logger.debug('Evaluated: %s = %r' % (expr, res if (len(res) < 100) else res[:100] + ".."))
                         else:
-                            logger.debug ('Evaluated: %s = %r' % (expr, res))
+                            logger.debug('Evaluated: %s = %r' % (expr, res))
 
                 except (Exception) as e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()

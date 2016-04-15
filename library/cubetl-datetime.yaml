@@ -82,6 +82,22 @@ levels:
 
 ---
 
+!!python/object:cubetl.olap.HierarchyDimension
+id: cubetl.datetime.datemonthly
+name: datemonthly
+label: Month
+role: date
+hierarchies:
+- name: monthly
+  label: Month
+  levels: year, quarter, month
+levels:
+- !ref cubetl.datetime.year
+- !ref cubetl.datetime.quarter
+- !ref cubetl.datetime.month
+
+---
+
 !!python/object:cubetl.core.Mappings
 id: cubetl.datetime.mappings
 mappings:

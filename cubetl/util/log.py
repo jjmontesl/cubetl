@@ -56,6 +56,8 @@ class LogPerformance(Node):
         process = psutil.Process(os.getpid())
         if hasattr(process, 'get_memory_info'):
             mem = process.get_memory_info()[0] / float(2 ** 20)
+        elif hasattr(process, 'memory_info'):
+            mem = process.memory_info()[0] / float(2 ** 20)
         else:
             mem = 0
         return mem

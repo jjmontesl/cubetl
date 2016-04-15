@@ -280,12 +280,13 @@ class Store(Node):
 
     def process(self, ctx, m):
 
-        logger.debug ("Storing entity %s" % (self.entity.name))
+        logger.debug("Storing entity %s" % (self.entity.name))
 
         # Store
         # TODO: We shall not collect the ID here possibly
         fid = self.mapper.entity_mapper(self.entity).store(ctx, m)
-        if (fid != None): m[self.entity.name + "_id"] = fid
+        if (fid != None):
+            m[self.entity.name + "_id"] = fid
 
         yield m
 

@@ -81,6 +81,14 @@ class Filter(Node):
 
 
 class Multiplier(Node):
+    """
+    The multiplier node produces several messages for each incoming message received.
+
+    The incoming message is copied before assigning the value to the attribute.
+
+    | name | Name of the attribute that will be created in the message.
+    | values | A list or comma-separated-string of values to be assigned.
+    """
 
     name = None
     values = None
@@ -110,6 +118,7 @@ class Multiplier(Node):
             yield m2
 
 
+"""
 class Iterator(Node):
 
     name = None
@@ -152,6 +161,7 @@ class Iterator(Node):
             mes = result_msgs[0]
 
         yield mes
+"""
 
 
 class Union(Node):

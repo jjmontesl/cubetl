@@ -93,7 +93,13 @@ class Eval(Node):
             for evalitem in evals:
 
                 if ("value" in evalitem):
-                    m[evalitem["name"]] = ctx.interpolate(m, evalitem["value"], data)
+                    try:
+                        m[evalitem["name"]] = ctx.interpolate(m, evalitem["value"], data)
+                    except Exception as e:
+                        if "except" in evalitem:
+                            m[evalitem["name"]] = ctx.interpolate(m, evalitem["except"], data)
+                        else:
+                            raise
                 else:
                     if (evalitem["name"] in data):
                         m[evalitem["name"]] = data[evalitem["name"]]

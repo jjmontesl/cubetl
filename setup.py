@@ -12,13 +12,13 @@ setup(
 
     include_package_data=True,
     package_data = {
-                    'cubetl': ['*.yaml']
-                    },
+        'cubetl': ['*.yaml']
+    },
 
     scripts = ['bin/cubetl'],
 
     url='https://github.com/jjmontesl/cubetl',
-    license='LICENSE',
+    license='LICENSE.txt',
     description='Data manipulation tool (ETL)',
     long_description="CubETL is a data manipulation tool (also known as ETL for Extract, Transform and Load). It allows data processing flows to be defined on a configuration file. It can access and store files, databases, HTTP, FTP, SFTP resources and is extensible and scriptable.",
 
@@ -35,7 +35,7 @@ setup(
         'Topic :: Text Processing :: Markup :: XML'
     ],
 
-    install_requires=[
+    install_requires = [
         "repoze.lru >= 0.5.0",
         "sqlalchemy >= 0.7.9",
         "fs >= 0.3.0"

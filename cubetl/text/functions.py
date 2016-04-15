@@ -55,6 +55,8 @@ def parsebool(value):
 
 def extract_date(value, dayfirst, fuzzy=True):
 
+    if value is None:
+        raise ValueError("Tried to extract date from null value.")
     datetime = parser.parse(value, dayfirst = dayfirst, fuzzy = fuzzy)
     return datetime
 
