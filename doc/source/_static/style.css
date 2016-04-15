@@ -1,0 +1,12 @@
+.sphinxsidebarwrapper {
+	overflow: hidden;
+}
+
+.sphinxsidebarwrapper:before {
+    content: "";
+    display: block;
+    background: url("favicon-96x96.png") no-repeat;
+    background-size: 100% auto;
+    width: 48px;
+    height: 48px;
+}

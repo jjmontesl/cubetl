@@ -7,6 +7,7 @@ import traceback
 
 from repoze.lru import LRUCache
 from collections import namedtuple
+from cubetl.core.exceptions import ETLConfigurationException
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -42,7 +43,11 @@ class Components():
         if (not self.is_initialized(comp)):
             logger.debug("Initializing %s" % comp)
             self.component_desc(comp).initialized = True
-            comp.initialize(self.ctx)
+            try:
+                comp.initialize(self.ctx)
+            except AttributeError as e:
+                raise ETLConfigurationException("Tried to initialize invalid component: %r" % comp)
+
 
     def finalize(self, comp):
 

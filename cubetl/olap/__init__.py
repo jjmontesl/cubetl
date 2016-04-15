@@ -1,5 +1,6 @@
 import logging
 from cubetl.core import Node, Component
+from cubetl.core.exceptions import ETLConfigurationException
 #from cubetl.olap.sql import FactMapper
 
 # Get an instance of a logger
@@ -26,7 +27,8 @@ class Dimension(Component):
         super(Dimension, self).initialize(ctx)
 
         # FIXME: Added because PyYAML didn't call init
-        if self.attributes == []: self.attributes = []
+        if self.attributes == [] or self.attributes is None:
+            self.attributes = []
 
         if (self.label == None):
             self.label = self.name
@@ -207,6 +209,9 @@ class FactDimension(Dimension):
         self.dimensions = self.fact.dimensions
         self.measures = self.fact.measures
         self.attributes = self.fact.attributes
+
+        if self.name != self.fact.name:
+            raise ETLConfigurationException("FactDimension %s name is '%s' but it should match name of fact %s ('%s')" % (self, self.name, self.fact, self.fact.name))
 
 
     """

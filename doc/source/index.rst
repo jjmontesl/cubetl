@@ -6,13 +6,15 @@
 Welcome to CubETL's documentation!
 ==================================
 
+Welcome to CubETL documentation.
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
    apidoc/cubetl.rst
-   
+   faq
 
 Indices and tables
 ==================
