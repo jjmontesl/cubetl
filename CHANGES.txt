@@ -1,5 +1,7 @@
 [1.0.4]
 
+    * Fixed MultiTableHierarchyDimensionMapper failing to initialize its entity.
+    * Fixed memory_util bug in LogPerformance.
     * Added PCAxis format reader and iterator.
     * Added CSVFileWriter, FileWriter and SQLQuery.
     * Added basic support for config file includes (!include).
@@ -13,6 +15,7 @@
     * Support for Cubes 1.0 model export, including time roles.
 
 [1.0.2]
+
     * Cubes 0.10 export refactored and working.
     * Support for mappings reuse.
     * Table module (standard interface with lookup() and other methods).
@@ -22,7 +25,7 @@
     * Syntax highlighting for print output (when output is a tty).
     * Initial doc generation scripts.
     * Added basic initial CSV support.
-    * Added config instrospection utils (cubetl.config.list-nodes...).
+    * Added config instrospection utils (cubetl.config.* nodes).
     * Added support for parameters in context and command line.
     * Implemented very basic template module (mako)
 
