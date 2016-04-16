@@ -35,7 +35,7 @@ class CsvReader(Node):
 
     def process(self, ctx, m):
 
-        logger.debug ("Processing CSV data at %s" % self)
+        logger.debug("Processing CSV data at %s" % self)
 
         # Resolve data
         data = ctx.interpolate(m, self.data)

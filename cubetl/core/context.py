@@ -32,6 +32,8 @@ class Context():
 
         self.quiet = False
 
+        self.profile = False
+
         self.config_files = []
 
         self.start_node = None

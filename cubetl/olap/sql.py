@@ -370,6 +370,10 @@ class DimensionMapper(TableMapper):
 
 
 class CompoundDimensionMapper(TableMapper):
+    """
+    The CompoundDimensionMapper maps together two or more entities onto
+    the same SQL table.
+    """
 
     dimensions = []
     _created_mappers = []
@@ -436,11 +440,12 @@ class CompoundDimensionMapper(TableMapper):
 class CompoundHierarchyDimensionMapper(CompoundDimensionMapper):
     """
     This mapper maps all dimension levels of a multi-level dimension
-    on a CompoundDimensionMapper, this is, on the same table.
+    on a CompoundDimensionMapper, this is, onto the same table.
 
-    This mapper is appropriate, for example, for dates.
+    This mapper is appropriate, for example, for dates and other
+    multi-level dimensions when creating one table per level is not
+    desired.
     """
-
 
     def initialize(self, ctx):
 

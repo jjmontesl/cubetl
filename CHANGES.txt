@@ -1,5 +1,6 @@
 [1.0.4]
 
+    * Added profile command line option for profiling execution.
     * Fixed MultiTableHierarchyDimensionMapper failing to initialize its entity.
     * Fixed memory_util bug in LogPerformance.
     * Added PCAxis format reader and iterator.

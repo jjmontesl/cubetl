@@ -12,6 +12,7 @@ from cubetl import APP_NAME_VERSION
 from cubetl.core.container import Container
 from cubetl.core.cubetlconfig import load_config
 import pprint
+import cProfile
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -36,18 +37,18 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print "cubetl [-dd] [-q] [-h] [-p property=value] [-m attribute=value] [config.yaml ...] <start-node>"
+        print "cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-m attribute=value] [config.yaml ...] <start-node>"
         print ""
         print "    -p   set a context property"
         print "    -m   set an attribute for the start message"
         print "    -d   debug mode (can be used twice for more debug)"
         print "    -q   quiet mode (bypass print nodes)"
+        print "    -r   profile execution writing results to filename"
         print "    -h   show this help and exit"
         print "    -v   print version and exit"
         print ""
-        print "  Internal nodes: "
-        print "      cubetl.config.list-nodes"
-        print "      cubetl.config.list-components"
+        print "  Builtin entry points: "
+        print "      cubetl.config.list  Loads and prints configuration."
         print ""
 
     def _split_keyvalue(self, text):
@@ -61,7 +62,7 @@ class Bootstrap:
     def parse_args(self, ctx):
 
         try:
-            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:dqhv", [ "help", "version"])
+            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:r:dqhv", [ "help", "version"])
         except getopt.GetoptError as err:
             print str(err)
             self.usage()
@@ -81,6 +82,8 @@ class Bootstrap:
                     ctx.debug = True
             elif o == "-q":
                 ctx.quiet = True
+            elif o == "-r":
+                ctx.profile = a
             elif o == "-p":
                 (key, value) = self._split_keyvalue(a)
                 if (key == None):
@@ -135,6 +138,12 @@ class Bootstrap:
             else:
                 sys.exit(3)
 
+    def _do_process(self, process, ctx):
+        msgs = ctx.comp.process(process, ctx.start_message)
+        count = 0
+        for m in msgs:
+            count = count + 1
+        return count
 
     def start(self, argv):
 
@@ -160,26 +169,28 @@ class Bootstrap:
         # Launch process
         try:
             process = cubetl.container.get_component_by_id(ctx.start_node)
-        except KeyError, e:
-            logger.error ("Start process '%s' not found in configuration" % ctx.start_node)
+        except KeyError as e:
+            logger.error("Start process '%s' not found in configuration" % ctx.start_node)
             sys.exit(1)
-
 
         count = 0
 
         # Launch process and consume messages
         try:
-            logger.debug ("Initializing components")
+            logger.debug("Initializing components")
             ctx.comp.initialize(process)
 
-            logger.info ("Processing %s" % ctx.start_node)
-            msgs = ctx.comp.process(process, ctx.start_message)
-            for m in msgs:
-                count = count + 1
+            logger.info("Processing %s" % ctx.start_node)
 
-            logger.debug ("%s messages resulted from the process" % count)
+            if ctx.profile:
+                logger.warning("Profiling execution (WARNING this is SLOW) and saving results to: %s" % ctx.profile)
+                cProfile.runctx("count = self._do_process(process, ctx)", globals(), locals(), ctx.profile)
+            else:
+                count = self._do_process(process, ctx)
 
-            logger.debug ("Finalizing components")
+            logger.debug("%s messages resulted from the process" % count)
+
+            logger.debug("Finalizing components")
             ctx.comp.finalize(process)
 
             ctx.comp.cleanup()
