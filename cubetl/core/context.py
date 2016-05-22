@@ -16,6 +16,9 @@ from inspect import isclass
 import datetime
 import os
 import re
+import random
+from cubetl.core.exceptions import ETLException
+from bunch import Bunch
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -37,7 +40,7 @@ class Context():
         self.config_files = []
 
         self.start_node = None
-        self.start_message = {}
+        self.start_message = Bunch()  # {}   # TODO: Review if this is definitive, compare performance
 
         self.props = {}
         self.properties = self.props
@@ -45,13 +48,15 @@ class Context():
         self.var = {}
 
         self.working_dir = os.getcwd()
+        self.library_path = os.path.dirname(os.path.realpath(__file__)) + "/../../library"
 
         self._globals = {
                          "text": functions,
                          "xml": xmlfunctions,
                          "cubetl": cubetl,
                          "datetime": datetime,
-                         "re": re
+                         "re": re,
+                         "random": random.Random()
                          }
 
         self._compiled = LRUCache(512)  # TODO: Configurable
@@ -77,7 +82,7 @@ class Context():
         pos = -1
         result = unicode(value)
 
-        for dstart,dend in (('${|', '|}'), ('${', '}')):
+        for dstart, dend in (('${|', '|}'), ('${', '}')):
             if (pos >= -1):
                 pos = result.find(dstart)
             while (pos >= 0):
@@ -113,7 +118,9 @@ class Context():
 
                     #logger.error("Error evaluating expression %s on data: %s" % (expr, m))
                     self._eval_error_message = m
-                    raise Exception('Error evaluating expression "%s" called from %s:\n%s' % (expr, caller_component, ("".join(traceback.format_exception_only(exc_type, exc_value)))) )
+
+                    logger.error('Error evaluating expression "%s" called from %s:\n%s' % (expr, caller_component, ("".join(traceback.format_exception_only(exc_type, exc_value)))))
+                    raise
 
                 if ((pos>0) or (pos_end < len(result) - (len(dend)))):
                     result = result[0:pos] + unicode(res) + result[pos_end + (len(dend)):]

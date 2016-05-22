@@ -11,6 +11,8 @@ import csv
 from abc import abstractmethod, ABCMeta
 from cubetl.script import Eval
 from cubetl.csv import CsvReader
+from cubetl.core.exceptions import ETLException
+import random
 
 
 # Get an instance of a logger
@@ -63,13 +65,17 @@ class Table(Component):
 
 class MemoryTable(Table):
 
-    _rows = []
+    _rows = None
 
     def __init__(self):
 
         super(MemoryTable, self).__init__()
 
-        self._rows = []
+    def initialize(self, ctx):
+        super(MemoryTable, self).initialize(ctx)
+        if self._rows is None:
+            self._rows = []
+
 
     def find(self, ctx, attribs):
         logger.debug("Searching %s in %s" % (attribs, self))
@@ -85,7 +91,8 @@ class MemoryTable(Table):
 
 
     def insert(self, ctx, attribs):
-        if (ctx.debug2): logger.debug("Inserting %s in %s" % (attribs, self))
+        if (ctx.debug2):
+            logger.debug("Inserting %s in %s" % (attribs, self))
         # TODO: Copy?
         self._rows.append(attribs)
 
@@ -103,7 +110,7 @@ class CsvMemoryTable(MemoryTable):
     """
     This component represents an in-memory table which can be defined in CSV format,
     which is handy to define in-line tables in the configuration files or to quickly read
-    a CSV file in memoryh for lookups.
+    a CSV file in memory for lookups.
 
     The CSV data is processed by a CSVReader.
 
@@ -194,7 +201,7 @@ class TableLookup(Node):
         ctx.comp.finalize(self.table)
         super(TableLookup, self).finalize(ctx)
 
-    def _resolve_lookup_keys (self, ctx, m):
+    def _resolve_lookup_keys(self, ctx, m):
 
         if (not self.lookup):
             raise Exception("No lookup configuration defined for %s" % self)
@@ -258,3 +265,24 @@ class TableList(Node):
             yield m2
 
 
+class TableRandomLookup(TableList):
+
+    count = 1
+
+    def process(self, ctx, m):
+
+        attribs = {}
+        rows = list(self.table.find(ctx, attribs))
+
+        if len(rows) == 0:
+            raise ETLException("Cannot draw a random items from an empty list (%s)" % self)
+
+        for idx in range(self.count):
+            m2 = ctx.copy_message(m)
+
+            r = random.choice(rows)
+            result = self._rowtodict(r)
+            if (result != None):
+                m2.update(result)
+
+            yield m2

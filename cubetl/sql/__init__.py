@@ -6,6 +6,7 @@ import sys
 from cubetl.core import Node, Component
 from sqlalchemy.sql.expression import and_
 from cubetl.text.functions import parsebool
+from sqlalchemy.exc import ResourceClosedError
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -491,40 +492,43 @@ class Query(Node):
         logger.debug("Running query: %s" % query.strip())
         rows = self.connection.connection().execute(query)
 
-        if self.embed:
-            result = []
-            for r in rows:
-                result.append(self._rowtodict(r))
+        try:
 
-            if self.singlerow and len(result) > 1:
-                raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
-            if len(result) == 0:
-                if self.failifempty:
-                    raise Exception("Error: %s query returned no results: %s" % (self, query))
-                else:
-                    result = None
+            if self.embed:
+                result = []
+                for r in rows:
+                    result.append(self._rowtodict(r))
 
-            m[self.embed] = result[0] if self.singlerow else result
-            yield m
-
-        else:
-            result = None
-            for r in rows:
-                if self.singlerow and result != None:
+                if self.singlerow and len(result) > 1:
                     raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
+                if len(result) == 0:
+                    if self.failifempty:
+                        raise Exception("Error: %s query returned no results: %s" % (self, query))
+                    else:
+                        result = None
 
-                m2 = ctx.copy_message(m)
-                result = self._rowtodict(r)
+                m[self.embed] = result[0] if self.singlerow else result
+                yield m
 
-                if (result != None):
-                    m2.update(result)
-                    yield m2
+            else:
+                result = None
+                for r in rows:
+                    if self.singlerow and result != None:
+                        raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
 
-            if not result:
-                if self.failifempty:
-                    raise Exception("Error: %s query returned no results: %s" % (self, query))
-                else:
-                    yield m
+                    m2 = ctx.copy_message(m)
+                    result = self._rowtodict(r)
 
+                    if (result != None):
+                        m2.update(result)
+                        yield m2
 
+                if not result:
+                    if self.failifempty:
+                        raise Exception("Error: %s query returned no results: %s" % (self, query))
+                    else:
+                        yield m
+
+        except ResourceClosedError as e:
+            yield m
 

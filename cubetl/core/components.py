@@ -12,6 +12,7 @@ from cubetl.core.exceptions import ETLConfigurationException
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class ComponentDescriptor():
     pass
 
@@ -46,7 +47,8 @@ class Components():
             try:
                 comp.initialize(self.ctx)
             except AttributeError as e:
-                raise ETLConfigurationException("Tried to initialize invalid component: %r" % comp)
+                raise ETLConfigurationException("Tried to initialize invalid component (%s): %s" % (comp, e))
+
 
 
     def finalize(self, comp):
@@ -70,6 +72,5 @@ class Components():
     def cleanup(self):
         for comp_desc in self.components.values():
             if (not comp_desc.finalized):
-                logger.warn ("Unfinalized component %s" % comp_desc.comp)
-
+                logger.warn("Unfinalized component %s" % comp_desc.comp)
 

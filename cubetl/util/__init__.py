@@ -10,6 +10,7 @@ import simplejson
 import sys
 from pygments.lexers.agile import PythonLexer
 from pygments.formatters.terminal256 import Terminal256Formatter
+from bunch import Bunch
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -121,6 +122,8 @@ class PrettyPrint(Print):
     def _prepare_res(self, obj):
 
         #res = str(obj)
+        if isinstance(obj, Bunch):
+            obj = obj.toDict()
         res = self._pp.pformat(obj)
 
         return res

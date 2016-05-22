@@ -9,6 +9,7 @@ from BeautifulSoup import UnicodeDammit
 from cubetl.fs import FileReader, FileWriter
 import csv
 import StringIO
+from cubetl.core.exceptions import ETLException
 
 
 
@@ -20,11 +21,12 @@ class CsvReader(Node):
 
     data = '${ m["data"] }'
 
-    header = None
     headers = None
 
+    comment = None
     delimiter = ","
     row_delimiter = "\n"
+    ignore_missing = False
 
     count = 0
     _linenumber = 0
@@ -48,12 +50,20 @@ class CsvReader(Node):
                 header = self.headers
 
         self._linenumber = 0
-        rows = iter (self._utf_8_encoder(data.split(self.row_delimiter)))
+        rows = iter(self._utf_8_encoder(data.split(self.row_delimiter)))
 
         reader = csv.reader(rows, delimiter = self.delimiter)
         for row in reader:
 
+            # Skip empty lines
+            if (len(row) == 1 and not row[0].strip()) or len(row) == 0:
+                continue
 
+            # Skip lines with comments if so configured
+            if (self.comment and row[0].startswith(self.comment)):
+                continue
+
+            # Load header if not defined already
             if (header == None):
                 header = [v.encode('utf-8') for v in row]
                 logger.debug("CSV header is: %s" % header)
@@ -65,13 +75,18 @@ class CsvReader(Node):
 
             #arow = {}
             if (len(row) > 0):
-                arow = ctx.copy_message(m)
-                for header_index in range(0, len(header)):
-                    arow[(header[header_index])] = unicode(row[header_index], "utf-8")
+                try:
+                    arow = ctx.copy_message(m)
+                    for header_index in range(0, len(header)):
+                        if header_index < len(row) or not self.ignore_missing:
+                            arow[(header[header_index])] = unicode(row[header_index], "utf-8")
+                except Exception as e:
+                    logger.error("Could not process CSV data (%r) at %s: %s" % (row, self, e))
+                    raise ETLException("Could not process CSV data (%r) at %s: %s" % (row, self, e))
 
-                self.count = self.count + 1
-                arow['_csv_count'] = self.count
-                arow['_csv_linenumber'] = self._linenumber
+                    self.count = self.count + 1
+                    arow['_csv_count'] = self.count
+                    arow['_csv_linenumber'] = self._linenumber
 
                 yield arow
 

@@ -1,5 +1,7 @@
 [1.0.4]
 
+    * Added '-l' command line switch (shortcut to list config nodes).
+    * Added faker support (for fake data generation).
     * Added profile command line option for profiling execution.
     * Fixed MultiTableHierarchyDimensionMapper failing to initialize its entity.
     * Fixed memory_util bug in LogPerformance.

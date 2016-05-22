@@ -6,6 +6,7 @@ from cubetl.sql import SQLTable
 from cubetl.sql.cache import CachedSQLTable
 import logging
 from cubetl.script import Eval
+from cubetl.core.exceptions import ETLConfigurationException
 
 logger = logging.getLogger(__name__)
 
@@ -280,7 +281,7 @@ class TableMapper(Component):
                             v2 = str(v2)
                     if (v1 != v2):
                         if (mapping["column"] not in self._lookup_changed_fields):
-                            logger.warn("%s looked up an entity which exists with different attributes (field=%s, existing_value=%s, tried_value=%s) (reported only once per field)" % (self, mapping["column"], v1, v2))
+                            logger.warn("%s looked up an entity which exists with different attributes (field=%s, existing_value=%r, tried_value=%r) (reported only once per field)" % (self, mapping["column"], v1, v2))
                             self._lookup_changed_fields.append(mapping["column"])
 
         return row[self.pk(ctx)["column"]]
@@ -311,11 +312,14 @@ class FactMapper(TableMapper):
                                   "entity": self.entity
                                   }])
         for attribute in self.entity.attributes:
-            self._extend_mappings(ctx, mappings, [{
-                                  "name": attribute["name"],
-                                  "type": attribute["type"],
-                                  "entity": self.entity
-                                  }])
+            try:
+                self._extend_mappings(ctx, mappings, [{
+                                      "name": attribute["name"],
+                                      "type": attribute["type"],
+                                      "entity": self.entity
+                                      }])
+            except KeyError as e:
+                raise ETLConfigurationException("Definition of attribute %s of %s is missing %s" % (attribute, self.entity, e))
 
         self._ensure_mappings(ctx, mappings)
         return mappings

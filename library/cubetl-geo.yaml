@@ -59,3 +59,81 @@ mappings:
 
 ---
 
+!!python/object:cubetl.table.MemoryTable
+id: cubetl.geo.country.table
+
+---
+
+!!python/object:cubetl.flow.Chain
+id: cubetl.geo.country.load
+fork: True
+steps:
+- !!python/object:cubetl.util.log.Log
+  message: Loading country information (content by geonames.org, under CC-A 3.0)
+- !!python/object:cubetl.csv.CsvFileReader
+  path: ${ ctx.library_path }/data/countryInfo.txt
+  comment: "#"
+  delimiter: "\t"
+  ignore_missing: true
+  headers: iso, iso3, iso_numeric, fips, country, capital, area_sq_km, population, continent, tld, currency_code, currency_name, phone, postal_code_format, postal_code_regex, languages, geoname_id, neighbours
+- !!python/object:cubetl.script.Eval
+  eval:
+  - name: continent_name
+    value: ""
+  - name: continent_name
+    value: ${ u"Africa" if m['continent'] == "AF" else m['continent_name'] }
+  - name: continent_name
+    value: ${ u"Asia" if m['continent'] == "AS" else m['continent_name'] }
+  - name: continent_name
+    value: ${ u"Europe" if m['continent'] == "EU" else m['continent_name'] }
+  - name: continent_name
+    value: ${ u"North America" if m['continent'] == "NA" else m['continent_name'] }
+  - name: continent_name
+    value: ${ u"South America" if m['continent'] == "SA" else m['continent_name'] }
+  - name: continent_name
+    value: ${ u"Oceania" if m['continent'] == "OC" else m['continent_name'] }
+  - name: continent_name
+    value: ${ u"Antarctica" if m['continent'] == "AN" else m['continent_name'] }
+- !!python/object:cubetl.flow.Filter
+  condition: ${ True if not m['_cubetl_geo_country_load_filter'] else m['_cubetl_geo_country_load_filter'](m) }
+- !!python/object:cubetl.table.TableInsert
+  table: !ref cubetl.geo.country.table
+  mappings:
+  - name: country_iso
+    value: ${ m['iso'] }
+  - name: country_iso3
+    value: ${ m['iso3'] }
+  - name: country_iso_numeric
+    value: ${ m['iso_numeric'] }
+  - name: country_name
+    value: ${ m['country'] }
+  - name: country_capital
+    value: ${ m['capital'] }
+  - name: country_continent_code
+    value: ${ m['continent'] }
+  - name: country_continent_name
+    value: ${ m['continent_name'] }
+
+---
+
+!!python/object:cubetl.table.TableRandomLookup
+id: cubetl.geo.country.random
+table: !ref cubetl.geo.country.table
+
+---
+
+!!python/object:cubetl.table.cache.CachedTableLookup
+id: cubetl.geo.country.lookup
+table: !ref cubetl.geo.country.table
+lookup:
+  country_iso: ${ m["country_iso"] }
+mappings:
+- name: country_iso
+- name: country_iso3
+- name: country_iso_numeric
+- name: country_name
+- name: country_capital
+- name: country_continent_name
+- name: country_continent_code
+
+---

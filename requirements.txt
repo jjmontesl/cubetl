@@ -17,3 +17,4 @@ user-agents>=0.3.2
 lxml>=3.4.2
 PyYAML==3.11
 pyparsing==2.1.1
+fake-factory==0.5.7

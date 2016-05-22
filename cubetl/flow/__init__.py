@@ -34,7 +34,7 @@ class Chain(Node):
             return
 
         if ctx.debug2:
-            logger.debug ("Processing step: %s" % (steps[0]))
+            logger.debug("Processing step: %s" % (steps[0]))
 
         result_msgs = ctx.comp.process(steps[0], m)
         for m in result_msgs:

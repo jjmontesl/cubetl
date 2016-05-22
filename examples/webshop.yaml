@@ -1,8 +1,21 @@
+
+---
+
+!include library/cubetl-datetime.yaml
+
+---
+
+!include library/cubetl-geo.yaml
+
+---
+
+!include library/cubetl-fakedata.yaml
+
 ---
 
 !!python/object:cubetl.core.ContextProperties
 id: webshop.contextproperties
-path_data: webshop-facts.csv
+path_data: examples/webshop-facts.csv
 
 ---
 
@@ -126,12 +139,13 @@ dimensions:
 - !ref webshop.dim.customer
 - !ref webshop.dim.product
 - !ref webshop.dim.country
-
 measures:
 - name: quantity
   type: Integer
 - name: price_total
   type: Float
+- name: delivery_days
+  type: Integer
 
 ---
 
@@ -146,6 +160,8 @@ dimensions:
 - !ref webshop.dim.newsletter
 measures:
 - name: pageviews
+  type: Integer
+- name: time
   type: Integer
 
 ---
@@ -206,7 +222,8 @@ mappers:
   entity: !ref webshop.fact.sales
   table: webshop_sales
   connection: !ref webshop.sql.connection
-  lookup_cols: date_sale_id, product_id
+  lookup_cols: date_sale_id, company_id, product_id
+  store_mode: insert
   mappings:
   - name: id
     pk: True
@@ -257,14 +274,24 @@ olapmapper:
 !!python/object:cubetl.flow.Chain
 id: webshop.process
 steps:
+
+- !ref cubetl.fake.faker
+- !ref cubetl.fake.product.load
+
+- !!python/object:cubetl.script.Eval
+  eval:
+  - name: _cubetl_geo_country_load_filter
+    value: "${ lambda m: m['population'] > 30000000 }"
+- !ref cubetl.geo.country.load
+
 - !!python/object:cubetl.flow.Chain
   fork: True
   steps:
   - !!python/object:cubetl.script.Script
     code: |
         dates = []
-        date_cur = datetime.datetime(2014, 1, 1, 0, 0, 0)
-        date_end = datetime.datetime(2015, 12, 31, 0, 0, 0)
+        date_cur = datetime.datetime(2012, 1, 1, 0, 0, 0)
+        date_end = datetime.datetime(2016, 12, 31, 0, 0, 0)
         while date_cur <= date_end:
           dates.append(date_cur)
           date_cur = date_cur + datetime.timedelta(days=1)
@@ -276,31 +303,70 @@ steps:
   - !!python/object:cubetl.olap.Store
     entity: !ref webshop.dim.date_sale
     mapper: !ref webshop.olapmapper
+
 - !!python/object:cubetl.flow.Chain
   fork: True
   steps:
+
   - !ref webshop.sql.transaction
-  - !!python/object:cubetl.csv.CsvFileReader
-    path: ${ ctx.props['path_data'] }
-    header: True
+
+  - !!python/object:cubetl.flow.Multiplier
+    name: iter
+    values: ${ range(4550) }
+
+  - !ref cubetl.fake.product.random
+
   - !!python/object:cubetl.script.Eval
     eval:
-    - name: date_sale
-      value: ${ datetime.datetime(int(m['date_created.year']) + 2, int(m['date_created.month']), int(m['date_created.day']), 0, 0, 0) }
+    - name: product.name
+      value: ${ m.product_name }
+    - name: product.category
+      value: ${ m.product_category }
+
+    - name: price_unit
+      value: ${ text.extract_number(m['product_price']) }
+    - name: quantity
+      value: ${ abs(int(random.gauss (2, 3))) }
+    - name: quantity
+      value: ${ m["quantity"] if m["price_unit"] < 80.0 else int(0.5 + (0.5 * m["quantity"])) }
     - name: price_total
-      value: ${ text.extract_number(m['price_total']) }
+      value: ${ m['price_unit'] * m['quantity'] }
+
+    - name: date_sale
+      value: ${ random.choice(ctx.props["dates"]) }
+    - name: delivery_days
+      value: ${ abs(int(random.gauss (7, 3))) }
+
+    - name: customer.name
+      value: ${ fake.limit("company", 215) }
+    - name: country_iso
+      value: ${ fake.limit("country_code", 28) }
+
+  - !ref cubetl.geo.country.lookup
+
   - !ref cubetl.util.print
+
+  - !!python/object:cubetl.script.Eval
+    eval:
+    - name: country.country
+      value: ${ m["country_name"] }
+    - name: country.region
+      value: ${ m["country_continent_name"] }
+
+
   - !!python/object:cubetl.olap.Store
     entity: !ref webshop.fact.sales
     mapper: !ref webshop.olapmapper
+
   - !ref cubetl.util.logperformance
+
 - !!python/object:cubetl.flow.Chain
   fork: True
   steps:
   - !ref webshop.sql.transaction
   - !!python/object:cubetl.flow.Multiplier
     name: visit
-    values: ${ range(1, 1018) }
+    values: ${ range(1, 9050) }
   - !!python/object:cubetl.script.Script
     code: |
         import random
@@ -313,14 +379,15 @@ steps:
           ['Europe', 'Ireland'], ['Europe', 'Germany'],
           ['Europe', 'Netherlands'], ['South America', 'Brazil'], ['North America', 'Canada'], ['Europe', 'Switzerland'],
           ['Europe', 'Portugal'], ['Europe', 'France'], ['Europe', 'Hungary'] ])
-        m["country.region"] = m["country"][0]
-        m["country.country"] = m["country"][1]
+        m["country.region"] = unicode(m["country"][0])
+        m["country.country"] = unicode(m["country"][1])
 
-        m["browser"] = random.choice (["Lynx", "Firefox", "Firefox", "Chrome", "Chrome", "Chrome"])
+        m["browser"] = random.choice ([u"Lynx", u"Internet Explorer 8.0", u"Internet Explorer 9.0", u"Safari", u"Android", u"Android", u"Firefox", u"Firefox", u"Firefox", u"Chrome", u"Chrome", u"Chrome", u"Chrome"])
         m["newsletter"] = random.choice([1, 0, 0, 0])  # ["Yes", "No", "No", "No"]
-        m["source_label"] = random.choice(["Web search", "Web search", "Direct link", "Unknown"])
+        m["source_label"] = random.choice([u"Web search", u"Web search", u"Web search", u"Direct link", u"Twitter", u"YouTube", u"Unknown"])
 
-        m["pageviews"] = abs(int (random.gauss (7, 6))) + 1
+        m["pageviews"] = abs(int (random.gauss (10, 10))) + 1
+        m["time"] = abs(int (random.gauss (90, 50)))
 
   - !ref cubetl.util.print
   - !!python/object:cubetl.olap.Store

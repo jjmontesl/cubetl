@@ -70,3 +70,8 @@ License
 CubETL is licensed under GNU General Public License v3 (GPLv3).
 
 For full license see the LICENSE file.
+
+Other sources:
+
+* Country list from: http://www.geonames.org (CC-A 3.0)
+

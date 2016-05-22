@@ -41,9 +41,10 @@ class Bootstrap:
         print ""
         print "    -p   set a context property"
         print "    -m   set an attribute for the start message"
-        print "    -d   debug mode (can be used twice for more debug)"
+        print "    -d   debug mode (can be used twice for extra debug)"
         print "    -q   quiet mode (bypass print nodes)"
         print "    -r   profile execution writing results to filename"
+        print "    -l   list config nodes ('cubetl.config.list' as start-node)"
         print "    -h   show this help and exit"
         print "    -v   print version and exit"
         print ""
@@ -62,7 +63,7 @@ class Bootstrap:
     def parse_args(self, ctx):
 
         try:
-            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:r:dqhv", [ "help", "version"])
+            opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:r:dqhvl", [ "help", "version"])
         except getopt.GetoptError as err:
             print str(err)
             self.usage()
@@ -84,6 +85,8 @@ class Bootstrap:
                 ctx.quiet = True
             elif o == "-r":
                 ctx.profile = a
+            elif o == "-l":
+                ctx.start_node = "cubetl.config.list"
             elif o == "-p":
                 (key, value) = self._split_keyvalue(a)
                 if (key == None):
@@ -108,7 +111,7 @@ class Bootstrap:
                 if (ctx.start_node == None):
                     ctx.start_node = argument
                 else:
-                    print ("Only one start node can be specified (second found: '%s')" % (argument))
+                    print ("Only one start node can be specified (found: '%s', '%s')" % (ctx.start_node, argument))
                     self.usage()
                     sys.exit(2)
 
