@@ -79,6 +79,8 @@ class Context():
         if value == None:
             return None
 
+        value = value.strip()
+
         pos = -1
         result = unicode(value)
 

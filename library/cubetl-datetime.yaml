@@ -108,7 +108,7 @@ mappings:
 - name: year
   value: ${ m["_cubetl_datetime_date"].year }
 - name: quarter
-  value: ${ int(m["_cubetl_datetime_date"].month / 4) + 1 }
+  value: ${ int((m["_cubetl_datetime_date"].month - 1) / 3) + 1 }
 - name: month
   value: ${ m["_cubetl_datetime_date"].month }
 - name: week

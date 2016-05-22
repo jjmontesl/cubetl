@@ -141,10 +141,13 @@ dimensions:
 - !ref webshop.dim.country
 measures:
 - name: quantity
+  label: Quantity
   type: Integer
 - name: price_total
+  label: Price Total
   type: Float
 - name: delivery_days
+  label: Delivery Days
   type: Integer
 
 ---
@@ -281,7 +284,8 @@ steps:
 - !!python/object:cubetl.script.Eval
   eval:
   - name: _cubetl_geo_country_load_filter
-    value: "${ lambda m: m['population'] > 30000000 }"
+    value: "${ lambda m: int(m.population) > 40000000 }"
+
 - !ref cubetl.geo.country.load
 
 - !!python/object:cubetl.flow.Chain
@@ -339,10 +343,8 @@ steps:
 
     - name: customer.name
       value: ${ fake.limit("company", 215) }
-    - name: country_iso
-      value: ${ fake.limit("country_code", 28) }
 
-  - !ref cubetl.geo.country.lookup
+  - !ref cubetl.geo.country.random
 
   - !ref cubetl.util.print
 
@@ -364,24 +366,23 @@ steps:
   fork: True
   steps:
   - !ref webshop.sql.transaction
+
   - !!python/object:cubetl.flow.Multiplier
     name: visit
     values: ${ range(1, 9050) }
+
+  - !ref cubetl.geo.country.random
+
   - !!python/object:cubetl.script.Script
     code: |
         import random
 
         m['visit_id'] = m['visit']
 
-        m["date_visit"] = random.choice (ctx.props["dates"])
-        m["country"] = random.choice([
-          ['Europe', 'Spain'], ['Europe', 'Denmark'], ['South America', 'Ecuador'], ['North America', 'United States of America'],
-          ['Europe', 'Ireland'], ['Europe', 'Germany'],
-          ['Europe', 'Netherlands'], ['South America', 'Brazil'], ['North America', 'Canada'], ['Europe', 'Switzerland'],
-          ['Europe', 'Portugal'], ['Europe', 'France'], ['Europe', 'Hungary'] ])
-        m["country.region"] = unicode(m["country"][0])
-        m["country.country"] = unicode(m["country"][1])
+        m["country.region"] = m.country_continent_name
+        m["country.country"] = m.country_name
 
+        m["date_visit"] = random.choice (ctx.props["dates"])
         m["browser"] = random.choice ([u"Lynx", u"Internet Explorer 8.0", u"Internet Explorer 9.0", u"Safari", u"Android", u"Android", u"Firefox", u"Firefox", u"Firefox", u"Chrome", u"Chrome", u"Chrome", u"Chrome"])
         m["newsletter"] = random.choice([1, 0, 0, 0])  # ["Yes", "No", "No", "No"]
         m["source_label"] = random.choice([u"Web search", u"Web search", u"Web search", u"Direct link", u"Twitter", u"YouTube", u"Unknown"])
@@ -390,6 +391,7 @@ steps:
         m["time"] = abs(int (random.gauss (90, 50)))
 
   - !ref cubetl.util.print
+
   - !!python/object:cubetl.olap.Store
     entity: !ref webshop.fact.visits
     mapper: !ref webshop.olapmapper

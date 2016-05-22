@@ -95,7 +95,8 @@ steps:
   - name: continent_name
     value: ${ u"Antarctica" if m['continent'] == "AN" else m['continent_name'] }
 - !!python/object:cubetl.flow.Filter
-  condition: ${ True if not m['_cubetl_geo_country_load_filter'] else m['_cubetl_geo_country_load_filter'](m) }
+  condition: ${ True if not '_cubetl_geo_country_load_filter' in m else m['_cubetl_geo_country_load_filter'](m) }
+- !ref cubetl.util.print
 - !!python/object:cubetl.table.TableInsert
   table: !ref cubetl.geo.country.table
   mappings:
