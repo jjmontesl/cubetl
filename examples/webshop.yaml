@@ -163,8 +163,10 @@ dimensions:
 - !ref webshop.dim.newsletter
 measures:
 - name: pageviews
+  label: Page Views
   type: Integer
 - name: time
+  label: Session Time
   type: Integer
 
 ---
@@ -323,9 +325,9 @@ steps:
   - !!python/object:cubetl.script.Eval
     eval:
     - name: product.name
-      value: ${ m.product_name }
+      value: ${ m["product_name"] }
     - name: product.category
-      value: ${ m.product_category }
+      value: ${ m["product_category"] }
 
     - name: price_unit
       value: ${ text.extract_number(m['product_price']) }
@@ -339,10 +341,10 @@ steps:
     - name: date_sale
       value: ${ random.choice(ctx.props["dates"]) }
     - name: delivery_days
-      value: ${ abs(int(random.gauss (7, 3))) }
+      value: ${ abs(int(random.gauss(hash(m["product_category"]) % 3 + 3, hash(m["product_category"]) % 5 + 1))) }
 
     - name: customer.name
-      value: ${ fake.limit("company", 215) }
+      value: ${ fake.limit("company", 145) }
 
   - !ref cubetl.geo.country.random
 

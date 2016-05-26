@@ -40,7 +40,7 @@ class Context():
         self.config_files = []
 
         self.start_node = None
-        self.start_message = Bunch()  # {}   # TODO: Review if this is definitive, compare performance
+        self.start_message = {}  # Bunch()  # {}   # TODO: Review if this is definitive, compare performance
 
         self.props = {}
         self.properties = self.props
