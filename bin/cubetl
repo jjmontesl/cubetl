@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
 import os
-
-from cubetl.core.bootstrap import Bootstrap
 import sys
 
+
 def main():
-    
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(BASE_DIR + "/../")
+
+    from cubetl.core.bootstrap import Bootstrap
     bootstrap = Bootstrap()
     bootstrap.start(sys.argv[1:])
 

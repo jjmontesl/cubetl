@@ -19,6 +19,11 @@ attributes:
 id: cubetl.geo.country
 name: country
 label: Country
+info:
+  cv-geo-flag-field: country_iso
+  cv-geo-ref-field: country_iso
+  cv-geo-map-layer: world_countries
+  #layer.ref-attr: iso
 attributes:
 - name: country_code
   label: Country Code

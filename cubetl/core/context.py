@@ -56,6 +56,7 @@ class Context():
                          "cubetl": cubetl,
                          "datetime": datetime,
                          "re": re,
+                         "sys": sys,
                          "random": random.Random()
                          }
 

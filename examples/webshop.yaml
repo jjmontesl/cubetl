@@ -332,7 +332,7 @@ steps:
     - name: price_unit
       value: ${ text.extract_number(m['product_price']) }
     - name: quantity
-      value: ${ abs(int(random.gauss (2, 3))) }
+      value: ${ abs(int(random.gauss (2, 3))) + 1 }
     - name: quantity
       value: ${ m["quantity"] if m["price_unit"] < 80.0 else int(0.5 + (0.5 * m["quantity"])) }
     - name: price_total

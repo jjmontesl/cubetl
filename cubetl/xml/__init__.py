@@ -3,9 +3,11 @@ from cubetl.core import Node
 #from elementtidy.TidyHTMLTreeBuilder import TidyHTMLTreeBuilder as TB
 import lxml
 from lxml import etree
+from xml.dom import pulldom
 from BeautifulSoup import BeautifulSoup
 
 import beautifulsoupselect as soupselect
+from xml.etree import ElementTree
 # Monkeypatch BeautifulSoup
 BeautifulSoup.findSelect = soupselect.select
 
@@ -13,6 +15,39 @@ BeautifulSoup.findSelect = soupselect.select
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+
+
+class XmlPullParser(Node):
+
+    path = None
+    tagname = None
+
+    def process(self, ctx, m):
+
+        path = ctx.interpolate(ctx, self.path)
+        logger.debug("Reading XML in pull mode (splitting by tag '%s'): %s" % (self.tagname, path))
+
+
+        with open(path, "r") as xmlfile:
+
+            doc = pulldom.parse(xmlfile)
+            for event, node in doc:
+                if event == pulldom.START_ELEMENT and node.tagName == self.tagname:
+                    doc.expandNode(node)
+
+                    m2 = ctx.copy_message(m)
+                    xmltext = node.toxml().encode('utf-8')
+                    xmltext = "<root>" + xmltext + "</root>"
+                    parser = etree.XMLParser(recover=True, encoding="utf-8")
+                    xml = etree.fromstring(xmltext, parser=parser)
+
+                    for elem in xml.iter():
+                        if ":" in elem.tag:
+                            elem.tag = ":".join(elem.tag.split(":")[1:])
+
+                    m2['xml'] = xml
+
+                    yield m2
 
 
 class XmlParser(Node):

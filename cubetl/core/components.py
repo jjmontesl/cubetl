@@ -44,10 +44,12 @@ class Components():
         if (not self.is_initialized(comp)):
             logger.debug("Initializing %s" % comp)
             self.component_desc(comp).initialized = True
+            comp.initialize(self.ctx)
             try:
-                comp.initialize(self.ctx)
+                pass
             except AttributeError as e:
                 raise ETLConfigurationException("Tried to initialize invalid component (%s): %s" % (comp, e))
+
 
 
 

@@ -154,14 +154,19 @@ class Bootstrap:
         ctx = Context()
         ctx.argv = argv
 
+        # Set library dir
+        # FIXME: Fix this so it works with setup.py/others installatiob
+        base_dir = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../../")
+        ctx.props['dir_lib'] = base_dir + "/library"
+
         # Parse arguments
         self.parse_args(ctx)
 
         # Init logging
         self.configure_logging(ctx)
         logger = logging.getLogger(__name__)
-        logger.info ("Starting %s" % cubetl.APP_NAME_VERSION)
-        logger.debug ("Debug logging level enabled")
+        logger.info("Starting %s" % cubetl.APP_NAME_VERSION)
+        logger.debug("Debug logging level enabled")
 
         # TODO: Character encoding considerations? warnings?
 
