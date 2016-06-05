@@ -21,6 +21,8 @@ class SDMXOlapMapper(OlapMapper):
 
     id_prefix = None
     table_prefix = ""
+    entity_prefix = ""
+    entity_rename = None
 
     def initialize(self, ctx):
 
@@ -47,12 +49,18 @@ class SDMXOlapMapper(OlapMapper):
         path_dsd = ctx.interpolate(ctx, self.path_dsd)
         self.dsd = SDMXDSD(path_dsd)
 
+    def rename_entity(self, name):
+        if self.entity_rename and name in self.entity_rename:
+            return self.entity_rename[name]
+        else:
+            return name
+
     def generate_model(self):
 
         for dimension_key, dimension in self.dsd.data['timedimensions'].items():
             olapdimension = Dimension()
-            olapdimension.id = "%s.%s" % (self.id_prefix, dimension_key)
-            olapdimension.name = dimension_key
+            olapdimension.id = self.id_prefix + self.rename_entity(dimension_key)
+            olapdimension.name = self.entity_prefix + self.rename_entity(dimension_key)
             olapdimension.role = "time"
             olapdimension.label = dimension["concept"]["label"]
             olapdimension.attributes = [ { "name": dimension_key, "type": "String" } ]
@@ -60,8 +68,8 @@ class SDMXOlapMapper(OlapMapper):
 
         for dimension_key, dimension in self.dsd.data['dimensions'].items():
             olapdimension = Dimension()
-            olapdimension.id = "%s.%s" % (self.id_prefix, dimension_key)
-            olapdimension.name = dimension_key
+            olapdimension.id = self.id_prefix + self.rename_entity(dimension_key)
+            olapdimension.name = self.entity_prefix + self.rename_entity(dimension_key)
             olapdimension.label = dimension["concept"]["label"]
             olapdimension.attributes = [ { "name": dimension_key + "_code", "type": "String" },
                                          { "name": dimension_key + "_label", "type": "String" } ]
@@ -72,10 +80,10 @@ class SDMXOlapMapper(OlapMapper):
             measures.append({"name": measure_key, "label": measure["label"], "type": "Float"})
 
         fact = Fact()
-        fact.id = "%s.%s" % (self.id_prefix, self.fact_name)
-        fact.name = self.fact_name
-        fact.dimensions = ( [d for d in self.model.values() if isinstance(d, Dimension) and d.role == "time"] +
-                            [d for d in self.model.values() if isinstance(d, Dimension) and not d.role == "time"] )
+        fact.id = self.id_prefix + self.fact_name
+        fact.name = self.entity_prefix + self.rename_entity(self.fact_name)
+        fact.dimensions = ( sorted([d for d in self.model.values() if isinstance(d, Dimension) and d.role == "time"], key=lambda x: x.label) +
+                            sorted([d for d in self.model.values() if isinstance(d, Dimension) and not d.role == "time"], key=lambda x: x.label) )
         fact.measures = measures
         self.model[fact.id] = fact
         self.fact = fact
@@ -85,26 +93,26 @@ class SDMXOlapMapper(OlapMapper):
         #self.olapmapper.mappers = []
 
         for dimension_key, sdmxdimension in self.dsd.data['dimensions'].items():
-            did = "%s.%s" % (self.id_prefix, dimension_key)
+            did = self.id_prefix + self.rename_entity(dimension_key)
             d = self.model[did]
             mapper = DimensionMapper()
             mapper.entity = d
             mapper.table = self.table_prefix + d.name
             mapper.connection = self.connection
             mapper.lookup_cols = [ d.name + "_code" ]
-            mapper.mappings = [{ "name": d.name + "_code", "pk": True, "type": "String", "value": "${m['%s']}" % (d.name + "_code")},
-                               { "name": d.name + "_label", "type": "String", "value": "${m['%s']}" % (d.name + "_label")}]
+            mapper.mappings = [{ "name": dimension_key + "_code", "pk": True, "type": "String", "value": "${m['%s']}" % (dimension_key + "_code")},
+                               { "name": dimension_key + "_label", "type": "String", "value": "${m['%s']}" % (dimension_key + "_label")}]
             self.olapmapper.mappers.append(mapper)
 
         for dimension_key, sdmxdimension in self.dsd.data['timedimensions'].items():
-            did = "%s.%s" % (self.id_prefix, dimension_key)
+            did = self.id_prefix + self.rename_entity(dimension_key)
             d = self.model[did]
             mapper = EmbeddedDimensionMapper()
             mapper.entity = d
             #mapper.table = self.table_prefix + d.name
             #mapper.connection = self.connection
             #mapper.lookup_cols = [ d.name ]
-            #mapper.mappings = [{ "name": d.name, "pk": True, "type": "String", "value": "${m['%s']}" % (d.name)}]
+            #mapper.mappings = [{ "name": dimension_key, "pk": True, "type": "String", "value": "${m['%s']}" % (dimension_key)}]
             self.olapmapper.mappers.append(mapper)
 
         mapper = FactMapper()
