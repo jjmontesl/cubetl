@@ -69,7 +69,7 @@ class Bootstrap:
             self.usage()
             sys.exit(2)
 
-        for o,a  in opts:
+        for o, a in opts:
             if o in ("-h", "--help"):
                 self.usage()
                 sys.exit(0)

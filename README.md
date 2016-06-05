@@ -67,7 +67,7 @@ See AUTHORS file for more information.
 License
 =======
 
-CubETL is licensed under GNU General Public License v3 (GPLv3).
+CubETL is published under MIT license.
 
 For full license see the LICENSE file.
 

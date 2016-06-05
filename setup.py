@@ -27,7 +27,7 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'Intended Audience :: Information Technology',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Topic :: Database',
         'Topic :: Scientific/Engineering',
