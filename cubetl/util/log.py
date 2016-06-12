@@ -19,6 +19,7 @@ class Log(Node):
     condition = None
     message = "MESSAGE NOT CONFIGURED - Check Log node configuration"
     level = logging.INFO
+    once = False
 
     count = 0
 
@@ -30,7 +31,7 @@ class Log(Node):
         if (self.condition):
             dolog = parsebool(ctx.interpolate(m, self.condition))
 
-        if dolog:
+        if dolog and (not self.once or self.count == 1):
             logger.log(self.level, ctx.interpolate(m, self.message))
 
         yield m

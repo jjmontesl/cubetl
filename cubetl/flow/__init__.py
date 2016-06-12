@@ -12,6 +12,7 @@ class Chain(Node):
 
     fork = False
     steps = None
+    condition = None
 
     def __init__(self):
         super(Chain, self).__init__()
@@ -44,19 +45,26 @@ class Chain(Node):
 
     def process(self, ctx, m):
 
-        if (not self.fork):
-            result_msgs = self._process(self.steps, ctx, m)
-            for m in result_msgs:
+        cond = True
+        if self.condition:
+            cond = parsebool(ctx.interpolate(m, self.condition))
+
+        if cond:
+            if (not self.fork):
+                result_msgs = self._process(self.steps, ctx, m)
+                for m in result_msgs:
+                    yield m
+            else:
+                logger.debug("Forking flow")
+                m2 = ctx.copy_message(m)
+                result_msgs = self._process(self.steps, ctx, m2)
+                count = 0
+                for mdis in result_msgs:
+                    count = count + 1
+
+                logger.debug("Forked flow end - discarded %d messages" % count)
                 yield m
         else:
-            logger.debug("Forking flow")
-            m2 = ctx.copy_message(m)
-            result_msgs = self._process(self.steps, ctx, m2)
-            count = 0
-            for mdis in result_msgs:
-                count = count + 1
-
-            logger.debug("Forked flow end - discarded %d messages" % count)
             yield m
 
 

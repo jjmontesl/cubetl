@@ -19,6 +19,7 @@ class SDMXOlapMapper(OlapMapper):
     path_dsd = None
     path_sdmx = None
 
+    fact_label = None
     id_prefix = None
     table_prefix = ""
     entity_prefix = ""
@@ -82,6 +83,7 @@ class SDMXOlapMapper(OlapMapper):
         fact = Fact()
         fact.id = self.id_prefix + self.fact_name
         fact.name = self.entity_prefix + self.rename_entity(self.fact_name)
+        fact.label = self.fact_label if self.fact_label else fact.name
         fact.dimensions = ( sorted([d for d in self.model.values() if isinstance(d, Dimension) and d.role == "time"], key=lambda x: x.label) +
                             sorted([d for d in self.model.values() if isinstance(d, Dimension) and not d.role == "time"], key=lambda x: x.label) )
         fact.measures = measures

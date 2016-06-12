@@ -1,5 +1,6 @@
 [1.0.4]
 
+    * Added ProcessTable (allows to do lookups through processes).
     * Added automatic OLAP entities and mapping generation from SDMX.
     * Added basic SDMX file reading support (Eurostat files).
     * Added '-l' command line switch (shortcut to list config nodes).

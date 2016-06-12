@@ -5,6 +5,7 @@ from urlparse import urlparse as org_ulparse
 from slugify import slugify
 import HTMLParser
 import mimetypes
+import urllib
 
 
 # Get an instance of a logger
