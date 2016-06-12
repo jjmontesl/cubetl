@@ -1,19 +1,22 @@
-sql Package
-===========
+cubetl.sql package
+==================
 
-:mod:`sql` Package
-------------------
+Submodules
+----------
 
-.. automodule:: cubetl.sql
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`cache` Module
--------------------
+cubetl.sql.cache module
+-----------------------
 
 .. automodule:: cubetl.sql.cache
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: cubetl.sql
+    :members:
+    :undoc-members:
+    :show-inheritance:

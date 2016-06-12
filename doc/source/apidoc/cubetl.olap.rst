@@ -1,19 +1,22 @@
-olap Package
-============
+cubetl.olap package
+===================
 
-:mod:`olap` Package
--------------------
+Submodules
+----------
 
-.. automodule:: cubetl.olap
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`sql` Module
------------------
+cubetl.olap.sql module
+----------------------
 
 .. automodule:: cubetl.olap.sql
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: cubetl.olap
+    :members:
+    :undoc-members:
+    :show-inheritance:

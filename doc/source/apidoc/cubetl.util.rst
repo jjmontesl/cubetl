@@ -1,27 +1,38 @@
-util Package
-============
+cubetl.util package
+===================
 
-:mod:`util` Package
--------------------
+Submodules
+----------
 
-.. automodule:: cubetl.util
+cubetl.util.cache module
+------------------------
+
+.. automodule:: cubetl.util.cache
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`config` Module
---------------------
+cubetl.util.config module
+-------------------------
 
 .. automodule:: cubetl.util.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`log` Module
------------------
+cubetl.util.log module
+----------------------
 
 .. automodule:: cubetl.util.log
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: cubetl.util
+    :members:
+    :undoc-members:
+    :show-inheritance:

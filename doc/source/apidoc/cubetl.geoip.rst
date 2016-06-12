@@ -1,10 +1,10 @@
-cubetl.script package
-=====================
+cubetl.geoip package
+====================
 
 Module contents
 ---------------
 
-.. automodule:: cubetl.script
+.. automodule:: cubetl.geoip
     :members:
     :undoc-members:
     :show-inheritance:

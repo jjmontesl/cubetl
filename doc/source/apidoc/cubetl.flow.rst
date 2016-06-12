@@ -1,11 +1,10 @@
-flow Package
-============
+cubetl.flow package
+===================
 
-:mod:`flow` Package
--------------------
+Module contents
+---------------
 
 .. automodule:: cubetl.flow
     :members:
     :undoc-members:
     :show-inheritance:
-

@@ -1,11 +1,10 @@
-templates Package
-=================
+cubetl.templates package
+========================
 
-:mod:`templates` Package
-------------------------
+Module contents
+---------------
 
 .. automodule:: cubetl.templates
     :members:
     :undoc-members:
     :show-inheritance:
-

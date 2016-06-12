@@ -1,11 +1,10 @@
-csv Package
-===========
+cubetl.csv package
+==================
 
-:mod:`csv` Package
-------------------
+Module contents
+---------------
 
 .. automodule:: cubetl.csv
     :members:
     :undoc-members:
     :show-inheritance:
-

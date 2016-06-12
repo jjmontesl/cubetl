@@ -1,13 +1,13 @@
-cubetl.xml package
+cubetl.net package
 ==================
 
 Submodules
 ----------
 
-cubetl.xml.functions module
+cubetl.net.useragent module
 ---------------------------
 
-.. automodule:: cubetl.xml.functions
+.. automodule:: cubetl.net.useragent
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ cubetl.xml.functions module
 Module contents
 ---------------
 
-.. automodule:: cubetl.xml
+.. automodule:: cubetl.net
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,13 +1,13 @@
-cubetl.xml package
-==================
+cubetl.table package
+====================
 
 Submodules
 ----------
 
-cubetl.xml.functions module
----------------------------
+cubetl.table.cache module
+-------------------------
 
-.. automodule:: cubetl.xml.functions
+.. automodule:: cubetl.table.cache
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ cubetl.xml.functions module
 Module contents
 ---------------
 
-.. automodule:: cubetl.xml
+.. automodule:: cubetl.table
     :members:
     :undoc-members:
     :show-inheritance:

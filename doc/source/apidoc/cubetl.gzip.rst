@@ -1,10 +1,10 @@
-cubetl.script package
-=====================
+cubetl.gzip package
+===================
 
 Module contents
 ---------------
 
-.. automodule:: cubetl.script
+.. automodule:: cubetl.gzip
     :members:
     :undoc-members:
     :show-inheritance:

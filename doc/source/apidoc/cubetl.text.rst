@@ -1,13 +1,13 @@
-cubetl.xml package
-==================
+cubetl.text package
+===================
 
 Submodules
 ----------
 
-cubetl.xml.functions module
----------------------------
+cubetl.text.functions module
+----------------------------
 
-.. automodule:: cubetl.xml.functions
+.. automodule:: cubetl.text.functions
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ cubetl.xml.functions module
 Module contents
 ---------------
 
-.. automodule:: cubetl.xml
+.. automodule:: cubetl.text
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,11 +1,10 @@
-fs Package
-==========
+cubetl.fs package
+=================
 
-:mod:`fs` Package
------------------
+Module contents
+---------------
 
 .. automodule:: cubetl.fs
     :members:
     :undoc-members:
     :show-inheritance:
-

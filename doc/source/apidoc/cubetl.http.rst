@@ -1,10 +1,10 @@
-cubetl.script package
-=====================
+cubetl.http package
+===================
 
 Module contents
 ---------------
 
-.. automodule:: cubetl.script
+.. automodule:: cubetl.http
     :members:
     :undoc-members:
     :show-inheritance:
