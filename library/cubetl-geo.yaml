@@ -143,3 +143,53 @@ mappings:
 - name: country_continent_code
 
 ---
+
+# This is a virtual table backed by an HTTP request to OpenStreetMaps Nominatim service.
+# Queries can be done on this table using the "query" message attribute, this process returns
+# the first result returned by Nominatim service.
+# Note that OSM Nonimatim service has a Usage Policy (http://wiki.openstreetmap.org/wiki/Nominatim_usage_policy).
+
+!!python/object:cubetl.table.ProcessTable
+id: cubetl.geo.osm.nominatim
+fork: True
+process: !!python/object:cubetl.flow.Chain
+  id: cubetl.geo.country.load
+  fork: False
+  steps:
+  - !!python/object:cubetl.util.log.Log
+    message: Resolving geographic name (data and service by (c) OpenStreetMaps contributors, see "Nominatim usage policy" (http://wiki.openstreetmap.org/wiki/Nominatim_usage_policy))
+    once: True
+  - !!python/object:cubetl.http.HttpReader
+    url: "http://nominatim.openstreetmap.org/search.php?format=json&q=${ urllib.quote_plus(m['query'].encode('utf-8')) }"
+  - !!python/object:cubetl.json.JsonReader
+    data: ${ m["data"] }
+    name: nominatim_data
+    iterate: False
+  - !!python/object:cubetl.flow.Filter
+    condition: ${ bool(m['nominatim_data']) }
+  - !!python/object:cubetl.script.Eval
+    eval:
+    - name: data
+      value: null
+    - name: nominatim_data
+      value: ${ m['nominatim_data'][0] }
+    - name: nominatim_display_name
+      value: ${ m['nominatim_data']['display_name'] }
+    - name: nominatim_lat
+      value: ${ float(m['nominatim_data']['lat']) }
+    - name: nominatim_lon
+      value: ${ float(m['nominatim_data']['lon']) }
+    - name: nominatim_bbox_u
+      value: ${ float(m['nominatim_data']['boundingbox'][1]) }
+    - name: nominatim_bbox_d
+      value: ${ float(m['nominatim_data']['boundingbox'][0]) }
+    - name: nominatim_bbox_l
+      value: ${ float(m['nominatim_data']['boundingbox'][2]) }
+    - name: nominatim_bbox_r
+      value: ${ float(m['nominatim_data']['boundingbox'][3]) }
+
+  - !!python/object:cubetl.util.log.Log
+    level: 10  # FIXME: Log node shall parse log levels
+    message: Nominatim query "${ m['query'] }" resolved to "${ m['nominatim_display_name'] }"
+
+---

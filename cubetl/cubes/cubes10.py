@@ -220,7 +220,6 @@ class Cubes10ModelWriter(Node):
         level = {}
         logger.debug("Exporting level %s" % mapper.entity)
 
-
         pk = mapper.pk(ctx)
         mappings = mapper._mappings(ctx)
         level["name"] = mapper.entity.name
@@ -228,6 +227,8 @@ class Cubes10ModelWriter(Node):
         level["attributes"] = []
         level["key"] = pk["name"] if pk else mappings[0]["name"]
         level["label_attribute"] = mappings[1]["name"] if len(mappings) >= 2 else mappings[0]["name"]
+        if hasattr(mapper.entity, 'order_attribute'):  level['order_attribute'] = mapper.entity.order_attribute
+
 
         for mapping in mappings:
 

@@ -142,7 +142,8 @@ class Bootstrap:
                 sys.exit(3)
 
     def _do_process(self, process, ctx):
-        msgs = ctx.comp.process(process, ctx.start_message)
+        message = ctx.copy_message(ctx.start_message)
+        msgs = ctx.comp.process(process, message)
         count = 0
         for m in msgs:
             count = count + 1

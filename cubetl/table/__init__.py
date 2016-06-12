@@ -97,13 +97,60 @@ class MemoryTable(Table):
         self._rows.append(attribs)
 
     def update(self, ctx, attribs, lookup):
-        pass
+        raise NotImplementedError()
 
     def upsert(self, ctx, attribs, lookup):
-        pass
+        raise NotImplementedError()
 
     def delete(self, ctx, lookup):
-        pass
+        raise NotImplementedError()
+
+
+class ReadOnlyTable(Table):
+
+    def insert(self, ctx, attribs):
+        raise NotImplementedError("%s is a readonly table, cannot insert." % self)
+
+    def update(self, ctx, attribs, lookup):
+        raise NotImplementedError("%s is a readonly table, cannot be updated." % self)
+
+    def upsert(self, ctx, attribs, lookup):
+        raise NotImplementedError("%s is a readonly table, cannot upsert." % self)
+
+    def delete(self, ctx, lookup):
+        raise NotImplementedError("%s is a readonly table, cannot delete." % self)
+
+
+class ProcessTable(ReadOnlyTable):
+
+    process = None
+
+    def __init__(self):
+
+        super(ProcessTable, self).__init__()
+
+    def initialize(self, ctx):
+        super(ProcessTable, self).initialize(ctx)
+        ctx.comp.initialize(self.process)
+
+    def finalize(self, ctx):
+        if self.process:
+            ctx.comp.finalize(self.process)
+        super(ProcessTable, self).finalize(ctx)
+
+    def find(self, ctx, attribs):
+        logger.debug("Process searching %s in %s" % (attribs, self))
+
+        # Initialize message adding attributes
+        message = ctx.copy_message(ctx.start_message)
+        for key in attribs.keys():
+            message[key] = attribs[key]
+
+        # Run process
+        msgs = ctx.comp.process(self.process, message)
+
+        for row in msgs:
+            yield row
 
 
 class CsvMemoryTable(MemoryTable):
@@ -182,18 +229,18 @@ class TableInsert(Node):
 
 class TableLookup(Node):
 
-    def __init__(self):
-
-        super(TableLookup, self).__init__()
-
-        self.table = None
-        self.lookup = { }
-        self.default = { }
-        self.mappings = []
+    table = None
+    lookup = None
+    default = None
+    mappings = None
 
     def initialize(self, ctx):
 
         super(TableLookup, self).initialize(ctx)
+        if not self.lookup: self.lookup = { }
+        if not self.default: self.default = { }
+        if not self.mappings: self.mappings = []
+
         ctx.comp.initialize(self.table)
 
     def finalize(self, ctx):
@@ -225,7 +272,7 @@ class TableLookup(Node):
         if (result):
             Eval.process_evals(ctx, m, self.mappings, result)
         else:
-            m.update({ k: ctx.interpolate(m, v) for k,v in self.default.items() })
+            m.update({ k: ctx.interpolate(m, v) for k, v in self.default.items() })
 
         yield m
 

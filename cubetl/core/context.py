@@ -19,6 +19,7 @@ import re
 import random
 from cubetl.core.exceptions import ETLException
 from bunch import Bunch
+import urllib
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class Context():
                          "datetime": datetime,
                          "re": re,
                          "sys": sys,
+                         "urllib": urllib,
                          "random": random.Random()
                          }
 
@@ -80,6 +82,9 @@ class Context():
         if value == None:
             return None
 
+        if not isinstance(value, basestring):
+            return value
+
         value = value.strip()
 
         pos = -1
@@ -100,7 +105,7 @@ class Context():
 
                     c_locals = { "m": m, "ctx": self, "props": self.props, "var": self.var, "cubetl": cubetl }
                     c_locals.update(data)
-                    res = eval (compiled, self._globals ,  c_locals)
+                    res = eval(compiled, self._globals, c_locals)
 
                     if (self.debug2):
                         if (isinstance(res, basestring)):

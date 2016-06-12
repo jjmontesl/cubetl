@@ -18,6 +18,22 @@ logger = logging.getLogger(__name__)
 
 
 class JsonReader(Node):
+    """
+    Processes JSON data, returning it as a Python dictionary inside the attribute specified by
+    `name`. If no name is defined, JSON object attributes are flattened on the message (if the
+    result is a JSON dictionary).
+
+    By default, if the result is a list, it will be iterated generating one message for each
+    item. This can be avoided using `iterate: False`, in this case a `name` is required.
+
+    .. code-block:: javascript
+
+        - !!python/object:cubetl.json.JsonReader
+          data: ${ m["data"] }
+          name: null
+          iterate: True
+
+    """
 
     name = None
     data = '${ m["data"] }'
@@ -31,7 +47,7 @@ class JsonReader(Node):
         data = ctx.interpolate(m, self.data)
 
         result = json.loads(data)
-        if isinstance(result, list):
+        if isinstance(result, list) and self.iterate:
             for item in result:
                 m2 = ctx.copy_message(m)
                 if self.name:
