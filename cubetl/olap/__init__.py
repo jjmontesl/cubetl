@@ -2,6 +2,7 @@ import logging
 from cubetl.core import Node, Component
 from cubetl.core.exceptions import ETLConfigurationException
 #from cubetl.olap.sql import FactMapper
+from past.builtins import basestring
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)

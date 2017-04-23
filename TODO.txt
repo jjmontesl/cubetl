@@ -31,6 +31,9 @@
 
     * Finish and add example for template support (mako)
 
+    * Inspect a dataset (attribute, column, w/ support for multiple columns...) and identify metadata (incl. names, etc).
+      based on metadata, validations, formatting, and sample data.
+
     * Publish?
     * Internal and External documentation (possibly best after config and examples exist)
     * Include system is order-dependant, because of !refs (check YAML references / lazy refs/proxies / ... ?).

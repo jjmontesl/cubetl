@@ -7,6 +7,7 @@ from cubetl.sql.cache import CachedSQLTable
 import logging
 from cubetl.script import Eval
 from cubetl.core.exceptions import ETLConfigurationException
+from past.builtins import basestring
 
 logger = logging.getLogger(__name__)
 

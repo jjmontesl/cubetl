@@ -1,6 +1,7 @@
 [1.0.5]
 
-
+    * Fixed several incompatibility bugs in Python 3.
+    * Improved support for starting processes from API.
 
 [1.0.4]
 
@@ -50,3 +51,5 @@
     * Importing to cubes works. Transactions. Proof of concept ready.
     * Some complex processing working (inserting data from XML into Star Schema)
     * Application prototype and proof of concept.
+
+

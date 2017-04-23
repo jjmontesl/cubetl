@@ -1,10 +1,6 @@
+
 import logging
 import re
-from dateutil import parser
-from urlparse import urlparse as org_ulparse
-from slugify import slugify
-import HTMLParser
-import mimetypes
 
 
 # Get an instance of a logger

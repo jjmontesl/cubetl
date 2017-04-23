@@ -7,6 +7,7 @@ from cubetl.core import Node, Component
 from sqlalchemy.sql.expression import and_
 from cubetl.text.functions import parsebool
 from sqlalchemy.exc import ResourceClosedError
+from past.builtins import basestring
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -61,8 +62,6 @@ class SQLTable(Component):
     sa_table = None
     sa_metadata = None
 
-    _selects = 0
-    _inserts = 0
     _unicode_errors = 0
     _lookup_changed_fields = None
 
@@ -127,6 +126,11 @@ class SQLTable(Component):
 
         self.sa_metadata = MetaData()
         self.sa_table = Table(self.name, self.sa_metadata)
+
+        self._selects = 0
+        self._inserts = 0
+        self._updates = 0
+        self._unicode_errors = 0
 
         # Drop?
 
@@ -289,7 +293,7 @@ class SQLTable(Component):
             if (column["type"] != "AutoIncrement"):
                 try:
                     row[column["name"]] = data[column["name"]]
-                except KeyError, e:
+                except KeyError as e:
                     raise Exception("Missing attribute for column %s in table '%s' while inserting row: %s" % (e, self.name, data))
 
                 # Checks
@@ -310,7 +314,7 @@ class SQLTable(Component):
         pk = self.pk(ctx)
         row[pk["name"]] = res.inserted_primary_key[0]
 
-        self._inserts = self._inserts +1
+        self._inserts = self._inserts + 1
         SQLTable._inserts = SQLTable._inserts + 1
 
         if (pk != None):

@@ -37,20 +37,20 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print "cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-m attribute=value] [config.yaml ...] <start-node>"
-        print ""
-        print "    -p   set a context property"
-        print "    -m   set an attribute for the start message"
-        print "    -d   debug mode (can be used twice for extra debug)"
-        print "    -q   quiet mode (bypass print nodes)"
-        print "    -r   profile execution writing results to filename"
-        print "    -l   list config nodes ('cubetl.config.list' as start-node)"
-        print "    -h   show this help and exit"
-        print "    -v   print version and exit"
-        print ""
-        print "  Builtin entry points: "
-        print "      cubetl.config.list  Loads and prints configuration."
-        print ""
+        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-m attribute=value] [config.yaml ...] <start-node>")
+        print("")
+        print("    -p   set a context property")
+        print("    -m   set an attribute for the start message")
+        print("    -d   debug mode (can be used twice for extra debug)")
+        print("    -q   quiet mode (bypass print nodes)")
+        print("    -r   profile execution writing results to filename")
+        print("    -l   list config nodes ('cubetl.config.list' as start-node)")
+        print("    -h   show this help and exit")
+        print("    -v   print version and exit")
+        print("")
+        print("  Builtin entry points: ")
+        print("      cubetl.config.list  Loads and prints configuration.")
+        print("")
 
     def _split_keyvalue(self, text):
         """Return key=value pair, or key=None if format is incorrect
@@ -65,7 +65,7 @@ class Bootstrap:
         try:
             opts, arguments = getopt.gnu_getopt(ctx.argv, "p:m:r:dqhvl", [ "help", "version"])
         except getopt.GetoptError as err:
-            print str(err)
+            print(str(err))
             self.usage()
             sys.exit(2)
 
@@ -74,7 +74,7 @@ class Bootstrap:
                 self.usage()
                 sys.exit(0)
             if o in ("-v", "--version"):
-                print APP_NAME_VERSION
+                print(APP_NAME_VERSION)
                 sys.exit(0)
             if o == "-d":
                 if (ctx.debug):
@@ -90,7 +90,7 @@ class Bootstrap:
             elif o == "-p":
                 (key, value) = self._split_keyvalue(a)
                 if (key == None):
-                    print ("Invalid property key=value definition (%s)" % (value))
+                    print("Invalid property key=value definition (%s)" % (value))
                     self.usage()
                     sys.exit(2)
                 logger.debug("Setting context property from command line: %s = %s" % (key, value))
@@ -98,7 +98,7 @@ class Bootstrap:
             elif o == "-m":
                 (key, value) = self._split_keyvalue(a)
                 if (key == None):
-                    print ("Invalid attribute key=value definition (%s)" % (value))
+                    print("Invalid attribute key=value definition (%s)" % (value))
                     self.usage()
                     sys.exit(2)
                 logger.debug("Setting message attribute from command line: %s = %s" % (key, value))
@@ -111,12 +111,12 @@ class Bootstrap:
                 if (ctx.start_node == None):
                     ctx.start_node = argument
                 else:
-                    print ("Only one start node can be specified (found: '%s', '%s')" % (ctx.start_node, argument))
+                    print("Only one start node can be specified (found: '%s', '%s')" % (ctx.start_node, argument))
                     self.usage()
                     sys.exit(2)
 
         if (ctx.start_node == None):
-            print "One starting node must be specified, but none found."
+            print("One starting node must be specified, but none found.")
             self.usage()
             sys.exit(2)
 
@@ -136,24 +136,22 @@ class Bootstrap:
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logger.error ("Could not load config: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
-            if (ctx.debug):
+            if (not ctx.cli or ctx.debug):
                 raise
             else:
                 sys.exit(3)
 
-    def _do_process(self, process, ctx):
-        message = ctx.copy_message(ctx.start_message)
-        msgs = ctx.comp.process(process, message)
-        count = 0
-        for m in msgs:
-            count = count + 1
-        return count
+    def init(self, argv=None, cli=False):
 
-    def start(self, argv):
 
         # Set up context
         ctx = Context()
         ctx.argv = argv
+        ctx.cli = cli
+
+        if not ctx.cli:
+            ctx.argv = []
+            ctx.start_node = "_dummy"
 
         # Set library dir
         # FIXME: Fix this so it works with setup.py/others installatiob
@@ -175,14 +173,39 @@ class Bootstrap:
         # Init container (reads config)
         self.init_container(ctx)
 
+        return ctx
+
+    def start(self, argv):
+
+        # Initialize context
+        ctx = self.init(argv, cli=True)
+
+        # Run
+        self.run(ctx)
+
+    def _do_process(self, process, ctx):
+        message = ctx.copy_message(ctx.start_message)
+        msgs = ctx.comp.process(process, message)
+        count = 0
+        m = None
+        for m in msgs:
+            count = count + 1
+        return (m, count)
+
+    def run(self, ctx):
+
         # Launch process
         try:
             process = cubetl.container.get_component_by_id(ctx.start_node)
         except KeyError as e:
             logger.error("Start process '%s' not found in configuration" % ctx.start_node)
-            sys.exit(1)
+            if ctx.cli:
+                sys.exit(1)
+            else:
+                raise Exception("Start process '%s' not found in configuration" % ctx.start_node)
 
-        count = 0
+        result = None
+        processed = 0
 
         # Launch process and consume messages
         try:
@@ -195,9 +218,9 @@ class Bootstrap:
                 logger.warning("Profiling execution (WARNING this is SLOW) and saving results to: %s" % ctx.profile)
                 cProfile.runctx("count = self._do_process(process, ctx)", globals(), locals(), ctx.profile)
             else:
-                count = self._do_process(process, ctx)
+                (result, processed) = self._do_process(process, ctx)
 
-            logger.debug("%s messages resulted from the process" % count)
+            logger.debug("%s messages resulted from the process" % processed)
 
             logger.debug("Finalizing components")
             ctx.comp.finalize(process)
@@ -213,7 +236,9 @@ class Bootstrap:
 
             if hasattr(ctx, "eval_error_message"):
                 pp = pprint.PrettyPrinter(indent=4, depth=2)
-                print pp.pformat(ctx._eval_error_message)
+                print(pp.pformat(ctx._eval_error_message))
 
             traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+        return result
 

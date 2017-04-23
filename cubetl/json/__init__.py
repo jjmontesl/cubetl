@@ -10,7 +10,7 @@ from cubetl.fs import FileReader, FileWriter
 import csv
 import StringIO
 import json
-
+from past.builtins import basestring
 
 
 # Get an instance of a logger

@@ -18,8 +18,9 @@ import os
 import re
 import random
 from cubetl.core.exceptions import ETLException
-from bunch import Bunch
 import urllib
+
+from past.builtins import basestring
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class Context():
 
     def __init__(self):
 
+        self.cli = False
         self.args = {}
 
         self.debug = False
@@ -88,7 +90,7 @@ class Context():
         value = value.strip()
 
         pos = -1
-        result = unicode(value)
+        result = str(value)
 
         for dstart, dend in (('${|', '|}'), ('${', '}')):
             if (pos >= -1):
@@ -131,7 +133,7 @@ class Context():
                     raise
 
                 if ((pos>0) or (pos_end < len(result) - (len(dend)))):
-                    result = result[0:pos] + unicode(res) + result[pos_end + (len(dend)):]
+                    result = result[0:pos] + str(res) + result[pos_end + (len(dend)):]
                     pos = result.find(dstart)
                 else:
                     # Keep non-string types

@@ -3,6 +3,7 @@ from cubetl.core import Node
 import copy
 from cubetl.text.functions import parsebool
 from cubetl.script import Eval
+from past.builtins import basestring
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)

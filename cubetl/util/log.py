@@ -7,7 +7,6 @@ from cubetl.core import Node
 import time
 from cubetl.text.functions import parsebool
 
-import psutil
 import os
 
 # Get an instance of a logger
@@ -54,6 +53,8 @@ class LogPerformance(Node):
 
     def memory_usage_psutil(self):
         # return the memory usage in MB
+
+        import psutil
         process = psutil.Process(os.getpid())
         if hasattr(process, 'get_memory_info'):
             mem = process.get_memory_info()[0] / float(2 ** 20)
@@ -77,6 +78,7 @@ class LogPerformance(Node):
                     ))
 
     def loginfo(self, ctx):
+        import psutil
         current = time.time()
         logger.info("Time: %d Mem: %.3f MB Messages: %d (+%d) Rate global: %.3f msg/s Rate current: %.3f msg/s" % (
              current - self._startTime,

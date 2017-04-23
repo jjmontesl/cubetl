@@ -24,7 +24,7 @@ class PrintConfig(Node):
         obj_list.sort(key=lambda x: x.id)
         for e in obj_list:
             #if (not e.endswith('<anonymous>')):
-            print "  %s (%s)" % (e.id, e.__class__.__name__)
+            print("  %s (%s)" % (e.id, e.__class__.__name__))
 
         yield m
 

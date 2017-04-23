@@ -10,7 +10,7 @@ from cubetl.fs import FileReader, FileWriter
 import csv
 import StringIO
 from cubetl.core.exceptions import ETLException
-
+from past.builtins import basestring
 
 
 # Get an instance of a logger
@@ -79,7 +79,7 @@ class CsvReader(Node):
                     arow = ctx.copy_message(m)
                     for header_index in range(0, len(header)):
                         if header_index < len(row) or not self.ignore_missing:
-                            arow[(header[header_index])] = unicode(row[header_index], "utf-8")
+                            arow[(header[header_index])] = str(row[header_index], "utf-8")
                 except Exception as e:
                     logger.error("Could not process CSV data (%r) at %s: %s" % (row, self, e))
                     raise ETLException("Could not process CSV data (%r) at %s: %s" % (row, self, e))

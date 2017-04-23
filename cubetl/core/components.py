@@ -51,8 +51,6 @@ class Components():
                 raise ETLConfigurationException("Tried to initialize invalid component (%s): %s" % (comp, e))
 
 
-
-
     def finalize(self, comp):
 
         # TODO: Count references and finalize in an adequate order!!!

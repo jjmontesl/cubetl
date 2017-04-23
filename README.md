@@ -43,6 +43,30 @@ Documentation
 
 * Notes to be included:
 
+Running from Python
+-------------------
+
+In order to configure and/or run a process from client code, use:
+
+    from cubetl.core.bootstrap import Bootstrap
+
+    # Create Cubetl context
+    bootstrap = Bootstrap()
+    ctx = bootstrap.init()
+    ctx.debug = True
+
+    # Extra configuration
+
+    # Add components ...
+    comp = ...
+    cubetl.container.add_component(comp)
+
+    # Launch process
+    ctx.start_node = "your_app.node_id"
+    result = bootstrap.run(ctx)
+
+
+
 Support
 =======
 

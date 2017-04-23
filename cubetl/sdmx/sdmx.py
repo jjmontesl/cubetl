@@ -101,7 +101,7 @@ class SDMXOlapMapper(OlapMapper):
             mapper.entity = d
             mapper.table = self.table_prefix + d.name
             mapper.connection = self.connection
-            mapper.lookup_cols = [ d.name + "_code" ]
+            mapper.lookup_cols = [ dimension_key + "_code" ]
             mapper.mappings = [{ "name": dimension_key + "_code", "pk": True, "type": "String", "value": "${m['%s']}" % (dimension_key + "_code")},
                                { "name": dimension_key + "_label", "type": "String", "value": "${m['%s']}" % (dimension_key + "_label")}]
             self.olapmapper.mappers.append(mapper)

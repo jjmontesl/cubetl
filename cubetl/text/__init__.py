@@ -11,6 +11,7 @@ import pprint
 import re
 import simplejson
 import sys
+from past.builtins import basestring
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)

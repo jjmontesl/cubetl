@@ -4,13 +4,7 @@ from cubetl.core import Node
 import lxml
 from lxml import etree
 from xml.dom import pulldom
-from BeautifulSoup import BeautifulSoup
-
-import beautifulsoupselect as soupselect
 from xml.etree import ElementTree
-# Monkeypatch BeautifulSoup
-BeautifulSoup.findSelect = soupselect.select
-
 
 
 # Get an instance of a logger
@@ -133,6 +127,11 @@ class BeautifulSoupParser(Node):
         super(BeautifulSoupParser, self).__init__()
 
     def process(self, ctx, m):
+
+        from BeautifulSoup import BeautifulSoup
+        import beautifulsoupselect as soupselect
+        # Monkeypatch BeautifulSoup
+        BeautifulSoup.findSelect = soupselect.select
 
         #logger.debug("Parsing XML")
         m["soup"] = BeautifulSoup(m["data"]) #, self.parser)

@@ -1,19 +1,19 @@
 import logging
 import re
 from dateutil import parser
-from urlparse import urlparse as org_ulparse
 from slugify import slugify
-import HTMLParser
 import mimetypes
 import urllib
 
+from future.moves.html import parser as HTMLParser
+from six.moves.urllib.parse import urlparse as org_urlparse
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
 def slug(value):
-    return unicode(slugify(unicode(value)))
+    return str(slugify(unicode(value)))
 
 
 def slugu(value):
@@ -50,7 +50,7 @@ def parsebool(value):
             return False
         else:
             raise Exception("Invalid boolean value '%s' (valid values are 'True' or 'False')" % value)
-    except Exception, e:
+    except Exception as e:
         raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
 
 
