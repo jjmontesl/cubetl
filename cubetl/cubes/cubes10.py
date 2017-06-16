@@ -97,7 +97,14 @@ class Cubes10ModelWriter(Node):
             for dim in mapper.entity.dimensions:
                 dim_mapper = mapper.olapmapper.entity_mapper(dim)
                 sub_mappings = self._get_mappings(ctx, dim_mapper, base_mapper, mapper)
-                c_mappings.update(sub_mappings)
+
+                if isinstance(mapper.entity, AliasDimension):
+                    # For AliasDimensions, the table is aliased
+                    for sm in sub_mappings.items():
+                        c_mappings[sm[0]] = mapper.entity.name + "." + sm[1].split(".")[1]
+                else:
+                    # XXX mapper.olapmapper.entity_mapper(join["detail_entity"]).entity.name
+                    c_mappings.update(sub_mappings)
 
         elif (isinstance(mapper, MultiTableHierarchyDimensionMapper)):
             for dim in mapper.entity.levels:

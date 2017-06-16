@@ -42,7 +42,7 @@ class Components():
 
     def initialize(self, comp):
         if (not self.is_initialized(comp)):
-            logger.debug("Initializing %s" % comp)
+            logger.debug("Initializing %s" % (comp, ))
             self.component_desc(comp).initialized = True
             comp.initialize(self.ctx)
             try:

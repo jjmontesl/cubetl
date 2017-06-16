@@ -109,6 +109,9 @@ class AliasDimension(Dimension):
     dimension = None
     role = None
 
+    def __init__(self):
+        pass
+
     def initialize(self, ctx):
 
         #super(Dimension, self).initialize(ctx)
@@ -136,13 +139,13 @@ class AliasDimension(Dimension):
     """
 
     def __getattr__(self, attr):
-        if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
+        if (attr in ["id", "label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__getattr__(attr)
         else:
             return getattr(self.dimension, attr)
 
     def __setattr__(self, attr, value):
-        if (attr in ["label", "name", "dimension", "role", "initialize", "finalize"]):
+        if (attr in ["id", "label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__setattr__(attr, value)
         else:
             return setattr(self.dimension, attr, value)
@@ -190,7 +193,7 @@ class FactDimension(Dimension):
     measures = None
 
     def __init__(self):
-        super(Fact, self).__init__()
+        super(FactDimension, self).__init__()
         self.dimensions = []
         self.attributes = []
         self.measures = []
@@ -232,6 +235,9 @@ class OlapMapper(Component):
     mappers = []
     include = []
 
+    def __str__(self):
+        return "%s(mappers=%d,include=%d)" % (self.__class__.__name__, len(self.mappers), len(self.include))
+
     def initialize(self, ctx):
 
         super(OlapMapper, self).initialize(ctx)
@@ -269,7 +275,7 @@ class OlapMapper(Component):
                 return mapper
 
         if fail:
-            raise Exception("No OLAP mapper found for: %s" % entity.name)
+            raise Exception("No OLAP mapper found for: %s" % entity)
 
         return None
 

@@ -141,7 +141,7 @@ class Bootstrap:
             else:
                 sys.exit(3)
 
-    def init(self, argv=None, cli=False):
+    def init(self, argv=None, cli=False, debug=False):
 
 
         # Set up context
@@ -160,6 +160,8 @@ class Bootstrap:
 
         # Parse arguments
         self.parse_args(ctx)
+
+        ctx.debug = debug
 
         # Init logging
         self.configure_logging(ctx)
