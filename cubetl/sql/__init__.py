@@ -141,7 +141,8 @@ class SQLTable(Component):
 
             # Check for duplicate names
             if (column["name"] in columns_ex):
-                raise Exception("Duplicate column name '%s' in %s" % (column["name"], self))
+                logger.warn("Duplicate column name '%s' in %s" % (column["name"], self))
+
             columns_ex.append(column["name"])
 
             # Configure column

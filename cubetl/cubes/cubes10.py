@@ -101,7 +101,11 @@ class Cubes10ModelWriter(Node):
                 if isinstance(mapper.entity, AliasDimension):
                     # For AliasDimensions, the table is aliased
                     for sm in sub_mappings.items():
-                        c_mappings[sm[0]] = mapper.entity.name + "." + sm[1].split(".")[1]
+                        # Account for "extracted" fields, that return a dictionary:
+                        if isinstance(sm[1], dict):
+                            c_mappings[sm[0]] = { "column": mapper.entity.name + "." + sm[1]["column"].split(".")[1], "extract": sm[1]["extract"] }
+                        else:
+                            c_mappings[sm[0]] = mapper.entity.name + "." + sm[1].split(".")[1]
                 else:
                     # XXX mapper.olapmapper.entity_mapper(join["detail_entity"]).entity.name
                     c_mappings.update(sub_mappings)
@@ -119,7 +123,13 @@ class Cubes10ModelWriter(Node):
         elif (isinstance(mapper, EmbeddedDimensionMapper)):
             mappings = mapper._mappings_join(ctx)
             for mapping in mappings:
-                c_mappings[mapper.entity.name + "." + mapping["name"]] = parent_mapper.table + "." + mapping["column"]
+                if "extract" in mapping:
+                    c_mappings[mapper.entity.name + "." + mapping["name"]] = {
+                        "column": parent_mapper.table + "." + mapping["column"],
+                        "extract": mapping["extract"]
+                        }
+                else:
+                    c_mappings[mapper.entity.name + "." + mapping["name"]] = parent_mapper.table + "." + mapping["column"]
 
         elif (isinstance(mapper, DimensionMapper) or (isinstance(mapper, CompoundHierarchyDimensionMapper))):
             mappings = mapper._mappings(ctx)
