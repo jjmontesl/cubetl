@@ -630,5 +630,7 @@ class FactDimensionMapper(FactMapper):
         #raise Exception ("Cannot store an embedded dimension")
         pass
 
-
-
+    def _joins(self, ctx, master = None):
+        result = super(FactDimensionMapper, self)._joins(ctx, master)
+        logger.info("%s joins: %s" % (self, result))
+        return result

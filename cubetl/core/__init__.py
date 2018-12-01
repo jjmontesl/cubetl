@@ -41,6 +41,9 @@ class Component(object):
 
         #return object.__str__(self, *args, **kwargs)
 
+    def __repr__(self):
+        return str(self)
+
 
 class Node(Component):
     """
