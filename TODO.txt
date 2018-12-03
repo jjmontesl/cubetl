@@ -41,3 +41,24 @@
     * Correct entry point, setup.py, path considerations.
     * Include library through library path.
 
+[NEXT]
+
+  * New generation refactor: import SQL to OLAP -> Cubes + CubETLOLAPQuery
+
+  * Remove YAML
+  * Remove __init__ and move back modules if they are small.
+  * Sql-to-cubetl (tables and types) then to OLAP
+  * Then, instance an olap sql-to-olap (process tables and columns, generate olap and olap mappings)
+  * Implement querying
+  * Move these SQL/OLAP method to Cubetl components.
+  * Normalize/formalize column/name/id/schema/database naming ("name" (can contain dots), "id"?)
+
+  * Data type system (could explore data in messages, SQL columns/rows, etc...), used to detect column types and formatting.
+    Used by any process that wants to use it, used by sql2cubetl and sql2olap.
+    Support detection, validation, formatting, transformation + unit conversion, icons (for type and values), i18n (for type and values)...
+
+  # (optionally, at the end, export to cubes)
+  # (should theorically be able to create olap-2-star-schema mappings, then create tables and load)
+  # (theorically, we should be able to generate the same mappings from the generated star-schema (would require identifying split dims/hierarchies)
+
+

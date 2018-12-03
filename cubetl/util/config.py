@@ -18,13 +18,11 @@ class PrintConfig(Node):
 
     def process(self, ctx, m):
 
-        obj_list = cubetl.container.components
-        #obj_list = cubetl.container.object_defs.keys()
+        obj_list = ctx.components
 
-        obj_list.sort(key=lambda x: x.id)
         for e in obj_list:
             #if (not e.endswith('<anonymous>')):
-            print("  %s (%s)" % (e.id, e.__class__.__name__))
+            print("  %r" % (e))
 
         yield m
 

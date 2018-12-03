@@ -1,18 +1,18 @@
 
-from cubetl.core.context import Context
-import cubetl
+
 import getopt
 import logging
 import os
+import pprint
 import sys
 import traceback
 import yaml
-from cubetl.core import ContextProperties
+
 from cubetl import APP_NAME_VERSION
-from cubetl.core.container import Container
-from cubetl.core.cubetlconfig import load_config
-import pprint
-import cProfile
+from cubetl.core import ContextProperties
+from cubetl.core.context import Context
+import cubetl
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ class Bootstrap:
 
         # In absence of file config
         default_level = logging.INFO if ctx.debug == False else logging.DEBUG
-        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
-        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
+        #logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
         #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
         #logging.basicConfig(
@@ -37,10 +37,10 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-m attribute=value] [config.yaml ...] <start-node>")
+        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-i attribute=value] [config.yaml ...] <start-node>")
         print("")
         print("    -p   set a context property")
-        print("    -m   set an attribute for the start message")
+        print("    -i   set an attribute for the start item")
         print("    -d   debug mode (can be used twice for extra debug)")
         print("    -q   quiet mode (bypass print nodes)")
         print("    -r   profile execution writing results to filename")
@@ -101,8 +101,8 @@ class Bootstrap:
                     print("Invalid attribute key=value definition (%s)" % (value))
                     self.usage()
                     sys.exit(2)
-                logger.debug("Setting message attribute from command line: %s = %s" % (key, value))
-                ctx.start_message[key] = value
+                logger.debug("Setting item attribute from command line: %s = %s" % (key, value))
+                ctx.start_item[key] = value
 
         for argument in arguments:
             if (argument.endswith('.yaml')):
@@ -121,28 +121,7 @@ class Bootstrap:
             sys.exit(2)
 
 
-    def init_container(self, ctx):
-
-        cubetl.container = Container()
-
-        try:
-            configs = [os.path.dirname(os.path.realpath(__file__)) + "/../cubetl-context.yaml"]
-            configs.extend([config_file for config_file in ctx.config_files])
-
-            for configfile in configs:
-                load_config(ctx, configfile)
-
-
-        except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logger.error ("Could not load config: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
-            if (not ctx.cli or ctx.debug):
-                raise
-            else:
-                sys.exit(3)
-
     def init(self, argv=None, cli=False, debug=False):
-
 
         # Set up context
         ctx = Context()
@@ -171,10 +150,6 @@ class Bootstrap:
 
         # TODO: Character encoding considerations? warnings?
 
-
-        # Init container (reads config)
-        self.init_container(ctx)
-
         return ctx
 
     def start(self, argv):
@@ -183,64 +158,5 @@ class Bootstrap:
         ctx = self.init(argv, cli=True)
 
         # Run
-        self.run(ctx)
-
-    def _do_process(self, process, ctx):
-        message = ctx.copy_message(ctx.start_message)
-        msgs = ctx.comp.process(process, message)
-        count = 0
-        m = None
-        for m in msgs:
-            count = count + 1
-        return (m, count)
-
-    def run(self, ctx):
-
-        # Launch process
-        try:
-            process = cubetl.container.get_component_by_id(ctx.start_node)
-        except KeyError as e:
-            logger.error("Start process '%s' not found in configuration" % ctx.start_node)
-            if ctx.cli:
-                sys.exit(1)
-            else:
-                raise Exception("Start process '%s' not found in configuration" % ctx.start_node)
-
-        result = None
-        processed = 0
-
-        # Launch process and consume messages
-        try:
-            logger.debug("Initializing components")
-            ctx.comp.initialize(process)
-
-            logger.info("Processing %s" % ctx.start_node)
-
-            if ctx.profile:
-                logger.warning("Profiling execution (WARNING this is SLOW) and saving results to: %s" % ctx.profile)
-                cProfile.runctx("count = self._do_process(process, ctx)", globals(), locals(), ctx.profile)
-            else:
-                (result, processed) = self._do_process(process, ctx)
-
-            logger.debug("%s messages resulted from the process" % processed)
-
-            logger.debug("Finalizing components")
-            ctx.comp.finalize(process)
-
-            ctx.comp.cleanup()
-
-        except KeyboardInterrupt as e:
-            logger.error("User interrupted")
-
-        except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logger.fatal("Error during process: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
-
-            if hasattr(ctx, "eval_error_message"):
-                pp = pprint.PrettyPrinter(indent=4, depth=2)
-                print(pp.pformat(ctx._eval_error_message))
-
-            traceback.print_exception(exc_type, exc_value, exc_traceback)
-
-        return result
+        ctx.run()
 

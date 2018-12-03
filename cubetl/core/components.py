@@ -52,7 +52,6 @@ class Components():
 
 
     def finalize(self, comp):
-
         # TODO: Count references and finalize in an adequate order!!!
 
         if (not self.is_initialized(comp)):

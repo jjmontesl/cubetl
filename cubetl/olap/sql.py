@@ -2,7 +2,7 @@ import cubetl
 from abc import ABCMeta, abstractmethod
 from cubetl.core import Component, Node, Mappings
 from cubetl.text.functions import parsebool
-from cubetl.sql import SQLTable
+from cubetl.sql.sql import SQLTable
 from cubetl.sql.cache import CachedSQLTable
 import logging
 from cubetl.script import Eval
@@ -23,14 +23,7 @@ class TableMapper(Component):
     STORE_MODE_INSERT = SQLTable.STORE_MODE_INSERT
     STORE_MODE_UPSERT = SQLTable.STORE_MODE_UPSERT
 
-
-    entity = None
-
-    connection = None
-    table = None
-
     eval = []
-    mappings = []
 
     lookup_cols = None
 
@@ -44,10 +37,13 @@ class TableMapper(Component):
 
     olapmapper = None
 
-    def __init__(self):
+    def __init__(self, entity, sqltable, mappings=None):
         super(TableMapper, self).__init__()
         self.eval = []
-        self.mappings = []
+        self.entity = entity
+        self.sqltable = sqltable
+        #self.connection = connection
+        self.mappings = mappings if mappings else []
         self._lookup_changed_fields = []
 
     def __str__(self, *args, **kwargs):
@@ -608,7 +604,6 @@ class FactDimensionMapper(FactMapper):
             raise Exception("Cannot define table in %s." % self)
         if (self.connection):
             raise Exception("Cannot define connection in %s." % self)
-
 
         # No call to constructor. No need for connection and table
         ctx.comp.initialize(self.entity)

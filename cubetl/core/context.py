@@ -1,26 +1,26 @@
 
-import cubetl
+from inspect import isclass
+from past.builtins import basestring
+from repoze.lru import LRUCache
+import cProfile
+import copy
+import datetime
+import inspect
 import logging
-
-from cubetl.text import functions
-from cubetl.xml import functions as xmlfunctions
+import os
+import random
+import re
 import sys
 import traceback
-
-from repoze.lru import LRUCache
-from cubetl.core.components import Components
-import copy
-import inspect
-from cubetl.core import Component
-from inspect import isclass
-import datetime
-import os
-import re
-import random
-from cubetl.core.exceptions import ETLException
 import urllib
 
-from past.builtins import basestring
+from cubetl.core import Component
+from cubetl.core.components import Components
+from cubetl.core.exceptions import ETLException
+from cubetl.text import functions
+from cubetl.xml import functions as xmlfunctions
+import cubetl
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -40,10 +40,9 @@ class Context():
 
         self.profile = False
 
-        self.config_files = []
+        self.components = []
 
-        self.start_node = None
-        self.start_message = {}  # Bunch()  # {}   # TODO: Review if this is definitive, compare performance
+        self.start_item = {}
 
         self.props = {}
         self.properties = self.props
@@ -77,6 +76,40 @@ class Context():
             class_type = None
 
         return class_type
+
+    def get(self, component_id):
+        #logger.debug("Getting component: %s" % component_id)
+        for comp in self.components:
+            if (hasattr(comp, "id")):
+                if (comp.id == component_id):
+                    return comp
+
+        raise KeyError("Component not found with id '%s'" % component_id)
+
+    def find(self, type):
+        result = []
+        for comp in self.components:
+            if isinstance(comp, type):
+                result.append(comp)
+        return result
+
+    def register(self, component):
+        if component == None:
+            raise Exception('Tried to configure a null object')
+        if not isinstance(component, Component):
+            raise Exception('Tried to configure a non Component object: %s' % component)
+
+        # Search if it exists already
+        if (hasattr(component, "id")):
+            try:
+                if self.get_component_by_id(component.id) != None:
+                    raise Exception("Tried to define an already existing id: " % component.id)
+            except:
+                pass
+
+
+        self.components.append(component)
+
 
 
     def interpolate(self, m, value, data = {}):
@@ -147,4 +180,65 @@ class Context():
             return {}
         else:
             return copy.copy(m)
+
+
+    def _do_process(self, process, ctx):
+        item = ctx.copy_message(ctx.start_item)
+        msgs = ctx.comp.process(process, item)
+        count = 0
+        m = None
+        for m in msgs:
+            count = count + 1
+        return (m, count)
+
+    def process(self, start_node):
+
+        ctx = self
+
+        # Launch process
+        if not start_node:
+            logger.error("Start process '%s' not found in configuration" % ctx.start_node)
+            if ctx.cli:
+                sys.exit(1)
+            else:
+                raise Exception("Start process '%s' not found in configuration" % ctx.start_node)
+
+        result = None
+        processed = 0
+
+        # Launch process and consume items
+        try:
+            logger.debug("Initializing components")
+            ctx.comp.initialize(start_node)
+
+            logger.info("Processing %s" % start_node)
+
+            if ctx.profile:
+                logger.warning("Profiling execution (WARNING this is SLOW) and saving results to: %s" % ctx.profile)
+                cProfile.runctx("count = self._do_process(process, ctx)", globals(), locals(), ctx.profile)
+            else:
+                (result, processed) = self._do_process(start_node, ctx)
+
+            logger.debug("%s items resulted from the process" % processed)
+
+            logger.debug("Finalizing components")
+            ctx.comp.finalize(start_node)
+
+            ctx.comp.cleanup()
+
+        except KeyboardInterrupt as e:
+            logger.error("User interrupted")
+
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            logger.fatal("Error during process: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
+
+            if hasattr(ctx, "eval_error_message"):
+                pp = pprint.PrettyPrinter(indent=4, depth=2)
+                print(pp.pformat(ctx._eval_error_message))
+
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+        return result
+
 

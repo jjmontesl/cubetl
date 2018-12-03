@@ -153,15 +153,10 @@ class AliasDimension(Dimension):
 
 class Fact(Component):
 
-    name = None
-    label = None
-
-    dimensions = None
-    attributes = None
-    measures = None
-
-    def __init__(self):
+    def __init__(self, name, label=None):
         super(Fact, self).__init__()
+        self.name = name
+        self.label = label if label else name
         self.dimensions = []
         self.attributes = []
         self.measures = []

@@ -1,5 +1,5 @@
 import logging
-from cubetl.sql import SQLTable, QueryLookup
+from cubetl.sql.sql import SQLTable, QueryLookup
 from cubetl.util.cache import Cache
 
 # Get an instance of a logger

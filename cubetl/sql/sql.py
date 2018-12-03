@@ -8,6 +8,7 @@ from sqlalchemy.sql.expression import and_
 from cubetl.text.functions import parsebool
 from sqlalchemy.exc import ResourceClosedError
 from past.builtins import basestring
+from cubetl.core.exceptions import ETLConfigurationException
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -15,21 +16,24 @@ logger = logging.getLogger(__name__)
 
 class Connection(Component):
 
-    url = None
-    _engine = None
-    _connection = None
-    _ctx = None
+    def __init__(self, url):
+        super(Connection, self).__init__()
+        self._url = url
+        self._engine = None
+        self._connection = None
+
+    def __repr__(self):
+        return "%s(url='%s')" % (self.__class__.__name__, self._url)
 
     def initialize(self, ctx):
-        super(Connection, self).initialize(ctx)
         self._ctx = ctx
 
     def lazy_init(self):
-        if (self._engine == None):
-                url = self._ctx.interpolate(None, self.url)
-                logger.info("Connecting to database: %s" % url)
-                self._engine = create_engine(url)
-                self._connection = self._engine.connect()
+        if self._engine is None:
+            url = self._url
+            logger.info("Connecting to database: %s" % url)
+            self._engine = create_engine(url)
+            self._connection = self._engine.connect()
 
     def connection(self):
         self.lazy_init()
@@ -38,6 +42,24 @@ class Connection(Component):
     def engine(self):
         self.lazy_init()
         return self._engine
+
+
+class SQLColumn(Component):
+
+    TYPE_INTEGER = "Integer"
+    TYPE_STRING = "String"
+
+    def __init__(self, sqltable, column_name, type, pk=False):
+        super(SQLColumn, self).__init__()
+        self.sqltable = sqltable
+        self.column_name = column_name
+        self.type = type
+        self.pk = pk
+
+    def initialize(self, ctx):
+        super(SQLColumn, self).initialize(ctx)
+        ctx.comp.initialize(self.connection)
+        self.enabled = parsebool(self.enabled)
 
 
 class SQLTable(Component):
@@ -53,8 +75,6 @@ class SQLTable(Component):
 
     _pk = False
 
-    name = None
-    connection = None
     columns = []
 
     create = True
@@ -65,8 +85,15 @@ class SQLTable(Component):
     _unicode_errors = 0
     _lookup_changed_fields = None
 
-    def __init__(self):
+    def __init__(self, name, connection, label=None):
+
         super(SQLTable, self).__init__()
+
+        self.name = name
+        self.connection = connection
+
+        self.label = label if label else table_name
+
         self.columns = []
 
     def _get_sa_type(self, column):
@@ -141,7 +168,7 @@ class SQLTable(Component):
 
             # Check for duplicate names
             if (column["name"] in columns_ex):
-                logger.warn("Duplicate column name '%s' in %s" % (column["name"], self))
+                raise ETLConfigurationException("Duplicate column name '%s' in %s" % (column["name"], self))
 
             columns_ex.append(column["name"])
 
@@ -149,10 +176,10 @@ class SQLTable(Component):
             column["pk"] = False if (not "pk" in column) else parsebool(column["pk"])
             if (not "type" in column): column["type"] = "String"
             #if (not "value" in column): column["value"] = None
-            self.sa_table.append_column( Column(column["name"],
-                                                self._get_sa_type(column),
-                                                primary_key = column["pk"],
-                                                autoincrement = (True if column["type"] == "AutoIncrement" else False) ))
+            self.sa_table.append_column(Column(column["name"],
+                                               self._get_sa_type(column),
+                                               primary_key=column["pk"],
+                                               autoincrement=(True if column["type"] == "AutoIncrement" else False)))
 
         # Check schema
 
@@ -393,24 +420,27 @@ class Transaction(Node):
 
 class StoreRow(Node):
 
-    table = None
-    store_mode = SQLTable.STORE_MODE_INSERT
+
+    def __init__(self, sqltable, store_mode=SQLTable.STORE_MODE_INSERT):
+        super(StoreRow, self).__init__()
+        self.sqltable = sqltable
+        self.store_mode = store_mode
 
     def initialize(self, ctx):
         super(StoreRow, self).initialize(ctx)
-        ctx.comp.initialize(self.table)
+        ctx.comp.initialize(self.sqltable)
 
     def finalize(self, ctx):
-        ctx.comp.finalize(self.table)
+        ctx.comp.finalize(self.sqltable)
         super(StoreRow, self).finalize(ctx)
 
     def process(self, ctx, m):
 
         # Store
         if self.store_mode == SQLTable.STORE_MODE_UPSERT:
-            self.table.upsert(ctx, m)
+            self.sqltable.upsert(ctx, m)
         elif self.store_mode == SQLTable.STORE_MODE_INSERT:
-            self.table.insert(ctx, m)
+            self.sqltable.insert(ctx, m)
 
         yield m
 
@@ -467,11 +497,12 @@ class QueryLookup(Node):
 
 class Query(Node):
 
-    connection = None
-    query = None
-    embed = False
-    singlerow = False
-    failifempty = True
+    def __init__(self, connection, query, embed=False, single=False, failifempty=True):
+        self.connection = connection
+        self.query = query
+        self.embed = embed
+        self.single = single
+        self.failifempty = failifempty
 
     def initialize(self, ctx):
 
@@ -504,7 +535,7 @@ class Query(Node):
                 for r in rows:
                     result.append(self._rowtodict(r))
 
-                if self.singlerow and len(result) > 1:
+                if self.single and len(result) > 1:
                     raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
                 if len(result) == 0:
                     if self.failifempty:
@@ -512,13 +543,13 @@ class Query(Node):
                     else:
                         result = None
 
-                m[self.embed] = result[0] if self.singlerow else result
+                m[self.embed] = result[0] if self.single else result
                 yield m
 
             else:
                 result = None
                 for r in rows:
-                    if self.singlerow and result != None:
+                    if self.single and result != None:
                         raise Exception("Error: %s query resulted in more than one row: %s" % (self, query))
 
                     m2 = ctx.copy_message(m)

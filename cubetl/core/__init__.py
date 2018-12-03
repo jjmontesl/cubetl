@@ -1,6 +1,8 @@
 import logging
 import cubetl
 from copy import deepcopy
+from cubetl.core.exceptions import ETLConfigurationException
+import inspect
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -11,6 +13,9 @@ class Component(object):
     Base class for all components.
     """
 
+    def __init__(self):
+        pass
+
     def get_id(self):
 
         if (hasattr(self, "id")):
@@ -19,7 +24,9 @@ class Component(object):
         return None
 
     def initialize(self, ctx):
-        pass
+        if hasattr(self, '_initialized'):
+            raise ETLConfigurationException("Component already initialized: %s" % self)
+        self._initialized = True
 
     def finalize(self, ctx):
         pass
@@ -42,7 +49,22 @@ class Component(object):
         #return object.__str__(self, *args, **kwargs)
 
     def __repr__(self):
-        return str(self)
+        args = []
+        argspec = inspect.getargspec(self.__init__)  # ArgSpec(args=['self', 'name'], varargs=None, keywords=None, defaults=None)
+        #print(argspec)
+        for key in argspec.args:
+            if key == "self": continue
+            value = getattr(self, key) if hasattr(self, key) else None
+            args.append((key, value))  # TODO: get default?
+        '''
+        if argspec.keywords:
+            for key in argspec.keywords:
+                print(argspec.keywords)
+                print(argspec.defaults)
+                if not hasattr(self, key): continue
+                args.append((key, getattr(self, key)))  # TODO: get default?
+        '''
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(["%s=%r" % (key, value) for key, value in args]))
 
 
 class Node(Component):
