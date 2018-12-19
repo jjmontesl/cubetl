@@ -45,7 +45,7 @@
 
   * New generation refactor: import SQL to OLAP -> Cubes + CubETLOLAPQuery
 
-  * Remove YAML
+  * Remove YAML? keep config declarative
   * Remove __init__ and move back modules if they are small.
   * Sql-to-cubetl (tables and types) then to OLAP
   * Then, instance an olap sql-to-olap (process tables and columns, generate olap and olap mappings)
@@ -60,5 +60,8 @@
   # (optionally, at the end, export to cubes)
   # (should theorically be able to create olap-2-star-schema mappings, then create tables and load)
   # (theorically, we should be able to generate the same mappings from the generated star-schema (would require identifying split dims/hierarchies)
+
+  * Use pk() and mappings() (currently one is private, but it's the public interface)
+  * Rename mappings() to "mappings_query", "mappings_join", "mappings_store" or whatever is needed...
 
 

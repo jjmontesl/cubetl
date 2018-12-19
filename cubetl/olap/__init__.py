@@ -14,13 +14,11 @@ class Dimension(Component):
     Note: This represents a Flat dimension (no hierarchies, only one level with attributes).
     """
 
-    name = None
-    label = None
-    attributes = []
-    role = None
-
-    def __init__(self):
+    def __init__(self, name, label=None):
         super(Dimension, self).__init__()
+        self.name = name
+        self.label = label or name
+        self.role = None
         self.attributes = []
 
     def initialize(self, ctx):
@@ -106,11 +104,9 @@ class HierarchyDimension(Dimension):
 
 class AliasDimension(Dimension):
 
-    dimension = None
-    role = None
-
-    def __init__(self):
-        pass
+    def __init__(self, name, dimension, label=None):
+        super(AliasDimension, self).__init__(name=name, label=label)
+        self.dimension = dimension
 
     def initialize(self, ctx):
 
@@ -138,6 +134,7 @@ class AliasDimension(Dimension):
         return self.dimension.attribute(self, search)
     """
 
+    '''
     def __getattr__(self, attr):
         if (attr in ["id", "label", "name", "dimension", "role", "initialize", "finalize"]):
             return super(AliasDimension, self).__getattr__(attr)
@@ -149,6 +146,7 @@ class AliasDimension(Dimension):
             return super(AliasDimension, self).__setattr__(attr, value)
         else:
             return setattr(self.dimension, attr, value)
+    '''
 
 
 class Fact(Component):
@@ -160,38 +158,59 @@ class Fact(Component):
         self.dimensions = []
         self.attributes = []
         self.measures = []
+        self.keys = []
+
+        #self.label_entity = None  # for now, support an entity (attribute, dimension)
+        #self.ordering = None
 
     def initialize(self, ctx):
+        super().initialize(ctx)
 
-        super(Fact, self).initialize(ctx)
 
-        if (self.attributes == None):
-            self.attributes = []
+class Key(Component):
 
-        if (self.label == None):
-            self.label = self.name
-        for attr in self.attributes:
-            if (not "label" in attr):
-                attr["label"] = attr["name"]
+    def __init__(self, entity, name, type, label=None):
+        super().__init__()
+        self.entity = entity
+        self.name = name
+        self.type = type
+        self.label = label or name
 
-        for measure in self.measures:
-            if (not "label" in measure):
-                measure["label"] = measure["name"]
+
+class Measure(Component):
+
+    def __init__(self, fact, name, type, label=None):
+        super().__init__()
+        self.fact = fact
+        self.name = name
+        self.type = type
+        self.label = label or name
+
+
+class Attribute(Component):
+
+    def __init__(self, fact, name, type, label=None):
+        super().__init__()
+        self.fact = fact
+        self.name = name
+        self.type = type
+        self.label = label or name
 
 
 class FactDimension(Dimension):
 
     fact = None
 
-    dimensions = None
-    attributes = None
-    measures = None
+    #dimensions = None
+    #attributes = None
+    #measures = None
 
-    def __init__(self):
-        super(FactDimension, self).__init__()
-        self.dimensions = []
-        self.attributes = []
-        self.measures = []
+    def __init__(self, fact):
+        super(FactDimension, self).__init__(name=None)
+        self.fact = fact
+        #self.dimensions = []
+        #self.attributes = []
+        #self.measures = []
 
     def finalize(self, ctx):
         ctx.comp.finalize(self.fact)
@@ -205,12 +224,12 @@ class FactDimension(Dimension):
         if (len(self.attributes) > 0):
             raise Exception("Cannot define attributes for a FactDimension (it's defined by the linked fact)")
 
-        self.dimensions = self.fact.dimensions
-        self.measures = self.fact.measures
-        self.attributes = self.fact.attributes
+        #self.dimensions = self.fact.dimensions
+        #self.measures = self.fact.measures
+        #self.attributes = self.fact.attributes
 
-        if self.name != self.fact.name:
-            raise ETLConfigurationException("FactDimension %s name is '%s' but it should match name of fact %s ('%s')" % (self, self.name, self.fact, self.fact.name))
+        if self.name != None:
+            raise ETLConfigurationException("FactDimension %s name is '%s' but it should be None as it automatically matches name of fact %s ('%s')" % (self, self.name, self.fact, self.fact.name))
 
 
     """
@@ -297,4 +316,5 @@ class Store(Node):
             m[entity.name + "_id"] = fid
 
         yield m
+
 

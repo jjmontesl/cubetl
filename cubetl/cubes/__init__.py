@@ -7,5 +7,5 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments import highlight
 from pygments.lexers.web import JsonLexer
 
-from .cubes010 import Cubes010ModelWriter
+#from .cubes010 import Cubes010ModelWriter
 from .cubes10 import Cubes10ModelWriter

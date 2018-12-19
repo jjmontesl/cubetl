@@ -4,6 +4,7 @@ import copy
 from cubetl.text.functions import parsebool
 from cubetl.script import Eval
 from past.builtins import basestring
+from posix import fork
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -11,23 +12,21 @@ logger = logging.getLogger(__name__)
 
 class Chain(Node):
 
-    fork = False
-    steps = None
-    condition = None
-
-    def __init__(self):
-        super(Chain, self).__init__()
-        self.steps = []
+    def __init__(self, steps=None, fork=False, condition=None):
+        super().__init__()
+        self.steps = steps or []
+        self.fork = fork
+        self.condition = condition
 
     def initialize(self, ctx):
-        super(Chain, self).initialize(ctx)
+        super().initialize(ctx)
         for p in self.steps:
             ctx.comp.initialize(p)
 
     def finalize(self, ctx):
         for p in self.steps:
             ctx.comp.finalize(p)
-        super(Chain, self).finalize(ctx)
+        super().finalize(ctx)
 
     def _process(self, steps, ctx, m):
 

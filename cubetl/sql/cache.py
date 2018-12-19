@@ -1,22 +1,29 @@
 import logging
 from cubetl.sql.sql import SQLTable, QueryLookup
 from cubetl.util.cache import Cache
+from cubetl.core import Node, Component
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
-class CachedSQLTable(SQLTable):
-
-    _cache = None
-    cache_hits = 0
-    cache_misses = 0
+class CachedSQLTable(Component):
 
     # TODO: Note: this caches only when there are results (for OLAP classes). At least this shall be optional.
 
+    # TODO: This class should compose (proxy) a SQLTable, instead of extending it (?)
+
+    def __init__(self, sqltable):
+
+        self._sqltable = sqltable
+
+        self._cache = None
+        self.cache_hits = 0
+        self.cache_misses = 0
+
     def initialize(self, ctx):
 
-        super(CachedSQLTable, self).initialize(ctx)
+        #super(CachedSQLTable, self).initialize(ctx)
         self._cache = Cache().cache()
 
     def finalize(self, ctx):

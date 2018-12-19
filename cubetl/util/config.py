@@ -1,12 +1,8 @@
 import logging
-from os import listdir
-from os.path import isfile, join
-import itertools
-import re
-from cubetl.core import Node, Component
-import time
-from cubetl.text.functions import parsebool
-import cubetl
+
+from cubetl.core import Node
+import slugify
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -16,13 +12,18 @@ class PrintConfig(Node):
 
     type = None
 
+
+
     def process(self, ctx, m):
+        text = ""
+        for k, e in ctx.components.items():
+            #k = slugify.slugify(k, separator="_")
+            item = "  ctx.add('%s',\n          %r)" % (k, e)
+            #print()
+            text += item + "\n"
 
-        obj_list = ctx.components
-
-        for e in obj_list:
-            #if (not e.endswith('<anonymous>')):
-            print("  %r" % (e))
+        #print()
+        m['data'] = text
 
         yield m
 

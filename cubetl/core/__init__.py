@@ -14,39 +14,21 @@ class Component(object):
     """
 
     def __init__(self):
-        pass
-
-    def get_id(self):
-
-        if (hasattr(self, "id")):
-            return self.id
-
-        return None
+        self.ctx = None
+        self.urn = None
 
     def initialize(self, ctx):
         if hasattr(self, '_initialized'):
             raise ETLConfigurationException("Component already initialized: %s" % self)
         self._initialized = True
+        self.ctx = ctx
 
     def finalize(self, ctx):
+        #self.ctx = None
         pass
 
     def __str__(self, *args, **kwargs):
-
-        cid = self.get_id()
-        if (not cid and hasattr(self, "name")):
-            cid = self.name
-
-        if (not cid):
-            cid = id(self)
-        else:
-            # TODO: Only on debug
-            #cid = cid + "/" + str(id(self))
-            pass
-
-        return "%s(%s)" % (self.__class__.__name__, cid)
-
-        #return object.__str__(self, *args, **kwargs)
+        return "%s(%s)" % (self.__class__.__name__, self.urn)
 
     def __repr__(self):
         args = []
@@ -55,6 +37,12 @@ class Component(object):
         for key in argspec.args:
             if key == "self": continue
             value = getattr(self, key) if hasattr(self, key) else None
+
+            if value and isinstance(value, Component):
+                value = "ctx.get('%s')" % value.urn
+            else:
+                value = "%r" % (value)
+
             args.append((key, value))  # TODO: get default?
         '''
         if argspec.keywords:
@@ -64,7 +52,7 @@ class Component(object):
                 if not hasattr(self, key): continue
                 args.append((key, getattr(self, key)))  # TODO: get default?
         '''
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(["%s=%r" % (key, value) for key, value in args]))
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(["%s=%s" % (key, value) for key, value in args]))
 
 
 class Node(Component):

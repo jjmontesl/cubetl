@@ -1,7 +1,7 @@
 CubETL
 ======
 
-CubETL is a *lightweight* tool for data ETL (Extract, Transform and Load).
+CubETL is a framework and tools for data ETL (Extract, Transform and Load), based in Python.
 
 Features:
 
@@ -11,6 +11,7 @@ Features:
 * OLAP support:
   * Star-schema generation and transparent data loading
   * Cubes OLAP Server model export
+  * Database introspection and database-to-OLAP tools
 * Common types library (dates, geo...)
 * Modular and extensible
 * Flexible configuration via YAML

@@ -18,15 +18,14 @@ class Connection(Component):
 
     def __init__(self, url):
         super(Connection, self).__init__()
-        self._url = url
+        self.url = url
         self._engine = None
-        self._connection = None
 
-    def __repr__(self):
-        return "%s(url='%s')" % (self.__class__.__name__, self._url)
+    #def __repr__(self):
+    #    return "%s(url='%s')" % (self.__class__.__name__, self._url)
 
-    def initialize(self, ctx):
-        self._ctx = ctx
+    def initialize(self):
+        pass
 
     def lazy_init(self):
         if self._engine is None:
@@ -46,20 +45,23 @@ class Connection(Component):
 
 class SQLColumn(Component):
 
-    TYPE_INTEGER = "Integer"
-    TYPE_STRING = "String"
+    TYPE_INTEGER = "INTEGER"
+    TYPE_STRING = "TEXT"
 
-    def __init__(self, sqltable, column_name, type, pk=False):
+    def __init__(self, sqltable, name, type, pk=False, label=None):
         super(SQLColumn, self).__init__()
         self.sqltable = sqltable
-        self.column_name = column_name
+        self.name = name
         self.type = type
         self.pk = pk
+        self.label = label or name
 
-    def initialize(self, ctx):
-        super(SQLColumn, self).initialize(ctx)
-        ctx.comp.initialize(self.connection)
-        self.enabled = parsebool(self.enabled)
+
+class SQLColumnFK(SQLColumn):
+
+    def __init__(self, sqltable, name, type, pk, fk_sqlcolumn):
+        super(SQLColumnFK, self).__init__(sqltable, name, type, pk)
+        self.fk_sqlcolumn = fk_sqlcolumn
 
 
 class SQLTable(Component):
@@ -92,7 +94,7 @@ class SQLTable(Component):
         self.name = name
         self.connection = connection
 
-        self.label = label if label else table_name
+        self.label = label if label else name
 
         self.columns = []
 

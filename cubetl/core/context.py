@@ -20,6 +20,7 @@ from cubetl.core.exceptions import ETLException
 from cubetl.text import functions
 from cubetl.xml import functions as xmlfunctions
 import cubetl
+from collections import OrderedDict
 
 
 # Get an instance of a logger
@@ -40,7 +41,7 @@ class Context():
 
         self.profile = False
 
-        self.components = []
+        self.components = OrderedDict()
 
         self.start_item = {}
 
@@ -77,40 +78,47 @@ class Context():
 
         return class_type
 
-    def get(self, component_id):
+    def get(self, uid):
         #logger.debug("Getting component: %s" % component_id)
-        for comp in self.components:
-            if (hasattr(comp, "id")):
-                if (comp.id == component_id):
-                    return comp
+        try:
+            comp = self.components.get(uid, None)
+        except KeyError as e:
+            raise KeyError("Component not found with id '%s'" % uid)
+        return comp
 
-        raise KeyError("Component not found with id '%s'" % component_id)
+    def key(self, comp):
+        for k, c in self.components.items():
+            if c == comp:
+                return k
+        return None
 
     def find(self, type):
         result = []
-        for comp in self.components:
+        for comp in self.components.values():
             if isinstance(comp, type):
                 result.append(comp)
         return result
 
-    def register(self, component):
-        if component == None:
+    def add(self, urn, component):
+
+        # FIXME: TODO: Allow anonymous components? these would be exported in-line with their parents.
+        # This assumes that components are initialized completely (possibly better for config comprehension)
+        # Also would serve as a hint for deep-swallow copying (anonymous components are always deep copied?)
+
+        if urn is None:
+            raise Exception('Tried to configure an object with no URN')
+        if component is None:
             raise Exception('Tried to configure a null object')
         if not isinstance(component, Component):
             raise Exception('Tried to configure a non Component object: %s' % component)
+        if self.get(urn) != None:
+            raise Exception("Tried to define an already existing URN: %s" % urn)
 
-        # Search if it exists already
-        if (hasattr(component, "id")):
-            try:
-                if self.get_component_by_id(component.id) != None:
-                    raise Exception("Tried to define an already existing id: " % component.id)
-            except:
-                pass
+        component.ctx = self
+        component.urn = urn
 
-
-        self.components.append(component)
-
-
+        self.components[urn] = component
+        return component
 
     def interpolate(self, m, value, data = {}):
 
@@ -230,6 +238,7 @@ class Context():
             logger.error("User interrupted")
 
         except Exception as e:
+            '''
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logger.fatal("Error during process: %s" % ", ".join((traceback.format_exception_only(exc_type, exc_value))))
 
@@ -238,6 +247,9 @@ class Context():
                 print(pp.pformat(ctx._eval_error_message))
 
             traceback.print_exception(exc_type, exc_value, exc_traceback)
+            '''
+
+            raise
 
         return result
 
