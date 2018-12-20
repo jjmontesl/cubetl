@@ -14,24 +14,18 @@ class Dimension(Component):
     Note: This represents a Flat dimension (no hierarchies, only one level with attributes).
     """
 
-    def __init__(self, name, label=None):
+    def __init__(self, name, attributes=None, label=None, role=None):
         super(Dimension, self).__init__()
         self.name = name
         self.label = label or name
         self.role = None
-        self.attributes = []
+        self.attributes = attributes or []
 
     def initialize(self, ctx):
 
         super(Dimension, self).initialize(ctx)
 
-        # FIXME: Added because PyYAML didn't call init
-        if self.attributes == [] or self.attributes is None:
-            self.attributes = []
-
-        if (self.label == None):
-            self.label = self.name
-
+        '''
         if len(self.attributes) == 0 and type(self) is Dimension:
             # If attributes are not defined, this is a shortcut for simple dimensions
             attr = { "name": self.name, "label": self.label, "type": "String" }
@@ -48,6 +42,7 @@ class Dimension(Component):
                         if (not "name" in attr):
                             raise Exception("Attribute '%s' of %s has no 'name' attribute" % (attr, self))
                         attr["label"] = attr["name"]
+        '''
 
 
     """
@@ -72,26 +67,24 @@ class HierarchyDimension(Dimension):
     References subdimensions (levels), usually forming hierarchies.
     """
 
-    levels = None
-    hierarchies = None
-
-    def __init__(self):
-        super(HierarchyDimension, self).__init__()
+    def __init__(self, name, hierarchies=None, label=None, role=None):
+        super(HierarchyDimension, self).__init__(name)
+        self.hierarchies = hierarchies or []
         self.levels = []
-        self.hierarchies = []
+
+        for h in self.hierarchies:
+            for l in h.levels:
+                if l not in self.levels:
+                    self.levels.append(l)
 
     def initialize(self, ctx):
         super(HierarchyDimension, self).initialize(ctx)
-
-        # FIXME: Added because PyYAML didn't call init
-        if (self.levels == None): self.levels = []
-        if (self.hierarchies == None): self.hierarchies = []
 
         if (len(self.attributes) > 0):
             raise Exception ("%s is a HierarchyDimension and cannot have attributes." % (self))
 
         for hie in self.hierarchies:
-            if (isinstance(hie["levels"], basestring)):
+            if (isinstance(hie.levels, basestring)):
                 levels = []
                 for lev_name in hie["levels"].split(","):
                     lev_name = lev_name.strip()
@@ -197,6 +190,13 @@ class Attribute(Component):
         self.label = label or name
 
 
+class Hierarchy(Component):
+    def __init__(self, name, levels, label):
+        self.name = name
+        self.levels = levels
+        self.label = label or name
+
+
 class FactDimension(Dimension):
 
     fact = None
@@ -271,7 +271,7 @@ class OlapMapper(Component):
         super(OlapMapper, self).finalize(ctx)
 
 
-    def entity_mapper(self, entity, fail = True):
+    def entity_mapper(self, entity, fail=True):
         """Returns the OlapMapper that handles a fact or dimension.
 
         Included mappers are processed after local ones, so mapping

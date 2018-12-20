@@ -1,7 +1,8 @@
 import logging
 import json
 from cubetl.core import Node
-from cubetl.olap import FactDimension, HierarchyDimension, Fact, AliasDimension
+from cubetl.olap import FactDimension, HierarchyDimension, Fact, AliasDimension,\
+    Dimension
 from cubetl.olap.sql import FactMapper, CompoundDimensionMapper,\
     MultiTableHierarchyDimensionMapper, EmbeddedDimensionMapper, DimensionMapper,\
     CompoundHierarchyDimensionMapper, AliasDimensionMapper
@@ -44,11 +45,11 @@ class Cubes10ModelWriter(Node):
         ctx.comp.finalize(self.olapmapper)
         super(Cubes10ModelWriter, self).finalize(ctx)
 
-    def _get_joins_recursively(self, ctx, mapper):
+    def _get_cube_joins(self, ctx, mapper):
 
         c_joins = []
 
-        for join in mapper._joins(ctx, None):
+        for join in mapper.sql_joins(ctx, None):
 
             c_join = {
                       "master": mapper.olapmapper.entity_mapper(join["master_entity"]).sqltable.name + "." + join["master_column"],
@@ -100,15 +101,24 @@ class Cubes10ModelWriter(Node):
         # Generate mappings for this mapper, possibly altering recursed mappings.
 
         mappings = mapper.sql_mappings(ctx)
-        print("MAPPINGS:")
-        print(mappings)
 
         for mapping in mappings:
             # Options are:
             # cube_name.detail = alias.column     # for details
             # dimension.attribute = alias.column  # for dimension attributes
             #c_mappings[mapping["entity"].name + "." + mapping['field'] = mapping['alias'] + "." + mapping['sqlcol'].name
-            c_mappings[mapping.parent.name + "." + mapping.field.name] = mapping.alias + "." + mapping.sqlcolumn.name
+            if mapping.alias is None:
+                mapping.alias = mapper.sqltable.name
+            try:
+                c_mappings[mapping.parent.name + "." + mapping.field.name] = mapping.alias + "." + mapping.sqlcolumn.name
+                if mapping.function:
+                    c_mappings[mapping.parent.name + "." + mapping.field.name] = {
+                        'column': mapping.alias + "." + mapping.sqlcolumn.name,
+                        'extract': mapping.function
+                    }
+            except:
+                logger.error("Cannot export mapping: %s.%s=%s.%s", mapping.parent, mapping.field, mapping.alias, mapping.sqlcolumn)
+                raise
 
         '''
 
@@ -199,12 +209,20 @@ class Cubes10ModelWriter(Node):
         for dimension in entity.dimensions:
 
             if isinstance(dimension, AliasDimension):
-                # FIXME: the aliased dimension may not be a FactDimension?
-                referenced_dimensions = self._get_dimensions_recursively(dimension.dimension.fact)
-                logger.info("Recursively including %s dimensions: %s", dimension, referenced_dimensions)
-                result.extend(referenced_dimensions)
+                # FIXME: the aliased dimension may not be a FactDimension
+                # This shall be part of OLAP
+                if isinstance(dimension.dimension, FactDimension):
+                    referenced_dimensions = self._get_dimensions_recursively(dimension.dimension.fact)
+                    logger.info("Recursively including %s dimensions: %s", dimension, referenced_dimensions)
+                    result.extend(referenced_dimensions)
 
-            result.append(dimension)
+                result.append(dimension)
+
+            #elif isinstance(dimension, HierarchyDimension):
+            #    pass
+
+            else:
+                result.append(dimension)
 
         return result
 
@@ -277,7 +295,7 @@ class Cubes10ModelWriter(Node):
         cube["aggregates"].append(c_aggregate)
 
         # Joins
-        cube["joins"] = self._get_joins_recursively(ctx, mapper)
+        cube["joins"] = self._get_cube_joins(ctx, mapper)
 
         # Details
         cube["details"] = []
@@ -298,6 +316,7 @@ class Cubes10ModelWriter(Node):
         logger.debug("Exporting level %s" % mapper.entity)
 
         mappings = mapper.sql_mappings(ctx)
+        print(mappings)
         pk = mapper.pk(ctx)
         if not pk:
             pk = mappings[0]
@@ -306,11 +325,15 @@ class Cubes10ModelWriter(Node):
         level["label_attribute"] = None
         level["order_attribute"] = None
         level["attributes"] = []
-        level["key"] = pk.sqlcolumn.name
+        level["key"] = pk.field.name if hasattr(pk, "field") else pk.entity.name
         if hasattr(mapper.entity, 'order_attribute'):
             level['order_attribute'] = mapper.entity.order_attribute
 
         for mapping in mappings:
+
+            print(mapping.field)
+            if isinstance(mapping.field, Dimension):
+                continue
 
             level["attributes"].append(mapping.field.name)
 
@@ -331,7 +354,7 @@ class Cubes10ModelWriter(Node):
                 level["role"] = "day"
 
         if level["label_attribute"] is None:
-            level["label_attribute"] = pk.sqlcolumn.name
+            level["label_attribute"] = pk.field.name if hasattr(pk, "field") else pk.entity.name
 
         return level
 
@@ -345,19 +368,19 @@ class Cubes10ModelWriter(Node):
         dim["label"] = mapper.entity.label
         dim["levels"] = []
 
-        # Aliased dimensions
-        if (mapper.entity != mapper.entity):
-            mapper = mapper.olapmapper.entity_mapper(mapper.entity)
+        # Resolve aliased dimensions
+        dimension = mapper.dimension()
+        print(dimension)
+        dimension_mapper = mapper.olapmapper.entity_mapper(dimension)
 
         # Attributes are levels
-
-        if (not hasattr(mapper.entity, "hierarchies")):
+        if not hasattr(dimension, 'hierarchies'):
             c_lev = self._export_level(ctx, mapper)
             dim["levels"].append(c_lev)
         else:
 
             levels = []
-            for level in mapper.entity.levels:
+            for level in dimension.levels:
                 level_mapper = mapper.olapmapper.entity_mapper(level)
                 c_lev = self._export_level(ctx, level_mapper)
                 dim["levels"].append(c_lev)
@@ -365,19 +388,17 @@ class Cubes10ModelWriter(Node):
 
             # Hierarchies
             finest_hierarchy = None
-            if (len(mapper.entity.hierarchies) > 0):
+            if (len(dimension.hierarchies) > 0):
                 dim["hierarchies"] = []
-                for hierarchy in mapper.entity.hierarchies:
+                for hierarchy in dimension_mapper.entity.hierarchies:
 
-                    if ((finest_hierarchy == None) or (len(hierarchy["levels"]) > len(finest_hierarchy["levels"]))):
+                    if ((finest_hierarchy == None) or (len(hierarchy.levels) > len(finest_hierarchy.levels))):
                         finest_hierarchy = hierarchy
 
                     # Define hierarchy
-                    chierarchy = {
-                                  "name": hierarchy["name"],
-                                  "label": hierarchy["label"] if ("label" in hierarchy) else hierarchy["name"],
-                                  "levels": [ lev.name for lev in hierarchy["levels"] ]
-                                  }
+                    chierarchy = {"name": hierarchy.name,
+                                  "label": hierarchy.label,
+                                  "levels": [ lev.name for lev in hierarchy.levels]}
                     dim["hierarchies"].append(chierarchy)
 
             # Add cubesviewer datefilter info
