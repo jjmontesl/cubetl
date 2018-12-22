@@ -1,6 +1,7 @@
 *.py[cod]
 *.so
 *.pyc
+__pycache__
 
 *.egg
 *.egg-info
@@ -29,6 +30,10 @@ develop-eggs
 
 /virtualenv
 /env
+
+*.sqlite3
+*.model.json
+*.slicer.ini
 
 *~
 
