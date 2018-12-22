@@ -144,8 +144,15 @@ class TableMapper(Component):
         if pk is None or pk.sqlcolumn is None:
             return []
         if master is not None:
+            # Search column name of the foreign key that references this primary key
+            master_column_name = "Basura" #self.entity.name
+            for column in self.olapmapper.entity_mapper(master).sqltable.columns:
+                if hasattr(column, "fk_sqlcolumn"):
+                    if column.fk_sqlcolumn == pk.sqlcolumn:
+                        master_column_name = column.name
+
             return [{"master_entity": master,
-                     "master_column": self.entity.name,
+                     "master_column": master_column_name,
                      "detail_entity": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.sqltable.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.sqltable.name,
                      "detail_column": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.name,
                      }]
@@ -372,7 +379,6 @@ class FactMapper(TableMapper):
         """
         Joins that can be done with this entity.
         """
-
         joins = super().sql_joins(ctx, master)
         for dim in self.entity.dimensions:
             dim_mapper = self.olapmapper.entity_mapper(dim)

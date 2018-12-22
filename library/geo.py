@@ -1,51 +1,38 @@
 
----
 
-!!python/object:cubetl.olap.Dimension
-id: cubetl.geo.continent
-name: continent
-label: Continent
-attributes:
-- name: continent_code
-  label: Continent Code
-  type: String
-- name: continent_name
-  label: Continent
-  type: String
+from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure
+from cubetl.text import RegExp
+from cubetl import table
 
----
 
-!!python/object:cubetl.olap.Dimension
-id: cubetl.geo.country
-name: country
-label: Country
-info:
-  cv-geo-flag-field: country_iso
-  cv-geo-ref-field: country_iso
-  cv-geo-map-layer: world_countries
-  #layer.ref-attr: iso
-attributes:
-- name: country_code
-  label: Country Code
-  type: String
-- name: country_name
-  label: Country
-  type: String
+def cubetl_config(ctx):
 
----
+    ctx.add('cubetl.geo.continent',
+            Dimension(name='continent', label='Continent', attributes=[
+                Attribute(name='continent_code', type='String', label='Continent Code'),
+                Attribute(name='continent_name', type='String', label='Continent'),
+                ]))
 
-!!python/object:cubetl.olap.HierarchyDimension
-id: cubetl.geo.contcountry
-name: contcountry
-label: Country
-hierarchies:
-- name: contcountry
-  label: Country
-  levels: continent, country
-levels:
-- !ref cubetl.geo.continent
-- !ref cubetl.geo.country
+    ctx.add('cubetl.geo.country', Dimension(
+        name='country',
+        label='Country',
+        #info={'cv-geo-flag-field': 'country_iso',
+        #      'cv-geo-ref-field': 'country_iso',
+        #      'cv-geo-map-layer': 'world_countries'},
+        attributes=[Attribute(name='country_iso2', type='String', label='Country Code'),
+                    Attribute(name='country_name', type='String', label='Country')]))
 
+    ctx.add('cubetl.geo.contcountry', HierarchyDimension(
+        name='contcountry',
+        label='Country',
+        hierarchies=[
+            Hierarchy(name='contcountry', label='Country', levels=[
+                ctx.get('cubetl.geo.continent'),
+                ctx.get('cubetl.geo.country')
+                ])
+        ]))
+
+'''
 ---
 
 !!python/object:cubetl.core.Mappings
@@ -122,12 +109,6 @@ steps:
 
 ---
 
-!!python/object:cubetl.table.TableRandomLookup
-id: cubetl.geo.country.random
-table: !ref cubetl.geo.country.table
-
----
-
 !!python/object:cubetl.table.cache.CachedTableLookup
 id: cubetl.geo.country.lookup
 table: !ref cubetl.geo.country.table
@@ -194,5 +175,5 @@ process: !!python/object:cubetl.flow.Chain
 
 ---
 
-
+'''
 

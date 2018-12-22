@@ -4,14 +4,6 @@ cubetl.cubes package
 Submodules
 ----------
 
-cubetl.cubes.cubes010 module
-----------------------------
-
-.. automodule:: cubetl.cubes.cubes010
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cubetl.cubes.cubes10 module
 ---------------------------
 

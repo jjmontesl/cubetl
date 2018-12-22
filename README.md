@@ -11,7 +11,8 @@ the process graph, logging, performance metrics and cleaning up.
 It provides several nodes out of the box that can deal with many common formats,
 and it also includes SQL and OLAP modules that can handle SQL and OLAP schemas
 and map data across them. This allows to include OLAP facts across multiple tables
-in a single store operation, performing the appropriate lookups (and caching).
+in a single store operation, performing the appropriate lookups.
+It also caches lookups by default, and is able to keep a sustained throughput.
 
 CubETL can also analyze an existing relational database and generate an OLAP schema, and
 the other way around: generate an SQL schema from an OLAP schema. It can also produce
@@ -73,7 +74,7 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
     # Inspect database and generate a Cubes model and config
     cubext sql2olap --cubes-model mydb.model.json --cubes-slicer mydb.slicer.ini sqlite:///mydb.sqlite3
     # Run cubes server
-    slicer serve cup.slicer.ini &
+    slicer serve mydb.slicer.ini &
     # Run cubesviewer
     cubext cv
 
@@ -117,6 +118,14 @@ Documentation
   * Configuration files
   * Process flow
   * Expressions (message, context, ternary operator...)
+
+* ETL examples
+  * Simple CubETL process (local directory list)
+  * PCAxis to SQL OLAP star-schema (Spanish census)
+  * OLAP schema definition, SQL generation and random data load (fictional web shop)
+  * Apache web server log file parsing and SQL loading in OLAP star-schema
+  * Wikipedia huge XML load to SQL star schema
+  * Querying and exporting to CSV
 
 * Component Reference
 

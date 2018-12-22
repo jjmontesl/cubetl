@@ -22,15 +22,16 @@ class GeoIPFromAddress(Node):
     Splits text into lines.
     """
 
+    def __init__(self, data='${ m["ip"] }', prefix='geoip'):
+        super().__init__()
+        self.data = data
+        self.prefix = prefix
 
-    data = '${ m["data"] }'
-    prefix = 'geoip'
-
-    _extract_error = False
+        self._extract_error = False
 
     def initialize(self, ctx):
 
-        super(GeoIPFromAddress, self).initialize(ctx)
+        super().initialize(ctx)
 
         self._gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
         #self._gi = GeoIP.new(GeoIP.GEOIP_STANDARD)

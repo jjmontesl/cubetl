@@ -12,6 +12,14 @@ cubetl.sql.cache module
     :undoc-members:
     :show-inheritance:
 
+cubetl.sql.sql module
+---------------------
+
+.. automodule:: cubetl.sql.sql
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

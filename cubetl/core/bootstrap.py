@@ -1,3 +1,5 @@
+#
+#
 
 import importlib.util
 
@@ -20,20 +22,19 @@ logger = logging.getLogger(__name__)
 
 
 class Bootstrap:
+    """
+    This class takes care of CubETL command line tool bootstrapping: configure logging,
+    processing arguments and triggering the ETL process entry node.
+    """
 
     def configure_logging(self, ctx):
 
         # In absence of file config
         default_level = logging.INFO if ctx.debug is False else logging.DEBUG
-        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
-        #logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=default_level)
-        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
-        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-        #logging.basicConfig(
-        #    level=logging.DEBUG,
-        #    format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
-        #    datefmt="%H:%M:%S", stream=sys.stdout)
+        if not ctx.debug:
+            logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
+        else:
+            logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=default_level)
 
         # With file config:
         #logging.config.fileConfig('logging.conf')

@@ -234,11 +234,11 @@ class TableInsert(Node):
 
 class TableLookup(Node):
 
-    def __init__(self, table, lookup):
+    def __init__(self, table, lookup, default=None):
         super().__init__()
         self.table = table
         self.lookup = lookup
-        self.default = None
+        self.default = default
         self.mappings = None
 
     def initialize(self, ctx):

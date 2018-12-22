@@ -20,26 +20,10 @@ cubetl.core.components module
     :undoc-members:
     :show-inheritance:
 
-cubetl.core.container module
-----------------------------
-
-.. automodule:: cubetl.core.container
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cubetl.core.context module
 --------------------------
 
 .. automodule:: cubetl.core.context
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cubetl.core.cubetlconfig module
--------------------------------
-
-.. automodule:: cubetl.core.cubetlconfig
     :members:
     :undoc-members:
     :show-inheritance:

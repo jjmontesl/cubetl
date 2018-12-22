@@ -3,7 +3,7 @@ import re
 from dateutil import parser
 from slugify import slugify
 import mimetypes
-import urllib
+from urllib import parse
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def re_search(pattern, text, match = 0):
 
 
 def urlparse(value):
-    return org_ulparse(value)
+    return parse.urlparse(value)
 
 
 #_html_parser = HTMLParser.HTMLParser()

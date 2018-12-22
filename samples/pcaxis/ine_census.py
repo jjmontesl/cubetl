@@ -13,8 +13,8 @@ from cubetl.olap.sql import TableMapper
 
 def cubetl_config(ctx):
 
-    ctx.include('${ ctx.library_path }/cubetl_datetime.py')
-    ctx.include('${ ctx.library_path }/cubetl_person.py')
+    ctx.include('${ ctx.library_path }/datetime.py')
+    ctx.include('${ ctx.library_path }/person.py')
 
     ctx.add('ine.sql.connection',
             sql.Connection(url='sqlite:///cubetl-examples.sqlite3'))
@@ -108,7 +108,7 @@ def cubetl_config(ctx):
                     ctx.get('ine.nationality'),
                     ctx.get('cubetl.person.gender'),
                     ctx.get('cubetl.person.age_range')],
-        measures=[olap.Measure(name='census', type='Integer', label="Population")]))
+        measures=[olap.Measure(name='census', type='Integer', label="Population")]))  # TODO: Should not present avg/max/min
 
     # Generate a SQL star schema and mappings automatically
     sqlschema.OlapSQLSchema.generate_star_schema_mapper(ctx,

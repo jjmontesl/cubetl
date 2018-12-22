@@ -16,33 +16,19 @@ class Dimension(Component):
     def __init__(self, name, attributes=None, label=None, role=None):
         super(Dimension, self).__init__()
         self.name = name
-        self.label = label or name
+        self.label = label
         self.role = None
         self.attributes = attributes or []
+
+        # If attributes are not defined, add a default one. This is a shortcut for simple dimensions.
+        if len(self.attributes) == 0 and type(self) is Dimension:
+            attribute = Attribute(self.name, 'String', self.label)
+            logger.debug("Automatically adding a default String attribute to dimension: %s" % self)
+            self.attributes.append(attribute)
 
     def initialize(self, ctx):
 
         super(Dimension, self).initialize(ctx)
-
-        '''
-        if len(self.attributes) == 0 and type(self) is Dimension:
-            # If attributes are not defined, this is a shortcut for simple dimensions
-            attr = { "name": self.name, "label": self.label, "type": "String" }
-            logger.debug("Automatically adding a default String attribute to dimension %s" % self)
-            self.attributes.append(attr)
-            #raise Exception("Dimension has no attributes: %s" % self)
-            pass
-        else:
-            for attr in self.attributes:
-                if (not "label" in attr):
-                    if ((len(self.attributes) == 1) and (attr["name"] == self.name)):
-                        attr["label"] = self.label
-                    else:
-                        if (not "name" in attr):
-                            raise Exception("Attribute '%s' of %s has no 'name' attribute" % (attr, self))
-                        attr["label"] = attr["name"]
-        '''
-
 
     """
     def has_attribute(self, search):

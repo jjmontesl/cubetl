@@ -14,6 +14,7 @@ Contents:
    :maxdepth: 2
 
    apidoc/cubetl.rst
+
    faq
 
 Indices and tables

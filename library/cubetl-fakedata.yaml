@@ -34,6 +34,12 @@ table: !ref cubetl.fake.product.table
 
 ---
 
+!!python/object:cubetl.table.TableRandomLookup
+id: cubetl.geo.country.random
+table: !ref cubetl.geo.country.table
+
+---
+
 !!python/object:cubetl.flow.Chain
 id: cubetl.fake.faker
 fork: True

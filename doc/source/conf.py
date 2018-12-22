@@ -27,7 +27,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo' ] #, 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo'] #, 'sphinx.ext.viewcode', 'sphinx.ext.autosummary']
+#autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CubETL'
-copyright = u'Jose Juan Montes 2016'
+copyright = u'Jose Juan Montes 2019'
 author = u'Jose Juan Montes'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -68,7 +69,7 @@ release = '1.0.5'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['_build', '_templates']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None

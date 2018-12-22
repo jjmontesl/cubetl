@@ -13,12 +13,14 @@ class UserAgentParse(Node):
     Returns platform, os and browser information from common HTTP user agent strings.
     """
 
-    data = '${ m["user_agent_string"] }'
+    def __init__(self, data='${ m["user_agent_string"] }', result_prefix='ua_'):
+        super().__init__()
 
-    result_obj = None  # 'ua'
-    result_prefix = 'ua_'
+        self.data = data
+        self.result_obj = None  # 'ua'
+        self.result_prefix = result_prefix
 
-    _extract_error = False
+        self._extract_error = False
 
     def initialize(self, ctx):
 

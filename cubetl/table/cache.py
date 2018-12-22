@@ -21,8 +21,8 @@ class CachedTableLookup(TableLookup):
 
     NOT_CACHED = "NOT_CACHED"
 
-    def __init__(self, table, lookup):
-        super().__init__(table=table, lookup=lookup)
+    def __init__(self, table, lookup, default=None):
+        super().__init__(table=table, lookup=lookup, default=default)
 
         self.cache_hits = 0
         self.cache_misses = 0

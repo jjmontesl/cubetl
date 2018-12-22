@@ -108,7 +108,10 @@ class OlapSQLSchema():
         for attribute in fact.attributes:
             logger.debug("Generating mappings for attribute: %s", attribute)
             # Generate a SQL column for the detail
-            # Generate a mapping
+            sqlcolumn = sql.SQLColumn(name=attribute.name, type=attribute.type, label=attribute.label)
+            columns.append(sqlcolumn)
+            columnmapping = OlapMapping(attribute, sqlcolumn)
+            mappings.append(columnmapping)
 
         # Create a SQL table for the fact, and a TableMapper
         sqltable = sql.SQLTable(name=fact.name, connection=connection, columns=columns, label=fact.label)
