@@ -2,7 +2,6 @@ import logging
 from cubetl.core import Node, Component
 from cubetl.core.exceptions import ETLConfigurationException
 #from cubetl.olap.sql import FactMapper
-from past.builtins import basestring
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -67,24 +66,35 @@ class HierarchyDimension(Dimension):
     References subdimensions (levels), usually forming hierarchies.
     """
 
-    def __init__(self, name, hierarchies=None, label=None, role=None):
-        super(HierarchyDimension, self).__init__(name)
-        self.hierarchies = hierarchies or []
+    def __init__(self, name, hierarchies=None, levels=None, label=None, role=None):
+
+        super().__init__(name, label=label)
+
+        self.hierarchies = []
         self.levels = []
 
-        for h in self.hierarchies:
-            for l in h.levels:
-                if l not in self.levels:
-                    self.levels.append(l)
+        if hierarchies is not None and levels is not None:
+            raise ETLConfigurationException("Cannot define both hierarchies and levels for HierarchyDimension: %s" % name)
+
+        if hierarchies:
+            self.hierarchies = hierarchies
+            for h in hierarchies:
+                for l in h.levels:
+                    if l not in self.levels:
+                        self.levels.append(l)
+        elif levels:
+            h = Hierarchy(self.name, list(levels), self.label)
+            self.hierarchies = [h]
+            self.levels = levels
 
     def initialize(self, ctx):
-        super(HierarchyDimension, self).initialize(ctx)
+        super().initialize(ctx)
 
         if (len(self.attributes) > 0):
             raise Exception ("%s is a HierarchyDimension and cannot have attributes." % (self))
 
         for hie in self.hierarchies:
-            if (isinstance(hie.levels, basestring)):
+            if (isinstance(hie.levels, str)):
                 levels = []
                 for lev_name in hie["levels"].split(","):
                     lev_name = lev_name.strip()
@@ -144,13 +154,13 @@ class AliasDimension(Dimension):
 
 class Fact(Component):
 
-    def __init__(self, name, label=None):
+    def __init__(self, name, dimensions, measures, attributes=None, label=None):
         super(Fact, self).__init__()
         self.name = name
-        self.label = label if label else name
-        self.dimensions = []
-        self.attributes = []
-        self.measures = []
+        self.label = label if label else name  # OLAP shouldl not infer name
+        self.dimensions = dimensions
+        self.attributes = attributes or []
+        self.measures = measures
         self.keys = []
 
         #self.label_entity = None  # for now, support an entity (attribute, dimension)
@@ -162,39 +172,51 @@ class Fact(Component):
 
 class Key(Component):
 
+    # TODO: Maybe remove, and use one of the attributes (and so reference the key by name or the attribute directly?)
+
     def __init__(self, entity, name, type, label=None):
         super().__init__()
         self.entity = entity
         self.name = name
         self.type = type
-        self.label = label or name
+        self.label = label or name  # TODO: OLAP shouldn't guess labels, can be done externally
+
+    def __str__(self):
+        return "%s(name=%s, entity=%s)" % (self.__class__.__name__, self.name, self.entity)
 
 
 class Measure(Component):
 
-    def __init__(self, fact, name, type, label=None):
+    def __init__(self, name, type, label=None, fact=None):
         super().__init__()
         self.fact = fact
         self.name = name
         self.type = type
-        self.label = label or name
+        self.label = label or name  # TODO: OLAP shouldn't guess labels, can be done externally
 
 
 class Attribute(Component):
+    """
+    """
 
-    def __init__(self, fact, name, type, label=None):
+    # TODO: Document, what is the entity, the parent entity or a related entity
+
+    def __init__(self, name, type, label=None, entity=None):
         super().__init__()
-        self.fact = fact
+        self.entity = entity
         self.name = name
         self.type = type
-        self.label = label or name
+        self.label = label # or name  # TODO: OLAP shouldn't guess labels, can be done externally
+
+    def __str__(self):
+        return "%s(name=%s, entity=%s)" % (self.__class__.__name__, self.name, self.entity)
 
 
 class Hierarchy(Component):
     def __init__(self, name, levels, label):
         self.name = name
         self.levels = levels
-        self.label = label or name
+        self.label = label or name  # TODO: OLAP shouldn't guess labels, can be done externally
 
 
 class FactDimension(Dimension):
@@ -296,6 +318,11 @@ class OlapMapper(Component):
 
 class Store(Node):
 
+    def __init__(self, entity, mapper):
+        super().__init__()
+        self.entity = entity
+        self.mapper = mapper
+
     def initialize(self, ctx):
         super(Store, self).initialize(ctx)
         ctx.comp.initialize(self.mapper)
@@ -312,7 +339,7 @@ class Store(Node):
         # Store
         # TODO: We shall not collect the ID here possibly
         fid = self.mapper.entity_mapper(entity).store(ctx, m)
-        if (fid != None):
+        if fid is not None:
             m[entity.name + "_id"] = fid
 
         yield m

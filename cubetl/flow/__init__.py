@@ -3,8 +3,8 @@ from cubetl.core import Node
 import copy
 from cubetl.text.functions import parsebool
 from cubetl.script import Eval
-from past.builtins import basestring
 from posix import fork
+from cubetl.core.exceptions import ETLConfigurationException
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class Chain(Node):
 
-    def __init__(self, steps=None, fork=False, condition=None):
+    def __init__(self, steps, fork=False, condition=None):
         super().__init__()
         self.steps = steps or []
         self.fork = fork
@@ -21,6 +21,8 @@ class Chain(Node):
     def initialize(self, ctx):
         super().initialize(ctx)
         for p in self.steps:
+            if p is None:
+                raise ETLConfigurationException("Component %s steps contain a None reference." % self)
             ctx.comp.initialize(p)
 
     def finalize(self, ctx):
@@ -55,7 +57,7 @@ class Chain(Node):
                 for m in result_msgs:
                     yield m
             else:
-                logger.debug("Forking flow")
+                logger.debug("Forking flow (copying message).")
                 m2 = ctx.copy_message(m)
                 result_msgs = self._process(self.steps, ctx, m2)
                 count = 0
@@ -70,13 +72,12 @@ class Chain(Node):
 
 class Filter(Node):
 
-    condition = None
-    message = None
+    def __init__(self, condition, message=None):
+        super().__init__()
+        self.condition = condition
+        self.message = message
 
     def process(self, ctx, m):
-
-        if (self.condition == None):
-            raise Exception("Filter node with no condition.")
 
         if (parsebool(ctx.interpolate(m, self.condition))):
             yield m
@@ -86,6 +87,55 @@ class Filter(Node):
             elif (ctx.debug2):
                 logger.debug("Filtering out message")
             return
+
+
+class Skip(Node):
+
+    def __init__(self, skip):
+        super().__init__()
+        self.skip = skip
+        self._next_skip = 0
+
+    def initialize(self, ctx):
+        super().initialize(ctx)
+        self.counter = 0
+        self._next_skip = 0
+
+    def process(self, ctx, m):
+
+        self.counter += 1
+        if self.counter < self._next_skip:
+            # Skip message
+            return
+
+        self._next_skip = int(ctx.interpolate(m, self.skip))
+        self.counter = 0
+
+        yield m
+
+
+class Limit(Node):
+
+    def __init__(self, limit):
+        super().__init__()
+        self.limit = limit
+        self.counter = 0
+
+    def initialize(self, ctx):
+        super().initialize(ctx)
+        self.counter = 0
+
+    def process(self, ctx, m):
+
+        self.counter += 1
+        limit = int(ctx.interpolate(m, self.limit))
+
+        if self.counter > limit:
+            # Skip message
+            # TODO: We shall actually break the process flow, signalling backwards (return or yield some constant?)
+            return
+
+        yield m
 
 
 class Multiplier(Node):
@@ -113,9 +163,9 @@ class Multiplier(Node):
     def process(self, ctx, m):
 
         pvalues = self.values
-        if (isinstance(pvalues, basestring)):
+        if (isinstance(pvalues, str)):
             pvalues = ctx.interpolate(m, self.values)
-        if (isinstance(pvalues, basestring)):
+        if (isinstance(pvalues, str)):
             pvalues = [ v.strip() for v in pvalues.split(",") ]
         for val in pvalues:
             # Copy message and set value

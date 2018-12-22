@@ -1,16 +1,15 @@
-import logging
 from os import listdir
 from os.path import isfile, join
-import itertools
-import re
-from cubetl.core import Node
-import chardet
-from BeautifulSoup import UnicodeDammit
-from cubetl.fs import FileReader, FileWriter
+import io
 import csv
-import StringIO
+import itertools
+import logging
+
+from cubetl.core import Node
 from cubetl.core.exceptions import ETLException
-from past.builtins import basestring
+from cubetl.fs import FileReader, FileWriter
+import chardet
+import re
 
 
 # Get an instance of a logger
@@ -27,13 +26,15 @@ class CsvReader(Node):
     delimiter = ","
     row_delimiter = "\n"
     ignore_missing = False
+    strip = False
 
     count = 0
     _linenumber = 0
 
     def _utf_8_encoder(self, unicode_csv_data):
         for line in unicode_csv_data:
-            yield line.encode('utf-8')
+            yield line
+            #yield line.encoes()de('utf-8')
 
     def process(self, ctx, m):
 
@@ -44,15 +45,15 @@ class CsvReader(Node):
 
         header = None
         if (self.headers):
-            if (isinstance(self.headers, basestring)):
+            if (isinstance(self.headers, str)):
                 header = [h.strip() for h in self.headers.split(",")]
             else:
                 header = self.headers
 
         self._linenumber = 0
-        rows = iter(self._utf_8_encoder(data.split(self.row_delimiter)))
+        rows = iter(data.split(self.row_delimiter))
 
-        reader = csv.reader(rows, delimiter = self.delimiter)
+        reader = csv.reader(rows, delimiter=self.delimiter)
         for row in reader:
 
             # Skip empty lines
@@ -64,8 +65,8 @@ class CsvReader(Node):
                 continue
 
             # Load header if not defined already
-            if (header == None):
-                header = [v.encode('utf-8') for v in row]
+            if header is None:
+                header = [v for v in row]
                 logger.debug("CSV header is: %s" % header)
                 continue
 
@@ -79,7 +80,11 @@ class CsvReader(Node):
                     arow = ctx.copy_message(m)
                     for header_index in range(0, len(header)):
                         if header_index < len(row) or not self.ignore_missing:
-                            arow[(header[header_index])] = str(row[header_index], "utf-8")
+                            # arow[(header[header_index])] = str(row[header_index], "utf-8")
+                            value = row[header_index]
+                            if self.strip:
+                                value = value.strip()
+                            arow[header[header_index]] = value
                 except Exception as e:
                     logger.error("Could not process CSV data (%r) at %s: %s" % (row, self, e))
                     raise ETLException("Could not process CSV data (%r) at %s: %s" % (row, self, e))
@@ -178,7 +183,7 @@ class CsvFileWriter(Node):
     def _csv_row(self, ctx, row):
 
         if self.encoding:
-            row = [(r.encode(self.encoding) if isinstance(r, basestring) else r) for r in row]
+            row = [(r.encode(self.encoding) if isinstance(r, str) else r) for r in row]
 
         self._csvwriter.writerow(row)
         result = self._output.getvalue()
@@ -188,7 +193,7 @@ class CsvFileWriter(Node):
     def process(self, ctx, m):
 
         if not self._csvwriter:
-            self._output = StringIO.StringIO()
+            self._output = io.StringIO()
             self._csvwriter = csv.writer(self._output, delimiter=self.delimiter,
                               quotechar='"', quoting=csv.QUOTE_MINIMAL)
 

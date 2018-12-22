@@ -1,6 +1,5 @@
 
 from inspect import isclass
-from past.builtins import basestring
 from repoze.lru import LRUCache
 import cProfile
 import copy
@@ -21,6 +20,7 @@ from cubetl.text import functions
 from cubetl.xml import functions as xmlfunctions
 import cubetl
 from collections import OrderedDict
+import importlib
 
 
 # Get an instance of a logger
@@ -44,6 +44,8 @@ class Context():
         self.components = OrderedDict()
 
         self.start_item = {}
+        self.start_node = None
+        self.config_files = []
 
         self.props = {}
         self.properties = self.props
@@ -68,7 +70,6 @@ class Context():
 
         self.comp = Components(self)
 
-
     @staticmethod
     def _class_from_frame(fr):
         try:
@@ -78,12 +79,17 @@ class Context():
 
         return class_type
 
-    def get(self, uid):
+    def get(self, uid, fail=True):
         #logger.debug("Getting component: %s" % component_id)
-        try:
-            comp = self.components.get(uid, None)
-        except KeyError as e:
-            raise KeyError("Component not found with id '%s'" % uid)
+
+        if uid is None:
+            raise ETLException("Cannot retrieve component with id None.")
+
+        comp = self.components.get(uid, None)
+
+        if comp is None and fail:
+            raise ETLException("Component not found with id '%s'" % uid)
+
         return comp
 
     def key(self, comp):
@@ -106,13 +112,13 @@ class Context():
         # Also would serve as a hint for deep-swallow copying (anonymous components are always deep copied?)
 
         if urn is None:
-            raise Exception('Tried to configure an object with no URN')
+            raise Exception('Tried to add an object with no URN')
         if component is None:
-            raise Exception('Tried to configure a null object')
+            raise Exception('Tried to add a null object')
         if not isinstance(component, Component):
-            raise Exception('Tried to configure a non Component object: %s' % component)
-        if self.get(urn) != None:
-            raise Exception("Tried to define an already existing URN: %s" % urn)
+            raise Exception('Tried to add a non Component object: %s' % component)
+        if self.components.get(urn, None) is not None:
+            raise Exception("Tried to add an already existing URN: %s" % urn)
 
         component.ctx = self
         component.urn = urn
@@ -125,7 +131,10 @@ class Context():
         if value == None:
             return None
 
-        if not isinstance(value, basestring):
+        if callable(value):
+            value = value(m)
+
+        if not isinstance(value, str):
             return value
 
         value = value.strip()
@@ -253,4 +262,10 @@ class Context():
 
         return result
 
-
+    def include(self, configfile):
+        configfile = self.interpolate(None, configfile)
+        logger.info("Including config file: %s", configfile)
+        spec = importlib.util.spec_from_file_location("configmodule", configfile)
+        configmodule = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(configmodule)
+        configmodule.cubetl_config(self)

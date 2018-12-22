@@ -1,0 +1,12 @@
+
+---
+
+# Track: @author <- search author timeline, mentions
+# Track: #tag or search <- search timeline
+
+# DIMENSION: Author: username, fullname
+# FACT: Tweet: location(coords, country, etc), language->geo, datetime, author_id, text, has_image, mentions_outgoing, tag_count, link_count, character count, word count, mood?, is_retweet, retweets + text
+# FACT: Mention: from, to, tweet_id
+# FACT: Appearance?: link / tag / word,  tweet_id
+
+---

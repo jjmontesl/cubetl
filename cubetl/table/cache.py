@@ -1,16 +1,16 @@
-import logging
 from os import listdir
 from os.path import isfile, join
-import itertools
-import re
-from cubetl.core import Node, Component
-import chardet
-from BeautifulSoup import UnicodeDammit
-from cubetl.fs import FileReader
 import csv
+import itertools
+import logging
+
+from cubetl.core import Node, Component
+from cubetl.fs import FileReader
+from cubetl.script import Eval
 from cubetl.table import TableLookup
 from cubetl.util.cache import Cache
-from cubetl.script import Eval
+import chardet
+import re
 
 
 # Get an instance of a logger
@@ -21,9 +21,13 @@ class CachedTableLookup(TableLookup):
 
     NOT_CACHED = "NOT_CACHED"
 
-    _cache = None
-    cache_hits = 0
-    cache_misses = 0
+    def __init__(self, table, lookup):
+        super().__init__(table=table, lookup=lookup)
+
+        self.cache_hits = 0
+        self.cache_misses = 0
+
+        self._cache = None
 
     def initialize(self, ctx):
 

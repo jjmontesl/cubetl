@@ -5,15 +5,12 @@ from slugify import slugify
 import mimetypes
 import urllib
 
-from future.moves.html import parser as HTMLParser
-from six.moves.urllib.parse import urlparse as org_urlparse
-
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
 def slug(value):
-    return str(slugify(unicode(value)))
+    return slugify(value)
 
 
 def slugu(value):
@@ -29,7 +26,7 @@ def urlparse(value):
     return org_ulparse(value)
 
 
-_html_parser = HTMLParser.HTMLParser()
+#_html_parser = HTMLParser.HTMLParser()
 def html_unescape(value):
     return _html_parser.unescape(value)
 

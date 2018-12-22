@@ -1,4 +1,5 @@
 
+import importlib.util
 
 import getopt
 import logging
@@ -6,12 +7,12 @@ import os
 import pprint
 import sys
 import traceback
-import yaml
 
-from cubetl import APP_NAME_VERSION
+from cubetl import APP_NAME_VERSION, util
 from cubetl.core import ContextProperties
 from cubetl.core.context import Context
 import cubetl
+from cubetl.util import config, log
 
 
 # Get an instance of a logger
@@ -23,9 +24,10 @@ class Bootstrap:
     def configure_logging(self, ctx):
 
         # In absence of file config
-        default_level = logging.INFO if ctx.debug == False else logging.DEBUG
-        #logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
+        default_level = logging.INFO if ctx.debug is False else logging.DEBUG
+        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
+        #logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=default_level)
+        #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
         #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
         #logging.basicConfig(
@@ -37,7 +39,7 @@ class Bootstrap:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-i attribute=value] [config.yaml ...] <start-node>")
+        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-i attribute=value] [config.py ...] <start-node>")
         print("")
         print("    -p   set a context property")
         print("    -i   set an attribute for the start item")
@@ -105,7 +107,7 @@ class Bootstrap:
                 ctx.start_item[key] = value
 
         for argument in arguments:
-            if (argument.endswith('.yaml')):
+            if (argument.endswith('.py')):
                 ctx.config_files.append(argument)
             else:
                 if (ctx.start_node == None):
@@ -115,7 +117,7 @@ class Bootstrap:
                     self.usage()
                     sys.exit(2)
 
-        if (ctx.start_node == None):
+        if ctx.start_node is None:
             print("One starting node must be specified, but none found.")
             self.usage()
             sys.exit(2)
@@ -137,10 +139,10 @@ class Bootstrap:
         base_dir = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../../")
         ctx.props['dir_lib'] = base_dir + "/library"
 
+        ctx.debug = debug
+
         # Parse arguments
         self.parse_args(ctx)
-
-        ctx.debug = debug
 
         # Init logging
         self.configure_logging(ctx)
@@ -157,6 +159,20 @@ class Bootstrap:
         # Initialize context
         ctx = self.init(argv, cli=True)
 
+        # Load default config
+        self.default_config(ctx)
+
+        # Read config
+        for configfile in ctx.config_files:
+            ctx.include(configfile)
+
         # Run
-        ctx.run()
+        start_node = ctx.get(ctx.start_node)
+        ctx.process(start_node)
+
+    def default_config(self, ctx):
+
+        ctx.add('cubetl.config.print', config.PrintConfig())
+        ctx.add('cubetl.config.list', config.PrintConfig())  # TODO: restore context list
+        ctx.add('cubetl.util.print', util.PrettyPrint())
 

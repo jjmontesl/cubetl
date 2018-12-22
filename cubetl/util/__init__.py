@@ -93,9 +93,8 @@ class Print(Node):
                         truncated.append(line)
                     res = "\n".join(truncated)
 
-
                 if sys.stdout.isatty():
-                    print(highlight(res, self._lexer, self._formatter)) #[:-1]
+                    print(highlight(res, self._lexer, self._formatter)[:-1])
                     #print(res)
                 else:
                     print(res)
@@ -117,7 +116,7 @@ class PrettyPrint(Print):
 
         super().initialize(ctx)
 
-        self._pp = pprint.PrettyPrinter(indent=self.indent, depth=self.depth)
+        self._pp = pprint.PrettyPrinter(indent=self.indent, depth=self.depth, width=self.truncate_line)
 
     def _prepare_res(self, obj):
 

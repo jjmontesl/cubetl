@@ -5,7 +5,6 @@ import itertools
 import re
 from cubetl.core import Node, Component
 import chardet
-from BeautifulSoup import UnicodeDammit
 from cubetl.fs import FileReader
 import csv
 from abc import abstractmethod, ABCMeta
@@ -82,9 +81,13 @@ class MemoryTable(Table):
         for row in self._rows:
             match = True
             for key in attribs.keys():
-                if (row[key] != attribs[key]):
-                    match = False
-                    break
+                try:
+                    if (row[key] != attribs[key]):
+                        match = False
+                        break
+                except KeyError as e:
+                    logger.error("Invalid key '%s' for table '%s' (valid keys are: %s)", key, self, [k for k in row.keys()])
+                    raise
 
             if (match):
                 yield row
@@ -153,7 +156,7 @@ class ProcessTable(ReadOnlyTable):
             yield row
 
 
-class CsvMemoryTable(MemoryTable):
+class CSVMemoryTable(MemoryTable):
     """
     This component represents an in-memory table which can be defined in CSV format,
     which is handy to define in-line tables in the configuration files or to quickly read
@@ -165,20 +168,22 @@ class CsvMemoryTable(MemoryTable):
 
     """
 
-    data = None  # Interpolated at initialization, no message available
 
-    _csv_reader = None
-
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+        self._csv_reader = None
 
     def initialize(self, ctx):
         """
         Reads CSV data on initialization.
         """
 
-        super(CsvMemoryTable, self).initialize(ctx)
+        super().initialize(ctx)
 
         self._csv_reader = CsvReader()
         self._csv_reader.data = ctx.interpolate(None, self.data)
+        self._csv_reader.strip = True
         ctx.comp.initialize(self._csv_reader)
 
         for m in self._csv_reader.process(ctx, None):
@@ -189,7 +194,7 @@ class CsvMemoryTable(MemoryTable):
         if self._csv_reader:
             ctx.comp.finalize(self._csv_reader)
 
-        super(CsvMemoryTable, self).finalize(ctx)
+        super(CSVMemoryTable, self).finalize(ctx)
 
 
 class TableInsert(Node):
@@ -229,10 +234,12 @@ class TableInsert(Node):
 
 class TableLookup(Node):
 
-    table = None
-    lookup = None
-    default = None
-    mappings = None
+    def __init__(self, table, lookup):
+        super().__init__()
+        self.table = table
+        self.lookup = lookup
+        self.default = None
+        self.mappings = None
 
     def initialize(self, ctx):
 

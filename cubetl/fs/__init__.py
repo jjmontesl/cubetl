@@ -5,8 +5,8 @@ import itertools
 import re
 from cubetl.core import Node
 import chardet
-from BeautifulSoup import UnicodeDammit
 import os
+from cubetl.core.exceptions import ETLConfigurationException
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -14,10 +14,14 @@ logger = logging.getLogger(__name__)
 
 class DirectoryList(Node):
 
-    path = None
-    filter_re = None
 
-    name = "path"
+    def __init__(self, path):
+        super().__init__()
+
+        self.path = path
+        self.filter_re = None
+
+        self.name = "path"
 
     def process(self, ctx, m):
 
@@ -41,22 +45,28 @@ class DirectoryList(Node):
 
 
 class FileReader(Node):
+    """
 
-    path = None
+    * encoding_errors can be one of "strict, ignore, replace"
+    """
 
-    encoding = "detect"
-    encoding_errors = "strict" # strict, ignore, replace
-    encoding_abort = True
+    def __init__(self, path, encoding="detect", encoding_errors="strict", encoding_abort=True):
+        super().__init__()
 
-    name = "data"
+        self.path = path
 
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors # strict, ignore, replace
+        self.encoding_abort = encoding_abort
+
+        self.name = "data"
 
     def initialize(self, ctx):
 
-        super(FileReader, self).initialize(ctx)
+        super().initialize(ctx)
 
-        if (self.path == None):
-            raise Exception("Missing path attribute for %s" % self)
+        if self.path is None:
+            raise ETLConfigurationException("Missing path attribute for %s" % self)
 
     def _solve_encoding(self, encoding, text):
 
@@ -91,7 +101,7 @@ class FileReader(Node):
         msg_path = ctx.interpolate(m, self.path)
 
         logger.debug("Reading file %s (encoding=%s)" % (msg_path, self.encoding))
-        with open(msg_path, "r") as myfile:
+        with open(msg_path, "rb") as myfile:
 
             m[self.name] = myfile.read()
 

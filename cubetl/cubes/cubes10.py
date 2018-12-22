@@ -20,11 +20,12 @@ logger = logging.getLogger(__name__)
 
 class Cubes10ModelWriter(Node):
 
-    olapmapper = None
-    _print = None
-
-    def __init__(self):
+    def __init__(self, olapmapper, model_path=None):
         super(Cubes10ModelWriter, self).__init__()
+        self.olapmapper = olapmapper
+        self.model_path = model_path
+
+        self._print = None
 
     def initialize(self, ctx):
 
@@ -44,6 +45,35 @@ class Cubes10ModelWriter(Node):
 
         ctx.comp.finalize(self.olapmapper)
         super(Cubes10ModelWriter, self).finalize(ctx)
+
+    def process(self, ctx, m):
+
+        model = {"dimensions": [],
+                 "cubes": []}
+
+        self._exportolapmapper(ctx, model, self.olapmapper)
+
+        # Prepare result
+        m["cubesmodel"] = model
+        m["cubesmodel_json"] = json.dumps(model, indent=4, sort_keys=True)
+
+        # Send to print node
+        #print m["cubesmodel_json"]
+        res = ctx.comp.process(self._print, m)
+        for m in res:
+            pass
+
+        if self.model_path:
+            logger.info("Writing Cubes model path to: %s", self.model_path)
+            with open(self.model_path, "w") as f:
+                f.write(m["cubesmodel_json"])
+
+        #print m["cubesmodel_json"]
+        #_python_lexer = JsonLexer()
+        #_terminal_formatter = TerminalFormatter()
+        #print highlight(m["cubesmodel_json"], _python_lexer, _terminal_formatter)
+
+        yield m
 
     def _get_cube_joins(self, ctx, mapper):
 
@@ -310,13 +340,55 @@ class Cubes10ModelWriter(Node):
 
         model["cubes"].append(cube)
 
+    def _export_level2(self, ctx, entity):
+        level = {}
+        logger.debug("Exporting level: %s" % entity)
+
+        level["name"] = entity.name
+        level["label"] = entity.label
+        level["label_attribute"] = None
+        level["order_attribute"] = None
+        level["attributes"] = []
+        #level["key"] = entity.key.field.name if hasattr(entity.key, "field") else pk.entity.name
+        if hasattr(entity, 'order_attribute'):
+            level['order_attribute'] = entity.order_attribute
+
+        for attribute in entity.attributes:
+
+            #print(attribute.name)
+            if isinstance(attribute, Dimension):
+                continue
+
+            level["attributes"].append(attribute.name)
+
+            if isinstance(attribute, olap.Attribute) and level["label_attribute"] is None:
+                level["label_attribute"] = attribute.name
+                level["order_attribute"] = attribute.name
+
+            # Cubesviewer dates
+            if (entity.role == "year"):
+                level["role"] = "year"
+            elif (entity.role == "quarter"):
+                level["role"] = "quarter"
+            elif (entity.role == "month"):
+                level["role"] = "month"
+            elif (entity.role == "week"):
+                level["role"] = "week"
+            elif (entity.role == "day"):
+                level["role"] = "day"
+
+        #if level["label_attribute"] is None:
+        #    level["label_attribute"] = pk.field.name if hasattr(pk, "field") else pk.entity.name
+
+        return level
+
     def _export_level(self, ctx, mapper):
 
         level = {}
         logger.debug("Exporting level %s" % mapper.entity)
 
         mappings = mapper.sql_mappings(ctx)
-        print(mappings)
+        #print(mappings)
         pk = mapper.pk(ctx)
         if not pk:
             pk = mappings[0]
@@ -331,7 +403,7 @@ class Cubes10ModelWriter(Node):
 
         for mapping in mappings:
 
-            print(mapping.field)
+            #print(mapping.field)
             if isinstance(mapping.field, Dimension):
                 continue
 
@@ -370,7 +442,6 @@ class Cubes10ModelWriter(Node):
 
         # Resolve aliased dimensions
         dimension = mapper.dimension()
-        print(dimension)
         dimension_mapper = mapper.olapmapper.entity_mapper(dimension)
 
         # Attributes are levels
@@ -381,8 +452,9 @@ class Cubes10ModelWriter(Node):
 
             levels = []
             for level in dimension.levels:
-                level_mapper = mapper.olapmapper.entity_mapper(level)
-                c_lev = self._export_level(ctx, level_mapper)
+                c_lev = self._export_level2(ctx, level)
+                #level_mapper = mapper.olapmapper.entity_mapper(level)
+                #c_lev = self._export_level(ctx, level_mapper)
                 dim["levels"].append(c_lev)
                 levels.append(level)
 
@@ -422,27 +494,4 @@ class Cubes10ModelWriter(Node):
             if isinstance(mapper, FactMapper):
                 self._export_cube(ctx, model, mapper)
 
-    def process(self, ctx, m):
-
-        model = {"dimensions": [],
-                 "cubes": []}
-
-        self._exportolapmapper(ctx, model, self.olapmapper)
-
-        # Prepare result
-        m["cubesmodel"] = model
-        m["cubesmodel_json"] = json.dumps(model, indent=4, sort_keys=True)
-
-        # Send to print node
-        #print m["cubesmodel_json"]
-        res = ctx.comp.process(self._print, m)
-        for m in res:
-            pass
-
-        #print m["cubesmodel_json"]
-        #_python_lexer = JsonLexer()
-        #_terminal_formatter = TerminalFormatter()
-        #print highlight(m["cubesmodel_json"], _python_lexer, _terminal_formatter)
-
-        yield m
 

@@ -15,12 +15,15 @@ logger = logging.getLogger(__name__)
 
 class Log(Node):
 
-    condition = None
-    message = "MESSAGE NOT CONFIGURED - Check Log node configuration"
-    level = logging.INFO
-    once = False
+    def __init__(self, message, condition=None, level=logging.INFO, once=False):
+        super().__init__()
 
-    count = 0
+        self.condition = condition
+        self.message = message
+        self.level = level
+        self.once = once
+
+        self.count = 0
 
     def process(self, ctx, m):
 
@@ -47,7 +50,9 @@ class LogPerformance(Node):
     _lastTime = time.time()
     _lastCount = 0
 
-    def __init__(self):
+    def __init__(self, name="Performance"):
+        super().__init__()
+        self.name = name
         self._startTime = time.time()
         self._lastTime = time.time()
 
@@ -71,7 +76,8 @@ class LogPerformance(Node):
         current = time.time()
         logger.debug("Context expression cache usage - size: %d evictions: %d hits/misses: %d/%d" %
                     (ctx._compiled.size, ctx._compiled.evictions, ctx._compiled.hits, ctx._compiled.misses))
-        logger.info("Total time: %d  Total messages: %d  Global rate: %.3f msg/s" % (
+        logger.info("%s - Total time: %d  Total messages: %d  Global rate: %.3f msg/s" % (
+                    self.name,
                     current - self._startTime,
                     self._count,
                     float(self._count) / (current - self._startTime)
@@ -80,7 +86,8 @@ class LogPerformance(Node):
     def loginfo(self, ctx):
         import psutil
         current = time.time()
-        logger.info("Time: %d Mem: %.3f MB Messages: %d (+%d) Rate global: %.3f msg/s Rate current: %.3f msg/s" % (
+        logger.info("%s - Time: %d Mem: %.3f MB Messages: %d (+%d) Rate global: %.3f msg/s Rate current: %.3f msg/s" % (
+             self.name,
              current - self._startTime,
              self.memory_usage_psutil(),
              self._count,

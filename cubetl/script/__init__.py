@@ -38,6 +38,19 @@ class Script(Node):
         yield m
 
 
+class Function(Node):
+
+    def __init__(self, function):
+        super().__init__()
+        self.function = function
+
+    def process(self, ctx, m):
+
+        # TODO: Cache code?
+        self.function(ctx, m)
+        yield m
+
+
 class ContextScript(ContextProperties):
 
     #def after_properties_set(self):
@@ -62,13 +75,11 @@ class Eval(Node):
     requires expressions to be delimited by ${}.
     """
 
-    eval = []
+    def __init__(self, eval=None):
 
-    def __init__(self):
+        super().__init__()
 
-        super(Eval, self).__init__()
-
-        self.eval = []
+        self.eval = eval or []
 
     def initialize(self, ctx):
         super(Eval, self).initialize(ctx)
@@ -92,7 +103,11 @@ class Eval(Node):
 
             for evalitem in evals:
 
-                if ("value" in evalitem):
+                if isinstance(evalitem, dict):
+                    m.update(evalitem)
+                    return
+
+                elif ("value" in evalitem):
                     try:
                         m[evalitem["name"]] = ctx.interpolate(m, evalitem["value"], data)
                     except Exception as e:
@@ -101,7 +116,8 @@ class Eval(Node):
                         else:
                             raise
                 else:
-                    if (evalitem["name"] in data):
+                    print(evalitem)
+                    if evalitem["name"] in data:
                         m[evalitem["name"]] = data[evalitem["name"]]
                     else:
                         if (not "default" in evalitem):
@@ -116,6 +132,28 @@ class Eval(Node):
     def process(self, ctx, m):
 
         Eval.process_evals(ctx, m, self.eval)
+
+        yield m
+
+
+class Delete(Node):
+    """
+    Note that evaluation is done via ctx.interpolate(), and so
+    requires expressions to be delimited by ${}.
+    """
+
+    def __init__(self, fields):
+
+        super().__init__()
+
+        self.fields = fields
+
+    def process(self, ctx, m):
+        for field in self.fields:
+            try:
+                m.pop(field)
+            except:
+                pass
 
         yield m
 

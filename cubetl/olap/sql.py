@@ -7,8 +7,8 @@ from cubetl.sql.cache import CachedSQLTable
 import logging
 from cubetl.script import Eval
 from cubetl.core.exceptions import ETLConfigurationException
-from past.builtins import basestring
 from cubetl.olap import Measure, Key, FactDimension, HierarchyDimension
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +75,6 @@ class TableMapper(Component):
 
     eval = []
 
-    lookup_cols = None
-
     auto_store = None
     store_mode = STORE_MODE_LOOKUP
 
@@ -93,6 +91,8 @@ class TableMapper(Component):
         self.entity = entity
         self.sqltable = sqltable
         self.mappings = mappings if mappings else []
+
+        self.lookup_cols = None
 
         self._lookup_changed_fields = []
 
@@ -199,21 +199,26 @@ class TableMapper(Component):
 
     def initialize(self, ctx):
 
-        super(TableMapper, self).initialize(ctx)
+        super().initialize(ctx)
 
         if (self.entity == None):
             raise Exception("No entity defined for %s" % self)
 
         ctx.comp.initialize(self.entity)
 
+        # Apply a caching layer
+        # TODO: shall at least be optional, also, columns are referenced to the backed table
+        # another option is that everybody that wants caching adds the wrapper, or maybe that
+        # tables natively support caching.
         if self._uses_table:
             self._sqltable = CachedSQLTable(sqltable=self.sqltable)
+        #self._sqltable = self.sqltable
 
             # Assert that the sqltable is clean
             #if (len(self._sqltable.columns) != 0): raise AssertionError("SQLTable '%s' columns shall be empty!" % self._sqltable.name)
 
         # If lookup_cols is a string, split by commas
-        if (isinstance(self.lookup_cols, basestring)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
+        if (isinstance(self.lookup_cols, str)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
 
         Mappings.includes(ctx, self.mappings)
         for mapping in self.mappings:
@@ -223,26 +228,22 @@ class TableMapper(Component):
             except TypeError as e:
                 raise Exception("Could not initialize mapping '%s' of '%s': %s" % (mapping, self, e))
 
-        if self._uses_table and not self.sqltable:
-
-            mappings = self._mappings(ctx)
-            for mapping in mappings:
-                logger.debug("%s adding column from OLAP mapping: %s" % (self, mapping))
-                self._sqltable.columns.append({ "name": mapping["column"] , "type": mapping["type"], "pk": mapping["pk"] })
+        if self._uses_table:
 
             # If no key, use pk()
-            if (self.lookup_cols == None):
+            if self.lookup_cols is None:
                 pk = self.pk(ctx)
-                if ((pk == None) or (pk["type"] == "AutoIncrement")): raise Exception ("No lookup cols defined for %s (use lookup_cols=[...])" % self)
-                self.lookup_cols = [ pk["name"] ]
+                if (pk is None) or (pk.sqlcolumn.type == "AutoIncrement"):
+                    raise Exception("No lookup cols defined for %s" % self)
+                self.lookup_cols = [ pk ]
 
             ctx.comp.initialize(self._sqltable)
 
     def finalize(self, ctx):
-        if self.sqltable:
-            ctx.comp.finalize(self.sqltable)
+        if self._sqltable:
+            ctx.comp.finalize(self._sqltable)
         ctx.comp.finalize(self.entity)
-        super(TableMapper, self).finalize(ctx)
+        super().finalize(ctx)
 
     def pk(self, ctx):
         #Returns the primary key mapping.
@@ -270,44 +271,35 @@ class TableMapper(Component):
             for ast in self.auto_store:
                 did = self.olapmapper.entity_mapper(ast).store(ctx, m)
                 # TODO: Review and use PK properly
-                if (did != None):
-                    m[ast.name + "_id"] = did
+                m[ast.name + "_id"] = did
         elif (isinstance(self.entity, cubetl.olap.Fact)):
-            logger.debug("Storing automatically: %s" % (self.entity.dimensions))
+            logger.debug("Storing automatically: %s" % ([d.name for d in self.entity.dimensions]))
             for dim in self.entity.dimensions:
                 did = self.olapmapper.entity_mapper(dim).store(ctx, m)
-                # TODO: review this too, or use rarer prefix
-                if (did != None):
-                    m[dim.name + "_id"] = did
-
+                # FIXME: shall use the correct foreign key column according to mappings
+                m[dim.name + "_id"] = did
 
         logger.debug("Storing entity in %s (mode: %s, lookup: %s)" % (self, self.store_mode, self.lookup_cols))
 
         data = {}
-        mappings = self._mappings(ctx)
+        mappings = self.sql_mappings(ctx)
 
         # First try to look it up
         for mapping in mappings:
-            if (mapping["column"] in self.lookup_cols):
-                if (mapping["type"] != "AutoIncrement"):
-                    if (mapping["value"] == None):
-                        data[mapping["column"]] = m[mapping["name"]]
-                    else:
-                        data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
+            if (mapping.sqlcolumn.name in self.lookup_cols):
+                if (mapping.sqlcolumn.type != "AutoIncrement"):
+                    data[mapping.sqlcolumn.name] = m[mapping.sqlcolumn.name]
 
         row = None
         if (self.store_mode == TableMapper.STORE_MODE_LOOKUP):
             row = self._sqltable.lookup(ctx, data)
 
         for mapping in mappings:
-            if (mapping["type"] != "AutoIncrement"):
-                if (mapping["value"] == None):
-                    if (not mapping["name"] in m):
-                        raise Exception("Field '%s' does not exist in message when assigning data for column %s in %s" % (mapping["name"], mapping["column"], self))
-                    data[mapping["column"]] = m[mapping["name"]]
-                else:
-                    data[mapping["column"]] = ctx.interpolate(m, mapping["value"])
-
+            #print(mapping.sqlcolumn.name + "->" + mapping.field.name)
+            if (mapping.sqlcolumn.type != "AutoIncrement"):
+                if mapping.sqlcolumn.name not in m:
+                    raise Exception("Field '%s' does not exist in message when assigning data for column %s in %s (fields: %s)" % (mapping.field.name, mapping.sqlcolumn.name, self, [f for f in m.keys()]))
+                data[mapping.sqlcolumn.name] = m[mapping.sqlcolumn.name]
 
         if (not row):
             if (ctx.debug2):
@@ -317,22 +309,27 @@ class TableMapper(Component):
             else:
                 raise Exception("Update store mode used at %s (%s) not implemented (available 'lookup', 'insert')" % (self, self.store_mode))
         else:
-            # Check row is identical
-            for mapping in self._mappings(ctx):
-                if (mapping["type"] != "AutoIncrement"):
-                    v1 = row[mapping['column']]
-                    v2 = data[mapping['column']]
-                    if (isinstance(v1, basestring) or isinstance(v2, basestring)):
-                        if (not isinstance(v1, basestring)):
+            # Check row is identical to issue a warning
+            # TODO: this shall be optional, check is expensive (no check, warning, fail)
+            for mapping in mappings:
+                if mapping.sqlcolumn.sqltable != self.sqltable:
+                    continue
+                if mapping.sqlcolumn.type != "AutoIncrement":
+                    v1 = row[mapping.sqlcolumn.name]
+                    v2 = data[mapping.sqlcolumn.name]
+                    if (isinstance(v1, str) or isinstance(v2, str)):
+                        if not isinstance(v1, str):
                             v1 = str(v1)
-                        if (not isinstance(v2, basestring)):
+                        if not isinstance(v2, str):
                             v2 = str(v2)
-                    if (v1 != v2):
-                        if (mapping["column"] not in self._lookup_changed_fields):
-                            logger.warn("%s looked up an entity which exists with different attributes (field=%s, existing_value=%r, tried_value=%r) (reported only once per field)" % (self, mapping["column"], v1, v2))
-                            self._lookup_changed_fields.append(mapping["column"])
+                    if v1 != v2:
+                        # Give warning just one time for each field
+                        if (mapping.sqlcolumn not in self._lookup_changed_fields):
+                            logger.warn("%s looked up an entity which exists with different attributes (field=%s, existing_value=%r, tried_value=%r) (reported only once per field)" % (self, mapping.sqlcolumn, v1, v2))
+                            self._lookup_changed_fields.append(mapping.sqlcolumn)
 
-        return row[self.pk(ctx)["column"]]
+        pk = self.pk(ctx)
+        return row[pk.sqlcolumn.name] if pk else None
 
 
 class FactMapper(TableMapper):
@@ -415,6 +412,9 @@ class DimensionMapper(TableMapper):
     """
 
     _automapping_warning = []
+
+    def dimension(self):
+        return self.entity
 
     '''
     def _mappings(self, ctx):
@@ -785,8 +785,8 @@ class AliasDimensionMapper(DimensionMapper):
         #self.table = self.olapmapper.entity_mapper(self.entity.entity).sqltable
 
         # If lookup_cols is a string, split by commas
-        if (self.lookup_cols != None):
-            raise Exception("No lookup_cols can be defined for an embedded dimension.")
+        if self.lookup_cols:
+            raise Exception("No lookup_cols can be defined for an embedded dimension (mapper=%s, lookup_cols=%s)." % (self, self.lookup_cols))
 
     def finalize(self, ctx):
         ctx.comp.finalize(self.entity)
@@ -862,6 +862,6 @@ class AliasDimensionMapper(DimensionMapper):
     def pk(self, ctx):
         mapper = self.olapmapper.entity_mapper(self.entity.dimension)
         pk = mapper.pk(ctx)
-        print(pk)
+        #print(pk)
         return pk
 

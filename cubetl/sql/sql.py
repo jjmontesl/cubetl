@@ -7,7 +7,6 @@ from cubetl.core import Node, Component
 from sqlalchemy.sql.expression import and_
 from cubetl.text.functions import parsebool
 from sqlalchemy.exc import ResourceClosedError
-from past.builtins import basestring
 from cubetl.core.exceptions import ETLConfigurationException
 
 # Get an instance of a logger
@@ -17,19 +16,16 @@ logger = logging.getLogger(__name__)
 class Connection(Component):
 
     def __init__(self, url):
-        super(Connection, self).__init__()
+        super().__init__()
         self.url = url
         self._engine = None
 
     #def __repr__(self):
     #    return "%s(url='%s')" % (self.__class__.__name__, self._url)
 
-    def initialize(self):
-        pass
-
     def lazy_init(self):
         if self._engine is None:
-            url = self._url
+            url = self.url
             logger.info("Connecting to database: %s" % url)
             self._engine = create_engine(url)
             self._connection = self._engine.connect()
@@ -48,19 +44,23 @@ class SQLColumn(Component):
     TYPE_INTEGER = "INTEGER"
     TYPE_STRING = "TEXT"
 
-    def __init__(self, sqltable, name, type, pk=False, label=None):
+    def __init__(self, name, type, pk=False, null=True, label=None):
         super(SQLColumn, self).__init__()
-        self.sqltable = sqltable
+        self.sqltable = None
         self.name = name
         self.type = type
         self.pk = pk
         self.label = label or name
+        self.null = null
+
+    def __str__(self):
+        return "%s(name=%s)" % (self.__class__.__name__, self.name)
 
 
 class SQLColumnFK(SQLColumn):
 
-    def __init__(self, sqltable, name, type, pk, fk_sqlcolumn):
-        super(SQLColumnFK, self).__init__(sqltable, name, type, pk)
+    def __init__(self, name, type, pk, fk_sqlcolumn, null=True, label=None):
+        super(SQLColumnFK, self).__init__(name, type, pk, null, label=label)
         self.fk_sqlcolumn = fk_sqlcolumn
 
 
@@ -87,7 +87,7 @@ class SQLTable(Component):
     _unicode_errors = 0
     _lookup_changed_fields = None
 
-    def __init__(self, name, connection, label=None):
+    def __init__(self, name, connection, columns, label=None):
 
         super(SQLTable, self).__init__()
 
@@ -96,31 +96,31 @@ class SQLTable(Component):
 
         self.label = label if label else name
 
-        self.columns = []
+        self.columns = columns or []
+        for col in columns:
+            col.sqltable = self
 
     def _get_sa_type(self, column):
 
-
-        if (column["type"] == "Integer"):
+        if (column.type == "Integer"):
             return Integer
-        elif (column["type"] == "String"):
-            if (not "length" in column):
-                column["length"] = 128
-            return Unicode(length = column["length"])
-        elif (column["type"] == "Float"):
+        elif (column.type == "String"):
+            #if (column.length is None): column.length = 128
+            return Unicode(length = 128)
+        elif (column.type == "Float"):
             return Float
-        elif (column["type"] == "Boolean"):
+        elif (column.type == "Boolean"):
             return Boolean
-        elif (column["type"] == "AutoIncrement"):
+        elif (column.type == "AutoIncrement"):
             return Integer
-        elif (column["type"] == "Date"):
+        elif (column.type == "Date"):
             return Date
-        elif (column["type"] == "Time"):
+        elif (column.type == "Time"):
             return Time
-        elif (column["type"] == "DateTime"):
+        elif (column.type == "DateTime"):
             return DateTime
         else:
-            raise Exception("Invalid data type: %s" % column["type"])
+            raise Exception("Invalid data type (%s): %s" % (column, column.type))
 
     def finalize(self, ctx):
 
@@ -168,20 +168,20 @@ class SQLTable(Component):
 
             logger.debug("Adding column to %s: %s" % (self, column))
 
-            # Check for duplicate names
-            if (column["name"] in columns_ex):
-                raise ETLConfigurationException("Duplicate column name '%s' in %s" % (column["name"], self))
+            column.sqltable = self
 
-            columns_ex.append(column["name"])
+            # Check for duplicate names
+            if (column.name in columns_ex):
+                raise ETLConfigurationException("Duplicate column name '%s' in %s" % (column.name, self))
+
+            columns_ex.append(column.name)
 
             # Configure column
-            column["pk"] = False if (not "pk" in column) else parsebool(column["pk"])
-            if (not "type" in column): column["type"] = "String"
-            #if (not "value" in column): column["value"] = None
-            self.sa_table.append_column(Column(column["name"],
+            self.sa_table.append_column(Column(column.name,
                                                self._get_sa_type(column),
-                                               primary_key=column["pk"],
-                                               autoincrement=(True if column["type"] == "AutoIncrement" else False)))
+                                               primary_key=column.pk,
+                                               nullable=column.null,
+                                               autoincrement=(True if column.type == "AutoIncrement" else False)))
 
         # Check schema
 
@@ -199,12 +199,12 @@ class SQLTable(Component):
         Returns the primary key column definitToClauion, or None if none defined.
         """
 
-        if (self._pk == False):
+        #if (self._pk == False):
+        if True:
             pk_cols = []
             for col in self.columns:
-                if ("pk" in col):
-                    if parsebool(col["pk"]):
-                        pk_cols.append(col)
+                if col.pk:
+                    pk_cols.append(col)
 
             if (len(pk_cols) > 1):
                 raise Exception("Table %s has multiple primary keys: %s" % (self.name, pk_cols))
@@ -230,7 +230,7 @@ class SQLTable(Component):
         d = {}
         for column in self.columns:
             #print column
-            d[column["name"]] = getattr(row, column["name"])
+            d[column.name] = getattr(row, column.name)
 
         return d
 
@@ -247,14 +247,15 @@ class SQLTable(Component):
             yield self._rowtodict(r)
 
 
-    def lookup(self, ctx, attribs):
+    def lookup(self, ctx, attribs, find_function=None):
 
         logger.debug ("Lookup on '%s' attribs: %s" % (self, attribs))
 
         if (len(attribs.keys()) == 0):
             raise Exception("Cannot lookup on table '%s' with no criteria (empty attribute set)" % self.name)
 
-        rows = self._find(ctx, attribs)
+        find_function = find_function or self._find
+        rows = find_function(ctx, attribs)
         rows = list(rows)
         if (len(rows) > 1):
             raise Exception("Found more than one row when searching for just one in table %s: %s" % (self.name, attribs))
@@ -300,9 +301,9 @@ class SQLTable(Component):
                         if c["type"] == "Date":
                             v1 = row[c['name']].strftime('%Y-%m-%d')
                             v2 = data[c['name']].strftime('%Y-%m-%d')
-                        if (isinstance(v1, basestring) or isinstance(v2, basestring)):
-                            if (not isinstance(v1, basestring)): v1 = str(v1)
-                            if (not isinstance(v2, basestring)): v2 = str(v2)
+                        if (isinstance(v1, str) or isinstance(v2, str)):
+                            if (not isinstance(v1, str)): v1 = str(v1)
+                            if (not isinstance(v2, str)): v2 = str(v2)
                         if (v1 != v2):
                             if (c["name"] not in self._lookup_changed_fields):
                                 logger.warn("%s updating an entity that exists with different attributes, overwriting (field=%s, existing_value=%s, tried_value=%s)" % (self, c["name"], v1, v2))
@@ -320,17 +321,17 @@ class SQLTable(Component):
         row = {}
 
         for column in self.columns:
-            if (column["type"] != "AutoIncrement"):
+            if column.type != "AutoIncrement":
                 try:
-                    row[column["name"]] = data[column["name"]]
+                    row[column.name] = data[column.name]
                 except KeyError as e:
                     raise Exception("Missing attribute for column %s in table '%s' while inserting row: %s" % (e, self.name, data))
 
                 # Checks
-                if ((column["type"] == "String") and (not isinstance(row[column["name"]], unicode))):
+                if (column.type == "String") and (not isinstance(row[column.name], str)):
                     self._unicode_errors = self._unicode_errors + 1
                     if (ctx.debug):
-                        logger.warn("Unicode column %r received non-unicode string: %r " % (column["name"], row[column["name"]]))
+                        logger.warn("Unicode column %r received non-unicode string: %r " % (column.name, row[column.name]))
 
         return row
 
@@ -342,15 +343,16 @@ class SQLTable(Component):
         res = self.connection.connection().execute(self.sa_table.insert(row))
 
         pk = self.pk(ctx)
-        row[pk["name"]] = res.inserted_primary_key[0]
+        if pk:
+            row[pk.name] = res.inserted_primary_key[0]
 
         self._inserts = self._inserts + 1
         SQLTable._inserts = SQLTable._inserts + 1
 
-        if (pk != None):
+        if pk is not None:
             return row
         else:
-            return None
+            return row  # None
 
     def update(self, ctx, data, keys = []):
 
@@ -383,18 +385,16 @@ class SQLTable(Component):
 class Transaction(Node):
 
 
-    connection = None
-
-    _transaction = None
-
-    enabled = True
+    def __init__(self, connection, enabled=True):
+        super().__init__()
+        self.connection = connection
+        self.enabled = enabled
+        self._transaction = None
 
     def initialize(self, ctx):
-
         super(Transaction, self).initialize(ctx)
         ctx.comp.initialize(self.connection)
         self.enabled = parsebool(self.enabled)
-
 
     def finalize(self, ctx):
         ctx.comp.finalize(self.connection)

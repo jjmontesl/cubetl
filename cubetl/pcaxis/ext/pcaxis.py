@@ -4,6 +4,7 @@
 import re
 from itertools import product
 from operator import mul
+from functools import reduce
 
 
 class Dimension(object):

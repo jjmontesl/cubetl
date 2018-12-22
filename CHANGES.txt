@@ -1,3 +1,8 @@
+[HEAD 1.1.0]
+
+    * Large refactor to OLAP package.
+    * Removed YAML config.
+
 [1.0.5]
 
     * Fixed several incompatibility bugs in Python 3.

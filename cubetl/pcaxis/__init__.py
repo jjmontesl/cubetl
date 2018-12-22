@@ -29,13 +29,22 @@ class PCAxisIterator(Node):
         table = m['pcaxis']
 
         #m['pca'] = {}
-        container = m
 
         values = [dimension.values for dimension in table.dimensions]
         for element in itertools.product(*values):
+
+            container = {}
+
             for idx, val in enumerate(element):
                 container[table.dimensions[idx].title] = val
 
-            container['value'] = float(table.get(*element))
+            value = table.get(*element)
+            try:
+                container['value'] = value
+            except ValueError as e:
+                logger.warn("PCAxisIterator could not parse value: %r (cell: %s)", value, container)
+                value = None
 
+            m.update(container)
             yield m
+

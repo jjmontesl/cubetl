@@ -15,6 +15,8 @@ class CachedSQLTable(Component):
 
     def __init__(self, sqltable):
 
+        super().__init__()
+
         self._sqltable = sqltable
 
         self._cache = None
@@ -24,6 +26,7 @@ class CachedSQLTable(Component):
     def initialize(self, ctx):
 
         #super(CachedSQLTable, self).initialize(ctx)
+        ctx.comp.initialize(self._sqltable)
         self._cache = Cache().cache()
 
     def finalize(self, ctx):
@@ -31,7 +34,8 @@ class CachedSQLTable(Component):
         if (self.cache_hits + self.cache_misses > 0):
             logger.info ("%s  hits/misses: %d/%d (%.2f%%)" % (self, self.cache_hits, self.cache_misses, float(self.cache_hits) / (self.cache_hits + self.cache_misses) * 100))
 
-        super(CachedSQLTable, self).finalize(ctx)
+        ctx.comp.finalize(self._sqltable)
+        #super(CachedSQLTable, self).finalize(ctx)
 
     def _find(self, ctx, attribs):
 
@@ -47,14 +51,14 @@ class CachedSQLTable(Component):
         # TODO: Cache also on natural keys
 
         # Run through parent
-        if (rows == None):
+        if rows is None:
 
             self.cache_misses = self.cache_misses + 1
 
             #query = self.sa_table.select(self._attribsToClause(attribs))
             #rows = self.connection.engine().execute(query)
 
-            rowsb = super(CachedSQLTable, self)._find(ctx, attribs)
+            rowsb = self._sqltable._find(ctx, attribs)
 
             rows = []
             for row in rowsb:
@@ -63,12 +67,19 @@ class CachedSQLTable(Component):
             # Cache if appropriate
             if (len(attribs.keys()) > 0):
                 if (len(rows) > 0):
-                    if (ctx.debug2): logger.debug("Caching row: %s = %s" % (attribs, rows))
+                    if (ctx.debug2):
+                        logger.debug("Caching row: %s = %s" % (attribs, rows))
                     self._cache.put(cache_key, rows)
         else:
             self.cache_hits = self.cache_hits + 1
 
         return iter(rows)
+
+    def lookup(self, ctx, attribs):
+        return self._sqltable.lookup(ctx, attribs, find_function=self._find)
+
+    def insert(self, ctx, data):
+        return self._sqltable.insert(ctx, data)
 
 
 class CachedQueryLookup(QueryLookup):

@@ -43,25 +43,15 @@
 
 [NEXT]
 
-  * New generation refactor: import SQL to OLAP -> Cubes + CubETLOLAPQuery
-
-  * Remove YAML? keep config declarative
-  * Remove __init__ and move back modules if they are small.
-  * Sql-to-cubetl (tables and types) then to OLAP
-  * Then, instance an olap sql-to-olap (process tables and columns, generate olap and olap mappings)
-  * Implement querying
-  * Move these SQL/OLAP method to Cubetl components.
-  * Normalize/formalize column/name/id/schema/database naming ("name" (can contain dots), "id"?)
+  * Implement OLAP querying.
 
   * Data type system (could explore data in messages, SQL columns/rows, etc...), used to detect column types and formatting.
     Used by any process that wants to use it, used by sql2cubetl and sql2olap.
     Support detection, validation, formatting, transformation + unit conversion, icons (for type and values), i18n (for type and values)...
 
-  # (optionally, at the end, export to cubes)
-  # (should theorically be able to create olap-2-star-schema mappings, then create tables and load)
-  # (theorically, we should be able to generate the same mappings from the generated star-schema (would require identifying split dims/hierarchies)
+  * Move SQL/OLAP imports to Cubetl components.
 
-  * Use pk() and mappings() (currently one is private, but it's the public interface)
-  * Rename mappings() to "mappings_query", "mappings_join", "mappings_store" or whatever is needed...
-
+  * HierarchyDimension/Dimension (shouldn't all dimensions be hierarchies? - a Dimension is an exception, unify!)
+  * Normalize/formalize column/name/id/schema/database naming ("name" (can contain dots), "id"?)
+  * [ongoing] Implement OLAP Query. New generation refactor: import SQL to OLAP -> Cubes + CubETLOLAPQuery
 

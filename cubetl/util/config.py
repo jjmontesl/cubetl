@@ -10,9 +10,8 @@ logger = logging.getLogger(__name__)
 
 class PrintConfig(Node):
 
-    type = None
-
-
+    def __init__(self):
+        super().__init__()
 
     def process(self, ctx, m):
         text = ""
@@ -22,7 +21,7 @@ class PrintConfig(Node):
             #print()
             text += item + "\n"
 
-        #print()
+        print(text)
         m['data'] = text
 
         yield m
