@@ -193,6 +193,7 @@ class Bootstrap:
     def default_config(self, ctx):
 
         ctx.add('cubetl.config.print', config.PrintConfig())
-        ctx.add('cubetl.config.list', config.PrintConfig())  # TODO: restore context list
+        ctx.add('cubetl.config.list', config.ListConfig())  # TODO: restore context list
+        #ctx.add('cubetl.config.new', config.CreateTemplateConfig())
         ctx.add('cubetl.util.print', util.PrettyPrint())
 

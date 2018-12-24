@@ -50,3 +50,39 @@ class PrintConfig(Node):
 
         yield m
 
+
+class ListConfig(Node):
+
+    def __init__(self):
+        super().__init__()
+
+    def list_config(self, ctx, m):
+        text = "\n"
+        text += "List of nodes in CubETL configuration:\n"
+        for k, e in ctx.components.items():
+            if not isinstance(e, Node):
+                continue
+            item = "  * %s" % (k)
+            text += item + "\n"
+        return text
+
+    def process(self, ctx, m):
+        res = self.list_config(ctx, m)
+        print(res)
+        yield m
+
+
+'''
+class CreateConfig(JinjaTemplateRenderer):
+
+    def __init__(self, template_path):
+        super().__init__(template_path, engine=MakoTemplateEngine)
+        self.template_path = template_path
+        self.data = data
+
+    def process(self, ctx, m):
+        res = super(process
+        res = self.list_config(ctx, m)
+        print(res)
+        yield m
+'''

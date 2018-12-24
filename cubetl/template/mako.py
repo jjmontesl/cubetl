@@ -1,12 +1,15 @@
-from cubetl.core import Node, Component
 import logging
+
+from cubetl.core import Node, Component
 from mako import template
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
-class MakoTemplate(Template):
+'''
+class MakoTemplateRenderer(TemplateRenderer):
 
     template = None
 
@@ -24,4 +27,4 @@ class MakoTemplate(Template):
         result = self._mako_template.render_unicode(ctx = ctx, **kwargs)
         return result
 
-#class TemplateRenderer(Node):
+'''

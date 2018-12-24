@@ -78,7 +78,7 @@ class HierarchyDimension(Dimension):
         super().initialize(ctx)
 
         if (len(self.attributes) > 0):
-            raise Exception ("%s is a HierarchyDimension and cannot have attributes." % (self))
+            raise Exception("%s is a HierarchyDimension and cannot have attributes." % (self))
 
         for hie in self.hierarchies:
             if (isinstance(hie.levels, str)):
@@ -87,7 +87,7 @@ class HierarchyDimension(Dimension):
                     lev_name = lev_name.strip()
                     level = [lev for lev in self.levels if lev.name == lev_name]
                     if (len(level) != 1):
-                        raise Exception ("Level %s defined in hierarchy %s is undefined." % (lev_name, hie))
+                        raise Exception("Level %s defined in hierarchy %s is undefined." % (lev_name, hie))
                     levels.append(level[0])
                 hie["levels"] = levels
 

@@ -27,7 +27,7 @@ class OlapSQLSchema():
     @staticmethod
     def generate_star_schema_mapper_dimension(ctx, connection, olapmapper, dimension):
 
-        logger.info("Generating star schema for dimension: %s", dimension)
+        logger.debug("Generating star schema for dimension: %s", dimension)
 
         columns = []
         mappings = []

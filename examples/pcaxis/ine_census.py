@@ -1,14 +1,15 @@
 
 
-import random
-from cubetl import text, flow, fs, script, olap, pcaxis, table
-from cubetl.util import log
-from cubetl.table import cache
-from cubetl.sql import sql
-from cubetl.olap import sqlschema
 import datetime
+import random
+
+from cubetl import text, flow, fs, script, olap, pcaxis, table
 from cubetl.cubes import cubes10
+from cubetl.olap import sqlschema
 from cubetl.olap.sql import TableMapper
+from cubetl.sql import sql
+from cubetl.table import cache
+from cubetl.util import log
 
 
 def cubetl_config(ctx):
