@@ -17,7 +17,7 @@ def cubetl_config(ctx):
     ctx.include('${ ctx.library_path }/person.py')
 
     ctx.add('ine.sql.connection',
-            sql.Connection(url='sqlite:///cubetl-examples.sqlite3'))
+            sql.Connection(url='sqlite:///ine.sqlite3'))
 
     ctx.add('ine.autonomy_province.table', table.CSVMemoryTable(
         data='''
@@ -100,6 +100,7 @@ def cubetl_config(ctx):
     ctx.add('ine.census', olap.Fact(
         name='census',
         label='Census',
+        #must_slice=ctx.get('cubetl.datetime.datemonthly'),  # study when and how dimensions can be aggregated, this cube requires slicing by date or results are invalid
         #natural_key=
         #notes='',
         dimensions=[#olap.Attribute('sample_date', label="Date", entity=ctx.get('cubetl.datetime.datemonthly')),
@@ -211,7 +212,7 @@ def cubetl_config(ctx):
 
         sql.Transaction(connection=ctx.get('ine.sql.connection')),
 
-        fs.FileReader(path='census.px', encoding=None),
+        fs.FileReader(path='census-1971.px', encoding=None),
         pcaxis.PCAxisParser(),
 
         flow.Chain(fork=True, steps=[
@@ -220,14 +221,17 @@ def cubetl_config(ctx):
             script.Delete(['data', 'pcaxis']),
 
             flow.Filter(condition="${ m['Sexo'] != 'Ambos sexos' }"),
-            flow.Filter(condition="${ m['Grupo quinquenal de edad'] != 'Total' }"),
-            flow.Filter(condition="${ m['Nacionalidad'] != 'Total' }"),
+            #flow.Filter(condition="${ m['Grupo quinquenal de edad'] != 'Total' }"),
+            flow.Filter(condition="${ m['Grupo de edad'] != 'Total' }"),
+            #flow.Filter(condition="${ m['Nacionalidad'] != 'Total' }"),
             flow.Filter(condition="${ m['Provincias'] != 'Total Nacional' }"),
 
             #flow.Skip(skip="${ random.randint(1, 1000) }"),
             #flow.Limit(limit=5000),
 
             script.Function(process_data),
+
+            flow.Filter(condition="${ m['date'].year < 2002 }"),
 
             cache.CachedTableLookup(
                 table=ctx.get("ine.autonomy_province.table"),
@@ -255,8 +259,8 @@ def cubetl_config(ctx):
 def process_data(ctx, m):
 
     m['date'] = datetime.datetime(int(m['Periodo'].split(" ")[-1]), 7 if 'julio' in m['Periodo'] else 1, 1)
-    m['nationality'] = m['Nacionalidad']
-    m['age_range'] = m['Grupo quinquenal de edad']
+    m['nationality'] = m.get('Nacionalidad', 'Unknown')
+    m['age_range'] = m.get('Grupo quinquenal de edad', None) or m.get('Grupo de edad')
     m['census'] = m['value']
 
     # For autonomy dimension
@@ -274,9 +278,10 @@ def process_data(ctx, m):
     m['icon'] = None
 
     del(m['Provincias'])
-    del(m['Nacionalidad'])
+    #del(m['Nacionalidad'])
     del(m['Periodo'])
-    del(m['Grupo quinquenal de edad'])
+    #del(m['Grupo quinquenal de edad'])
+    del(m['Grupo de edad'])
     del(m['Sexo'])
     del(m['value'])
 

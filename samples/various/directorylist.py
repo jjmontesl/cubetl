@@ -3,27 +3,40 @@
 import random
 from cubetl import text, flow, fs, script
 from cubetl.util import log
-
-
-def add_random_field(ctx, m):
-    m["id"] = text.functions.slugu(m["path"])
-    m["fruit"] = random.choice(['apples', 'oranges', 'bananas'])
-    m["number"] = random.randint(0, 10)
+import os
 
 
 def cubetl_config(ctx):
+    """
+    This is a simple ETL process. It simply lists files in the library
+    path, and adds some extra data. Then prints the resulting messages to
+    standard output.
+    """
 
-    ctx.add('example.directorylist', flow.Chain(steps=[
+    ctx.add('directorylist.process', flow.Chain(steps=[
 
-        log.Log(message='CubETL Example'),
+        # Log a message through the logging system
+        log.Log(message='CubETL Example', level=log.Log.LEVEL_WARN),
 
-        fs.DirectoryList(path='/'),
+        # Generates a message for each file in the given directory
+        fs.DirectoryList(path=ctx.library_path),
 
-        script.Function(add_random_field),
+        # Manipulate each message with a custom function
+        script.Function(process_data),
 
+        # Print the message (use -q when calling cubetl to hide print output)
         ctx.get('cubetl.util.print'),
 
     ]))
 
-    ctx.start_node = 'example.directorylist'
+    #ctx.start_node = 'example.directorylist'
+
+
+def process_data(ctx, m):
+    """
+    Message data transformations.
+    """
+    m["path_id"] = text.functions.slugu(m["path"])
+    m["filename"] = os.path.basename(m["path"])
+    m["random_number"] = random.randint(1, 10)
 

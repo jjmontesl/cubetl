@@ -87,6 +87,7 @@ class OlapSQLSchema():
 
         # Dimensions
         for dimension in fact.dimensions:
+            dimension = dimension.dimension
             dimension_mapper = OlapSQLSchema.generate_star_schema_mapper_dimension(ctx, connection, olapmapper, dimension)
             pk = dimension_mapper.pk(ctx)
             # Generate a SQL column for the detail

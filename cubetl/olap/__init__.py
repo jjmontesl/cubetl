@@ -13,11 +13,12 @@ class Dimension(Component):
     Note: This represents a Flat dimension (no hierarchies, only one level with attributes).
     """
 
-    def __init__(self, name, attributes=None, label=None, role=None):
+    def __init__(self, name, attributes=None, label=None, role=None, info=None):
         super(Dimension, self).__init__()
         self.name = name
         self.label = label
         self.role = None
+        self.info = info
         self.attributes = attributes or []
 
         # If attributes are not defined, add a default one. This is a shortcut for simple dimensions.
@@ -189,13 +190,32 @@ class Attribute(Component):
 
     def __init__(self, name, type, label=None, entity=None):
         super().__init__()
-        self.entity = entity
+        self.entity = entity  # TODO: Remove?
         self.name = name
         self.type = type
         self.label = label # or name  # TODO: OLAP shouldn't guess labels, can be done externally
 
     def __str__(self):
         return "%s(name=%s, entity=%s)" % (self.__class__.__name__, self.name, self.entity)
+
+
+class DimensionAttribute(Component):
+    """
+    """
+
+    # TODO: Document, what is the entity, the parent entity or a related entity
+
+    def __init__(self, dimension, alias=None, label=None, entity=None):
+        super().__init__()
+        self.entity = entity  # TODO: Remove?
+        #self.name = name
+        self.type = type
+        self.dimension = dimension
+        self.alias = alias or dimension.name
+        self.label = label or dimension.label   # or name  # TODO: OLAP shouldn't guess labels, can be done externally
+
+    def __str__(self):
+        return "%s(alias=%s, dimension=%s)" % (self.__class__.__name__, self.alias, self.dimension)
 
 
 class Hierarchy(Component):

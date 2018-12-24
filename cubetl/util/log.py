@@ -15,7 +15,15 @@ logger = logging.getLogger(__name__)
 
 class Log(Node):
 
-    def __init__(self, message, condition=None, level=logging.INFO, once=False):
+    LEVEL_DEBUG = logging.DEBUG
+    LEVEL_INFO = logging.INFO
+    LEVEL_WARN = logging.WARN
+    LEVEL_WARNING = logging.WARN
+    LEVEL_ERROR = logging.ERROR
+    LEVEL_FATAL = logging.FATAL
+    LEVEL_CRITICAL = logging.CRITICAL
+
+    def __init__(self, message, condition=None, level=LEVEL_INFO, once=False):
         super().__init__()
 
         self.condition = condition

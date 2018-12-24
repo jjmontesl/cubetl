@@ -11,8 +11,7 @@ the process graph, logging, performance metrics and cleaning up.
 It provides several nodes out of the box that can deal with many common formats,
 and it also includes SQL and OLAP modules that can handle SQL and OLAP schemas
 and map data across them. This allows to include OLAP facts across multiple tables
-in a single store operation, performing the appropriate lookups.
-It also caches lookups by default, and is able to keep a sustained throughput.
+in a single store operation, performing the appropriate (and caching) lookups.
 
 CubETL can also analyze an existing relational database and generate an OLAP schema, and
 the other way around: generate an SQL schema from an OLAP schema. It can also produce
@@ -48,6 +47,9 @@ As with most tools, it is recommended to use a virtualenv:
     # Activate virtualenv
     . env/bin/activate
 
+Requires Python 3.5+.
+
+
 Usage
 -----
 
@@ -73,10 +75,15 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
 
     # Inspect database and generate a Cubes model and config
     cubext sql2olap --cubes-model mydb.model.json --cubes-slicer mydb.slicer.ini sqlite:///mydb.sqlite3
+    cubetl sql2olap \
+        -i cubes_model=mydb.cubes-model.json \
+        -i cubes_config=mydb.cubes-config.ini \
+        -i db_url=sqlite:///mydb.sqlite3
     # Run cubes server
     slicer serve mydb.slicer.ini &
     # Run cubesviewer
     cubext cv
+    cubetl cv
 
 This will open a browser pointing to a local CubesViewer instance pointing to the previously
 launched Cubes server.

@@ -1,15 +1,13 @@
-import logging
-from os import listdir
-from os.path import isfile, join
+
 import itertools
-import re
-from cubetl.core import Node
-import chardet
-from BeautifulSoup import UnicodeDammit
+import logging
 import os
-from cubetl.fs import FileReader
-import urllib2
+
 from cubetl import APP_NAME_VERSION
+from cubetl.core import Node
+from cubetl.fs import FileReader
+import chardet
+import re
 
 
 # Get an instance of a logger

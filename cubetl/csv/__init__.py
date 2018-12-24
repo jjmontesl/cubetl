@@ -101,6 +101,8 @@ class CsvFileReader (CsvReader):
     This class is a shortcut to a FileReader and CsvReader
     """
 
+    # TODO: This shall be a FileLineReader?
+
     path = None
 
     encoding = "detect"

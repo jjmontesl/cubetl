@@ -1,15 +1,17 @@
 
-import random
-from cubetl import text, flow, fs, script, olap, pcaxis, table, geoip
-from cubetl.util import log
-from cubetl.table import cache
-from cubetl.sql import sql
-from cubetl.olap import sqlschema
+
 import datetime
+import random
+
+from cubetl import text, flow, fs, script, olap, pcaxis, table, geoip
 from cubetl.cubes import cubes10
+from cubetl.http import useragent
+from cubetl.olap import sqlschema, query
 from cubetl.olap.sql import TableMapper
+from cubetl.sql import sql
+from cubetl.table import cache
 from cubetl.text import functions
-from cubetl.net import useragent
+from cubetl.util import log
 
 
 def cubetl_config(ctx):
@@ -231,6 +233,27 @@ def cubetl_config(ctx):
     '''
 
 
+    ctx.add('loganalyzer.query', flow.Chain(steps=[
+
+        ctx.get('cubetl.config.print'),
+
+        query.OlapQueryAggregate(fact=ctx.get('cubetl.http.request'),
+                                 mapper=ctx.get('olap2sql.olapmapper'),
+                                 drills=['is_pc'],
+                                 cuts={'contcountry': 16}),
+
+        #query.OlapQueryFacts(fact=ctx.get('cubetl.http.request'),
+        #                     mapper=ctx.get('olap2sql.olapmapper'),
+        #                     cuts={'contcountry': 16}),
+
+        #query.OlapQueryDimension(fact=ctx.get('cubetl.http.request'),
+        #                         mapper=ctx.get('olap2sql.olapmapper'),
+        #                         drill=['contcountry.country']),
+
+        ctx.get('cubetl.util.print'),
+
+        ]))
+
     ctx.add('loganalyzer.process', flow.Chain(steps=[
 
         ctx.get('cubetl.config.print'),
@@ -273,6 +296,9 @@ def cubetl_config(ctx):
 def process_data(ctx, m):
 
     m['datetime'] = functions.extract_date(m['date_string'], dayfirst=True)
+
+    m['served_bytes'] = 0 if m['served_bytes'] == '-' else int(m['served_bytes'])
+
     m['client_address'] = m['address']
 
     # For date dimension
@@ -304,12 +330,17 @@ def process_data(ctx, m):
     m['operating_system_version'] = m['ua_os_version_string']
     m['device'] = m['ua_device_family']
 
+    m['is_mobile'] = m['ua_is_mobile']
+    m['is_tablet'] = m['ua_is_tablet']
+    m['is_pc'] = m['ua_is_pc']
+    m['is_bot'] = m['ua_is_bot']
+
     m['status_description'] = "%s %s" % (m['status_code'], m['status_description'])
     m['type_label'] = m['status_type']
     m['type_code'] = functions.slugu(m['status_type'])
 
     m['path'] = " ".join(m['verb'].split(' ')[1:-1]).split('?')[0]
-    m['path1'] =  m['path'].split('/')[1] if len(m['path'].split('/')) > 1 else ""
+    m['path1'] = m['path'].split('/')[1] if len(m['path'].split('/')) > 1 else ""
     m['path2'] = m['path'].split('/')[2] if len(m['path'].split('/')) > 2 else ""
     m['path3'] = m['path'].split('/')[3] if len(m['path'].split('/')) > 3 else ""
     m['path4'] = "/".join(m['path'].split('/')[4:]) if len(m['path'].split('/')) > 4 else ""
@@ -318,9 +349,40 @@ def process_data(ctx, m):
     m['mimetype_type'] = m['mimetype'].split('/')[0]
     m['mimetype_subtype'] = m['mimetype'].split('/')[1]
 
+    m['file_name'] = m['path'].split('/')[-1] if (len(m['path'].split('/')) > 0) else ""
     m['file_extension'] = m['path'].split('.')[-1] if (len(m['path'].split('.')) > 0) else ""
     m['is_download'] = m['file_extension'].lower() in ctx.props['download_extensions_list'] or int(m['served_bytes']) >= int(ctx.props['download_size_bytes'])
-    m['is_bot'] = (m['device'] == 'Spider')
+
+
+def process_sessions(ctx, m):
+
+    # Check that time hasn't gone backwards
+    #if 'last_datetime' in ctx.props and m['datetime'] < ctx.props['last_datetime']:
+    #    raise Exception("Log date going backwards")
+    #ctx.props['last_datetime'] = m['datetime']
+
+    # Calculate sessions
+    if 'sessions' not in ctx.props:
+        ctx.props['sessions'] = {}
+    sessions = ctx.props['sessions']
+
+    session_expiry_seconds = 30 * 60
+    session_key = "%s-%s" % (m['address'], m['user_agent_string'])
+
+    new_session = True
+    new_visitor = True
+    if session_key in sessions:
+        new_visitor = False
+        last_datetime = sessions[session_key]['last_time']
+        if (m['datetime'] - last_datetime).total_seconds() < session_expiry_seconds:
+            new_session = False
+    else:
+        session = {'session_key': session_key,
+                   'start_time': m['datetime'],
+                   'end_time': None,
+                   'last_time':  m['datetime'],
+                   'visitor_type': 'new',  # 'returning', 'unknown'
+        }
 
     # response size category (small, medium, large...), and sub category (<1k, <10k, <100k, etc)
     # response size metric in log2

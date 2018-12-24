@@ -9,25 +9,9 @@ logger = logging.getLogger(__name__)
 class Template(Component):
 
     # TODO: Add generic support for both templates in files and templates in data (also interpolable)
+
+    # TODO: (?) Have a generic way of loading data in components? (allow url magic for http, ftp, etc <- also in file reader / file line reader)
+    # this would allow to retrieve CSVs, Templates... and process them either as a stream or load them to a component
+
     pass
 
-
-class MakoTemplate(Template):
-
-    template = None
-
-    _mako_template = None
-
-    def initialize(self, ctx):
-
-        super(MakoTemplate, self).initialize(ctx)
-        self._mako_template = template.Template(filename = self.template)
-
-    def finalize(self, ctx):
-        super(MakoTemplate, self).initialize(ctx)
-
-    def render(self, ctx, **kwargs):
-        result = self._mako_template.render_unicode(ctx = ctx, **kwargs)
-        return result
-
-#class TemplateRenderer(Node):

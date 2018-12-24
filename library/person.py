@@ -14,13 +14,16 @@ def cubetl_config(ctx):
 
     ctx.add('cubetl.person.gender.table',
             table.CSVMemoryTable(data='''
-                label,color,icon
-                Male,#1969ea,male
-                Female,#d19ad3,female
+                key,label,color,icon
+                male,Male,#1969ea,male
+                female,Female,#d19ad3,female
             '''))
 
     ctx.add('cubetl.person.age_range',
             Dimension(name='age_range',
                       label='Age Range',
-                      attributes=[Attribute(name='age_range', type='String', label='Age Range')]))
+                      #roles=['range'],
+                      order_attribute='age_num',
+                      attributes=[Attribute(name='age_range', type='String', label='Age Range'),
+                                  Attribute(name='age_num', type='Integer', label='Age Number')]))
 

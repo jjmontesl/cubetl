@@ -62,7 +62,7 @@ class Print(Node):
 
         logger.debug("Initializing Print node %s" % (self))
 
-    def _prepare_res(self, obj):
+    def _prepare_res(self, ctx, m, obj):
         return str(obj)
 
     def process(self, ctx, m):
@@ -83,7 +83,7 @@ class Print(Node):
                 else:
                     obj = m
 
-                res = self._prepare_res(obj)
+                res = self._prepare_res(ctx, m, obj)
 
                 if (self.truncate_line):
                     truncated = []
@@ -118,7 +118,7 @@ class PrettyPrint(Print):
 
         self._pp = pprint.PrettyPrinter(indent=self.indent, depth=self.depth, width=self.truncate_line)
 
-    def _prepare_res(self, obj):
+    def _prepare_res(self, ctx, m, obj):
 
         #res = str(obj)
         #if isinstance(obj, Bunch):

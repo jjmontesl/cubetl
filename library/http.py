@@ -1,7 +1,24 @@
+# CubETL
+# Copyright (c) 2013-2019
+# See AUTHORS and LICENSE files for more information.
 
-from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure
+# This file is part of the CubETL library.
+
+# This file is meant to be included from other CubETL configuration files,
+# it provides data types, schema and other objects.
+
+from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure, DimensionAttribute
 from cubetl.text import RegExp
 from cubetl import table
+
+
+'''
+CubETL HTTP types library.
+
+This file provides OLAP dimensions for typical HTTP-related datasets,
+eg dimensions for "HTTP Method", "HTTP Response Code", "User agent",
+"MIME type" and others.
+'''
 
 
 def cubetl_config(ctx):
@@ -96,10 +113,29 @@ def cubetl_config(ctx):
 
     ctx.add('cubetl.http.request.is_bot',
             Dimension(name='is_bot', label='Is Bot', attributes=[
-                Attribute(name='is_bot', type='Boolean', label='is Bot')] ))
+                Attribute(name='is_bot', type='Boolean', label='Is Bot')]))
+
+    ctx.add('cubetl.http.request.is_mobile',
+            Dimension(name='is_mobile', label='Is Mobile', attributes=[
+                Attribute(name='is_mobile', type='Boolean', label='Is Mobile')]))
+
+    ctx.add('cubetl.http.request.is_pc',
+            Dimension(name='is_pc', label='Is PC', attributes=[
+                Attribute(name='is_pc', type='Boolean', label='Is PC')]))
+
+    ctx.add('cubetl.http.request.is_tablet',
+            Dimension(name='is_tablet', label='Is Tablet', attributes=[
+                Attribute(name='is_tablet', type='Boolean', label='Is Tablet')]))
+
+    ctx.add('cubetl.http.request.file_extension',
+            Dimension(name='file_extension', label='File Extension'))
 
     ctx.add('cubetl.http.request.referer_origin',
             Dimension(name='referer_origin', label='Referer Origin'))
+
+    ctx.add('cubetl.http.response.is_download',
+            Dimension(name='is_download', label='Is Download', attributes=[
+                Attribute(name='is_download', type='Boolean', label='Is Download')]))
 
     ctx.add('cubetl.http.request', Fact(
         name='http_request',
@@ -107,23 +143,28 @@ def cubetl_config(ctx):
         #natural_key=
         #notes='',
         dimensions=[
-            #AttributeDimension('request_date', label="Date", entity=ctx.get('cubetl.datetime.date')),
-            ctx.get('cubetl.datetime.date'),
-            ctx.get('cubetl.http.protocol'),
-            ctx.get('cubetl.http.request.client_address'),
-            ctx.get('cubetl.http.request.username'),
-            ctx.get('cubetl.http.request.method'),
-            ctx.get('cubetl.http.request.path'),
+            DimensionAttribute(ctx.get('cubetl.datetime.date'), alias='request_date', label="Request Date"),
+            #ctx.get('cubetl.datetime.date'),
+            DimensionAttribute(ctx.get('cubetl.http.protocol')),
+            DimensionAttribute(ctx.get('cubetl.http.request.client_address')),
+            DimensionAttribute(ctx.get('cubetl.http.request.username')),
+            DimensionAttribute(ctx.get('cubetl.http.request.method')),
+            DimensionAttribute(ctx.get('cubetl.http.request.path')),
+            DimensionAttribute(ctx.get('cubetl.http.request.file_extension')),
             #ctx.get('cubetl.http.request.referer_domain'), (alias of domain)
-            ctx.get('cubetl.http.request.referer_origin'),
-            #ctx.get('cubetl.http.request.is_bot'),
-            ctx.get('cubetl.geo.contcountry'),
-            ctx.get('cubetl.http.response.status'),
-            ctx.get('cubetl.http.mimetype'),
+            DimensionAttribute(ctx.get('cubetl.http.request.referer_origin')),
+            DimensionAttribute(ctx.get('cubetl.http.request.is_bot')),
+            DimensionAttribute(ctx.get('cubetl.http.request.is_pc')),
+            DimensionAttribute(ctx.get('cubetl.http.request.is_tablet')),
+            DimensionAttribute(ctx.get('cubetl.http.request.is_mobile')),
+            DimensionAttribute(ctx.get('cubetl.geo.contcountry')),
+            DimensionAttribute(ctx.get('cubetl.http.response.status')),
+            DimensionAttribute(ctx.get('cubetl.http.mimetype')),
+            DimensionAttribute(ctx.get('cubetl.http.response.is_download')),
             #ctx.get('cubetl.http.referer'),
-            ctx.get('cubetl.http.user_agent'),
-            ctx.get('cubetl.os.operating_system'),
-            ctx.get('cubetl.os.device'),
+            DimensionAttribute(ctx.get('cubetl.http.user_agent')),
+            DimensionAttribute(ctx.get('cubetl.os.operating_system')),
+            DimensionAttribute(ctx.get('cubetl.os.device')),
             ],
         measures=[
             Measure(name='served_bytes', type='Integer', label="Served Bytes"),
@@ -145,7 +186,8 @@ def cubetl_config(ctx):
 
 
     ctx.add('cubetl.http.parse.apache_combined',
-            RegExp(regexp=r'([\d\.]+) (-) (-) \[(.*?)\] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)"',
+            RegExp(regexp=r'([\d\.]+) (-) (-) \[(.*?)\] "(.*?)" (\d+) (\S+) "(.*?)" "(.*?)"',
+                   errors=RegExp.ERRORS_WARN,
                    names='address, rlogname, username, date_string, verb, status_code, served_bytes, referer, user_agent_string'))
 
 

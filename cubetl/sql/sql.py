@@ -44,14 +44,14 @@ class SQLColumn(Component):
     TYPE_INTEGER = "INTEGER"
     TYPE_STRING = "TEXT"
 
-    def __init__(self, name, type, pk=False, null=True, label=None):
+    def __init__(self, name, type, pk=False, nullable=True, label=None):
         super(SQLColumn, self).__init__()
         self.sqltable = None
         self.name = name
         self.type = type
         self.pk = pk
         self.label = label or name
-        self.null = null
+        self.nullable = nullable
 
     def __str__(self):
         return "%s(name=%s)" % (self.__class__.__name__, self.name)
@@ -81,15 +81,15 @@ class SQLTable(Component):
 
     create = True
 
-    sa_table = None
-    sa_metadata = None
-
     _unicode_errors = 0
     _lookup_changed_fields = None
 
     def __init__(self, name, connection, columns, label=None):
 
         super(SQLTable, self).__init__()
+
+        self.sa_table = None
+        self.sa_metadata = None
 
         self.name = name
         self.connection = connection
@@ -152,7 +152,6 @@ class SQLTable(Component):
 
         logger.debug("Loading table %s on %s" % (self.name, self))
 
-
         self.sa_metadata = MetaData()
         self.sa_table = Table(self.name, self.sa_metadata)
 
@@ -180,7 +179,7 @@ class SQLTable(Component):
             self.sa_table.append_column(Column(column.name,
                                                self._get_sa_type(column),
                                                primary_key=column.pk,
-                                               nullable=column.null,
+                                               nullable=column.nullable,
                                                autoincrement=(True if column.type == "AutoIncrement" else False)))
 
         # Check schema

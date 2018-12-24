@@ -17,7 +17,7 @@ import gzip
 logger = logging.getLogger(__name__)
 
 
-class DecompressReader(Node):
+class GZIPDecompressReader(Node):
 
     data = '${ m["data"] }'
     name = "data"

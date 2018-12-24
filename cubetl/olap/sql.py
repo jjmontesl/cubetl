@@ -7,8 +7,12 @@ from cubetl.sql.cache import CachedSQLTable
 import logging
 from cubetl.script import Eval
 from cubetl.core.exceptions import ETLConfigurationException
-from cubetl.olap import Measure, Key, FactDimension, HierarchyDimension
+from cubetl.olap import Measure, Key, FactDimension, HierarchyDimension,\
+    Dimension
 import sys
+from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.orm import mapper
+from sqlalchemy.sql.functions import func
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +271,56 @@ class TableMapper(Component):
         else:
             return None
 
+    def query_aggregate(self, ctx, drills, cuts, limit=5000):
+        mappings = self.sql_mappings(ctx)
+        joins = self.sql_joins(ctx, None)
+        pk = self.pk(ctx)
+
+        connection = self.sqltable.connection.connection()
+        engine = self.sqltable.connection._engine
+
+        # Build query
+        Session = sessionmaker()
+        Session.configure(bind=engine)
+        session = Session()
+        q = session.query()
+
+        #q = q.add_columns(self.sqltable.sa_table.columns['is_bot_id'].label("x"))
+
+        # Include measures
+        for measure in [m for m in mappings if isinstance(m.field, Measure)]:
+            sa_column = self.sqltable.sa_table.columns[measure.sqlcolumn.name]
+            q = q.add_columns(func.avg(sa_column).label(measure.field.name + "_avg"))
+            q = q.add_columns(func.sum(sa_column).label(measure.field.name + "_sum"))
+
+        q = q.add_columns(func.count('*').label("record_count"))
+
+        # Drills
+        for dimension in [m for m in mappings if isinstance(m.field, Dimension)]:
+            # We shoulld check the dimension-path here, with drills
+            if dimension.field.name in drills:
+                sa_column = self.sqltable.sa_table.columns[dimension.sqlcolumn.name]
+                q = q.add_columns(sa_column)
+                q = q.group_by(sa_column)
+
+        # Cuts
+        # TODO: Filterng on any dimension attribute, not only the key
+        #       (ie filter cities with type A or icon B), but then again
+        #       that could be a different (nested) dimension.
+        for dimension in [m for m in mappings if isinstance(m.field, Dimension)]:
+            # We shoulld check the dimension-path here, with drills
+            if dimension.field.name in cuts.keys():
+                sa_column = self.sqltable.sa_table.columns[dimension.sqlcolumn.name]
+                cut_value = cuts[dimension.field.name]
+                q = q.filter(sa_column==cut_value)
+
+        # Limit
+        q = q.limit(5000)
+
+        rows = connection.execute(q.statement).fetchall()
+
+        return rows
+
     def store(self, ctx, m):
 
         # Resolve evals
@@ -280,8 +334,9 @@ class TableMapper(Component):
                 # TODO: Review and use PK properly
                 m[ast.name + "_id"] = did
         elif (isinstance(self.entity, cubetl.olap.Fact)):
-            logger.debug("Storing automatically: %s" % ([d.name for d in self.entity.dimensions]))
-            for dim in self.entity.dimensions:
+            logger.debug("Storing automatically: %s" % ([da.dimension.name for da in self.entity.dimensions]))
+            for dim_attr in self.entity.dimensions:
+                dim = dim_attr.dimension
                 did = self.olapmapper.entity_mapper(dim).store(ctx, m)
                 # FIXME: shall use the correct foreign key column according to mappings
                 m[dim.name + "_id"] = did
@@ -380,7 +435,8 @@ class FactMapper(TableMapper):
         Joins that can be done with this entity.
         """
         joins = super().sql_joins(ctx, master)
-        for dim in self.entity.dimensions:
+        for dim_attr in self.entity.dimensions:
+            dim = dim_attr.dimension
             dim_mapper = self.olapmapper.entity_mapper(dim)
             joins.extend(dim_mapper.sql_joins(ctx, self.entity))
 
@@ -392,7 +448,8 @@ class FactMapper(TableMapper):
 
         # Add related dimension mappings
         # TODO: allow for a "publish: False" setting to avoid publishing dimensions recursively?
-        for dimension in self.entity.dimensions:
+        for dimensionattribute in self.entity.dimensions:
+            dimension = dimensionattribute.dimension
             mapper = self.olapmapper.entity_mapper(dimension)
             dim_mappings = mapper.sql_mappings(ctx)
             for mapping in dim_mappings:

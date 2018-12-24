@@ -16,9 +16,10 @@ def cubetl_config(ctx):
     ctx.add('cubetl.geo.country', Dimension(
         name='country',
         label='Country',
-        #info={'cv-geo-flag-field': 'country_iso',
-        #      'cv-geo-ref-field': 'country_iso',
-        #      'cv-geo-map-layer': 'world_countries'},
+        info={'cv-flag-field': 'country_iso2',
+              'cv-geo-ref-model-attribute': 'country_iso2',
+              'cv-geo-ref-feature-attribute': 'iso_a2',
+              'cv-geo-ref-layer': 'world_countries'},
         attributes=[Attribute(name='country_iso2', type='String', label='Country Code'),
                     Attribute(name='country_name', type='String', label='Country')]))
 

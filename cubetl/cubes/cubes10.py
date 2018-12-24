@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class Cubes10ModelWriter(Node):
 
     def __init__(self, olapmapper, model_path=None):
-        super(Cubes10ModelWriter, self).__init__()
+        super().__init__()
         self.olapmapper = olapmapper
         self.model_path = model_path
 
@@ -236,7 +236,8 @@ class Cubes10ModelWriter(Node):
 
         # NOTE: This shall be resolved by "olap" (since this would need to be used elsewhere)
         result = []
-        for dimension in entity.dimensions:
+        for dimension_attribute in entity.dimensions:
+            dimension = dimension_attribute.dimension
 
             if isinstance(dimension, AliasDimension):
                 # FIXME: the aliased dimension may not be a FactDimension
