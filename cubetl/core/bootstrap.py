@@ -53,16 +53,17 @@ class Bootstrap:
         if not ctx.debug:
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=default_level)
         else:
+            #logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=default_level)
             logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=default_level)
 
         # With file config:
         #logging.config.fileConfig('logging.conf')
 
     def usage(self):
-        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-i attribute=value] [config.py ...] <start-node>")
+        print("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-m attribute=value] [config.py ...] <start-node>")
         print("")
         print("    -p   set a context property")
-        print("    -i   set an attribute for the start item")
+        print("    -m   set an attribute for the start item")
         print("    -d   debug mode (can be used twice for extra debug)")
         print("    -q   quiet mode (bypass print nodes)")
         print("    -r   profile execution writing results to filename")
@@ -71,7 +72,8 @@ class Bootstrap:
         print("    -v   print version and exit")
         print("")
         print("  Builtin entry points: ")
-        print("      cubetl.config.list  Loads and prints configuration.")
+        print("      cubetl.config.print  Print configuration.")
+        print("      cubetl.config.list   List configured components.")
         print("")
 
     def _split_keyvalue(self, text):
@@ -188,12 +190,15 @@ class Bootstrap:
 
         # Run
         start_node = ctx.get(ctx.start_node)
-        ctx.process(start_node)
+        ctx.run(start_node)
 
     def default_config(self, ctx):
 
-        ctx.add('cubetl.config.print', config.PrintConfig())
-        ctx.add('cubetl.config.list', config.ListConfig())  # TODO: restore context list
+        ctx.add('cubetl.config.print', config.PrintConfig(),
+                description="Prints current CubETL configuration.")
+        ctx.add('cubetl.config.list', config.ListConfig(),
+                description="List available CubETL nodes (same as: cubetl -l).")
         #ctx.add('cubetl.config.new', config.CreateTemplateConfig())
-        ctx.add('cubetl.util.print', util.PrettyPrint())
+        ctx.add('cubetl.util.print', util.PrettyPrint(),
+                description="Prints the current message.")
 

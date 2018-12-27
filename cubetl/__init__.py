@@ -1,6 +1,6 @@
 
 
 APP_NAME = "CubETL"
-APP_VERSION = "1.0.5-devel"
+APP_VERSION = "1.1.0-devel"
 APP_NAME_VERSION = APP_NAME + " " + APP_VERSION
 

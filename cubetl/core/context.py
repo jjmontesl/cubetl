@@ -1,3 +1,24 @@
+# CubETL
+# Copyright (c) 2013-2019 Jose Juan Montes
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 
 from inspect import isclass
 from repoze.lru import LRUCache
@@ -105,7 +126,7 @@ class Context():
                 result.append(comp)
         return result
 
-    def add(self, urn, component):
+    def add(self, urn, component, description=None):
 
         # FIXME: TODO: Allow anonymous components? these would be exported in-line with their parents.
         # This assumes that components are initialized completely (possibly better for config comprehension)
@@ -122,6 +143,7 @@ class Context():
 
         component.ctx = self
         component.urn = urn
+        component.description = description
 
         self.components[urn] = component
         return component
@@ -160,7 +182,7 @@ class Context():
                     res = eval(compiled, self._globals, c_locals)
 
                     if (self.debug2):
-                        if (isinstance(res, basestring)):
+                        if (isinstance(res, str)):
                             logger.debug('Evaluated: %s = %r' % (expr, res if (len(res) < 100) else res[:100] + ".."))
                         else:
                             logger.debug('Evaluated: %s = %r' % (expr, res))
@@ -193,11 +215,10 @@ class Context():
         return result
 
     def copy_message(self, m):
-        if m == None:
+        if m is None:
             return {}
         else:
             return copy.copy(m)
-
 
     def _do_process(self, process, ctx):
         item = ctx.copy_message(ctx.start_item)
@@ -208,7 +229,7 @@ class Context():
             count = count + 1
         return (m, count)
 
-    def process(self, start_node):
+    def run(self, start_node):
 
         ctx = self
 
@@ -269,3 +290,4 @@ class Context():
         configmodule = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(configmodule)
         configmodule.cubetl_config(self)
+

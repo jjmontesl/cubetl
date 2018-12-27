@@ -1,9 +1,10 @@
 [HEAD 1.1.0]
 
+    * Improved examples.
     * Added OLAP to SQL star schema generator.
-    * Added sql to OLAP schema generator.
-    * Large refactor to OLAP package.
-    * Removed YAML config.
+    * Added SQL to OLAP schema generator.
+    * Large refactor of OLAP package (removed unnecessary mappers and entities).
+    * Removed YAML config in favour of Python config.
 
 [1.0.5]
 

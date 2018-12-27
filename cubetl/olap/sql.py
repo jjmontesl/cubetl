@@ -1,6 +1,6 @@
 import cubetl
 from abc import ABCMeta, abstractmethod
-from cubetl.core import Component, Node, Mappings
+from cubetl.core import Component, Node
 from cubetl.text.functions import parsebool
 from cubetl.sql.sql import SQLTable
 from cubetl.sql.cache import CachedSQLTable
@@ -231,7 +231,7 @@ class TableMapper(Component):
         # If lookup_cols is a string, split by commas
         if (isinstance(self.lookup_cols, str)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
 
-        Mappings.includes(ctx, self.mappings)
+        #Mappings.includes(ctx, self.mappings)
         for mapping in self.mappings:
             try:
                 if mapping.entity is None:

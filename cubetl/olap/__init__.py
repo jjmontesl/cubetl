@@ -1,16 +1,63 @@
+# CubETL
+# Copyright (c) 2013-2019 Jose Juan Montes
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 import logging
+
 from cubetl.core import Node, Component
 from cubetl.core.exceptions import ETLConfigurationException
-#from cubetl.olap.sql import FactMapper
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
+class OlapEntity(Component):
+    """
+    """
+    def __init__(self, name, attributes=None, label=None, role=None, info=None):
+        super(Dimension, self).__init__()
+        self.name = name
+        self.label = label
+        self.role = None
+        self.info = info
+        self.key = None
+        self.attributes = attributes or []
+        self.hierarchies = []  # point to attributes
+
+        # If attributes are not defined, add a default one. This is a shortcut for simple dimensions.
+        if len(self.attributes) == 0 and type(self) is Dimension:
+            attribute = Attribute(self.name, 'String', self.label)
+            logger.debug("Automatically adding a default String attribute to dimension: %s" % self)
+            self.attributes.append(attribute)
+
+    def initialize(self, ctx):
+        super(Dimension, self).initialize(ctx)
+
+
 class Dimension(Component):
     """A flat dimension.
 
-    Note: This represents a Flat dimension (no hierarchies, only one level with attributes).
+    This represents a flat dimension. This is, a dimension with no hierarchies,
+    only one level with attributes.
     """
 
     def __init__(self, name, attributes=None, label=None, role=None, info=None):
@@ -159,7 +206,7 @@ class Fact(Component):
 
 class Key(Component):
 
-    # TODO: Maybe remove, and use one of the attributes (and so reference the key by name or the attribute directly?)
+    # TODO: Maybe remove, and use one of the attributes (and so reference the key by name or the attribute directly?) +1
 
     def __init__(self, entity, name, type, label=None):
         super().__init__()

@@ -25,6 +25,7 @@ def cubetl_config(ctx):
 
     ctx.include('${ ctx.library_path }/datetime.py')
     ctx.include('${ ctx.library_path }/geo.py')
+    ctx.include('${ ctx.library_path }/net.py')
 
     ctx.add('cubetl.http.request.client_address',
             Dimension(name='client_address', label='Address'))
@@ -56,12 +57,12 @@ def cubetl_config(ctx):
     ctx.add('cubetl.http.response.status.code',
             Dimension(name='status_code', label='Status', attributes=[
                 Attribute(name='status_code', type='Integer', label='Status Code'),
-                Attribute(name='status_description', type='String', label='Status Description')] ))
+                Attribute(name='status_description', type='String', label='Status Description')]))
 
     ctx.add('cubetl.http.response.status.type',
             Dimension(name='status_type', label='Status Type', attributes=[
                 Attribute(name='type_label', type='String', label='Status Type'),
-                Attribute(name='type_code', type='String', label='Status Type Code')] ))
+                Attribute(name='type_code', type='String', label='Status Type Code')]))
 
     ctx.add('cubetl.http.response.status', HierarchyDimension(
         name='status',
@@ -73,9 +74,10 @@ def cubetl_config(ctx):
                 ])
         ]))
 
-    '''
-    ctx.add('cubetl.http.referer.path',
+    ctx.add('cubetl.http.request.referer_path',
             Dimension(name='referer_path', label='Referer Path'))
+
+    '''
 
     !!python/object:cubetl.olap.HierarchyDimension
     id: cubetl.http.referer
@@ -151,7 +153,6 @@ def cubetl_config(ctx):
             DimensionAttribute(ctx.get('cubetl.http.request.method')),
             DimensionAttribute(ctx.get('cubetl.http.request.path')),
             DimensionAttribute(ctx.get('cubetl.http.request.file_extension')),
-            #ctx.get('cubetl.http.request.referer_domain'), (alias of domain)
             DimensionAttribute(ctx.get('cubetl.http.request.referer_origin')),
             DimensionAttribute(ctx.get('cubetl.http.request.is_bot')),
             DimensionAttribute(ctx.get('cubetl.http.request.is_pc')),
@@ -161,6 +162,8 @@ def cubetl_config(ctx):
             DimensionAttribute(ctx.get('cubetl.http.response.status')),
             DimensionAttribute(ctx.get('cubetl.http.mimetype')),
             DimensionAttribute(ctx.get('cubetl.http.response.is_download')),
+            DimensionAttribute(ctx.get('cubetl.net.domain'), alias="referer_domain", label="Referer Domain"),
+            DimensionAttribute(ctx.get('cubetl.http.request.referer_path')),
             #ctx.get('cubetl.http.referer'),
             DimensionAttribute(ctx.get('cubetl.http.user_agent')),
             DimensionAttribute(ctx.get('cubetl.os.operating_system')),

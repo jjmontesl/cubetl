@@ -41,6 +41,10 @@ class GeoIPFromAddress(Node):
     * geoip_country_code
     * geoip_country_name
     * cont_name
+
+    Note: This module uses incf.countryutils, but as the version in PyPI does not currently
+    support Python 3, the updated package for Python 3 is included by this project (see
+    https://github.com/wyldebeast-wunderliebe/incf.countryutils/issues/2 ).
     """
 
     def __init__(self, data='${ m["ip"] }', prefix='geoip_'):

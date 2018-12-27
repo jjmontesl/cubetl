@@ -1,51 +1,46 @@
+# CubETL
+# Copyright (c) 2013-2019
+# See AUTHORS and LICENSE files for more information.
 
----
+# This file is part of the CubETL library.
 
-!!python/object:cubetl.olap.Dimension
-id: cubetl.net.domain.tld
-name: tld
-label: TLD
-attributes:
-- name: tld
-  label: TLD
-  type: String
+# This file is meant to be included from other CubETL configuration files,
+# it provides data types, schema and other objects.
 
----
+from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure, DimensionAttribute
+from cubetl.text import RegExp
+from cubetl import table
 
-!!python/object:cubetl.olap.Dimension
-id: cubetl.net.domain.domain
-name: domain
-label: Domain
-attributes:
-- name: domain
-  label: Domain
-  type: String
 
----
+'''
+CubETL HTTP types library.
 
-!!python/object:cubetl.olap.Dimension
-id: cubetl.net.domain.subdomain
-name: subdomain
-label: Subdomain
-attributes:
-- name: subdomain
-  label: Subdomain
-  type: String
+This file provides OLAP dimensions for typical Internet related datasets,
+eg dimensions for "Internet Domain".
+'''
 
----
 
-!!python/object:cubetl.olap.HierarchyDimension
-id: cubetl.net.domain3
-name: domain3
-label: Domain
-hierarchies:
-- name: domain3
-  label: Domain
-  levels: tld, domain, subdomain
-levels:
-- !ref cubetl.net.domain.tld
-- !ref cubetl.net.domain.domain
-- !ref cubetl.net.domain.subdomain
+def cubetl_config(ctx):
 
----
+    #ctx.include('${ ctx.library_path }/geo.py')
+
+    ctx.add('cubetl.net.domain.tld',
+            Dimension(name='tld', label='TLD'))
+            # TODO: Reference GEO/country if available (add "N/A" to Geo/Country)
+
+    ctx.add('cubetl.net.domain.domain',
+            Dimension(name='domain', label='Domain'))
+
+    ctx.add('cubetl.net.domain.subdomain',
+            Dimension(name='subdomain', label='Subdomain'))
+
+    ctx.add('cubetl.net.domain', HierarchyDimension(
+        name='domain',
+        label='Domain',
+        hierarchies=[
+            Hierarchy(name='domain3', label='Domain', levels=[
+                ctx.get('cubetl.net.domain.tld'),
+                ctx.get('cubetl.net.domain.domain'),
+                ctx.get('cubetl.net.domain.subdomain')])
+        ]))
 

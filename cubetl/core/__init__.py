@@ -38,6 +38,7 @@ class Component(object):
     def __init__(self):
         self.ctx = None
         self.urn = None
+        self.description = None
 
     def initialize(self, ctx):
         if hasattr(self, '_initialized'):
@@ -115,7 +116,7 @@ class ContextProperties(Component):
             else:
                 logger.debug("Not setting context property %s as it is already defined with value %s" % (attr, ctx.props[attr]))
 
-
+'''
 class Mappings(Component):
     """
     Serves as a holder for mappings, which can be included from other mappings.
@@ -157,4 +158,6 @@ class Mappings(Component):
                 # It's critical to copy mappings
                 ctx.comp.initialize(mapping)
                 mappings[pos:pos + 1] = deepcopy(mapping.mappings)
+
+'''
 

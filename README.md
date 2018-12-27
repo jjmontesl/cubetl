@@ -21,7 +21,7 @@ of an arbitrary database (see the examples below).
 Features:
 
 * Consumes and produces CSV, XML, JSON...
-* SQL support (querying, inserting/updating)
+* SQL support (querying, inserting/updating, schema creation, schema loading)
 * OLAP support:
   * Star-schema generation and data loading
   * SQL-to-OLAP schema generator
@@ -31,7 +31,7 @@ Features:
 * Extensible
 * Caching
 
-See the complete [CubETL feature list]().
+See the complete [CubETL component list]().
 
 **Note**: I built CubETL for my data transformation needs, and shared it once I thought
 it could be useful. The project is very young and tested in few environments.
@@ -41,26 +41,20 @@ You may hit issues: please use the issue tracker for bugs, questions and suggest
 Download / Install
 ------------------
 
-In your target environment (requires Python 3.5+ and pip3):
+In your target environment (requires Python 3.5+):
 
     pip install cubetl
 
-Note: as with most tools, it is recommended to use a virtualenv *first*:
+Test:
 
-    # Create virtualenv (run first time only)
-    python3 -m venv env
-    # Activate virtualenv
-    . env/bin/activate
-
-
+    cubetl -h
 
 Usage
 -----
 
-Cubetl provides two command line tools:
+Cubetl provides a command line tool:
 
-* `cubetl` runs cvETL ETL processes.
-* `cubeutil` is a helper tool for some typical operations.
+* `cubetl` runs ETL processes.
 
 You can also use CubETL directly from Python code.
 
@@ -78,22 +72,28 @@ CubETL can inspect a SQL database and generate a CubETL OLAP schema and
 SQL mappings for it. Such schema can then be visualized using CubesViewer:
 
     # Inspect database and generate a Cubes model and config
-    cubext sql2olap --cubes-model mydb.model.json --cubes-slicer mydb.slicer.ini sqlite:///mydb.sqlite3
     cubetl cubetl.sql2olap \
         -p cubes_model=mydb.cubes-model.json \
         -p cubes_config=mydb.cubes-config.ini \
         -p db_url=sqlite:///mydb.sqlite3
 
-    # Run cubes server
+    # Run cubes server (in background)
     slicer serve mydb.slicer.ini &
 
+    # Install cubesviewer-utils if you haven't before
+    pip install cubesviewer-utils
+
     # Run cubesviewer
-    cubetl cubetl.cv
+    cvutils cv
 
-This will open a browser pointing to a local CubesViewer instance pointing to the previously
-launched Cubes server.
+This will open a browser pointing to a local CubesViewer instance pointing to the
+previously launched Cubes server.
 
-You can control the schema generation passing options. Check the documentation for more information.
+The CubETL project contains an example database that you can use to test this
+(see the [Generate OLAP schema from SQL database and visualize]() example below).
+
+You can control the schema generation output with options. Check the documentation
+for more information.
 
 
 Creating a new ETL process config
@@ -101,7 +101,7 @@ Creating a new ETL process config
 
 Create a directory for your ETL process and run:
 
-    cubetl cubetl.config.new -i myprocess.py
+    cubetl cubetl.config.new -c config.name=myprocess
 
 This will create a new file `myprocess.py`, which you can use as a template
 for your new ETL process.
@@ -118,14 +118,15 @@ for information about how to define ETL processes.
 Example ETL processes
 ---------------------
 
-Check the following example ETL processes
+Example ETL processes included with the project:
 
   * Simple CubETL process (local directory list)
   * PCAxis to SQL OLAP star-schema (Spanish census)
   * OLAP schema definition, SQL generation and random data load (fictional web shop)
   * Apache web server log file parsing and SQL loading in OLAP star-schema
   * Wikipedia huge XML load to SQL star schema
-  * Querying and exporting to CSV
+  * Generate OLAP schema from SQL database and visualize in CubesViewer
+  * Querying a SQL database and exporting to CSV
 
 To run these examples you'll need the *examples* directory of the *cubetl* project, which
 is not included in the PyPI *pip* download. You can get them by cloning the cubetl

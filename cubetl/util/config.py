@@ -62,7 +62,7 @@ class ListConfig(Node):
         for k, e in ctx.components.items():
             if not isinstance(e, Node):
                 continue
-            item = "  * %s" % (k)
+            item = "  * %s  %s" % (k, e.description if hasattr(e, 'description') and e.description else "")
             text += item + "\n"
         return text
 

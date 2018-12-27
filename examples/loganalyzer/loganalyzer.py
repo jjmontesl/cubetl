@@ -26,7 +26,7 @@ def cubetl_config(ctx):
     ctx.props['domain'] = 'cubesviewer.com'  #  ctx.interpolate('${ }')
     ctx.props['file_path'] = ctx.props.get('file_path', 'access.log')
 
-    ctx.props['download_extensions'] = 'zip, tgz, gz, 7z, rar, iso, msi, exe, avi, mp3, mp4, ogg, mkv'
+    ctx.props['download_extensions'] = 'zip, tgz, gz, 7z, rar, iso, msi, exe, avi, mp3, mp4, ogg, mkv, pdf'
     ctx.props['download_extensions_list'] = [e.strip().lower() for e in ctx.props['download_extensions'].split(',')]
     ctx.props['download_size_bytes'] = 10 * 1024 * 1024
 
@@ -350,7 +350,7 @@ def process_data(ctx, m):
     m['mimetype_subtype'] = m['mimetype'].split('/')[1]
 
     m['file_name'] = m['path'].split('/')[-1] if (len(m['path'].split('/')) > 0) else ""
-    m['file_extension'] = m['path'].split('.')[-1] if (len(m['path'].split('.')) > 0) else ""
+    m['file_extension'] = m['file_name'].split('.')[-1] if (len(m['file_name'].split('.')) > 1) else ""
     m['is_download'] = m['file_extension'].lower() in ctx.props['download_extensions_list'] or int(m['served_bytes']) >= int(ctx.props['download_size_bytes'])
 
 
