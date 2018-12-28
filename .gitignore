@@ -21,12 +21,14 @@ develop-eggs
 *.sqlite
 
 
+/TODO.txt
 /ROADMAP
 /build
 
 /datospublicos
 /cubelogs
 /quini
+/private
 
 /virtualenv
 /env

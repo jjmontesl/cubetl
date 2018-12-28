@@ -177,15 +177,15 @@ class Bootstrap:
 
         # TODO: Character encoding considerations? warnings?
 
+        # Load default config
+        self.default_config(ctx)
+
         return ctx
 
     def start(self, argv):
 
         # Initialize context
         ctx = self.init(argv, cli=True)
-
-        # Load default config
-        self.default_config(ctx)
 
         # Read config
         for configfile in ctx.config_files:
@@ -218,8 +218,12 @@ class Bootstrap:
         ctx.add('cubetl.sql.db2sql',
                 schemaimport.DBToSQL(connection=Connection(url="${ ctx.props['db2sql.db_url'] }")),
                 description="Generate SQL schema from existing database.")
+
         ctx.add('cubetl.olap.sql2olap', sqlschema.SQLToOLAP(),
                 description="Generate OLAP schema from SQL schema.")
+        #ctx.add('cubetl.olap.mappings', sqlschema.PrintMappings(),
+        #        description="Show all OLAP mappings in the defined schema.")
+
         ctx.add('cubetl.cubes.olap2cubes',
                 cubes10.Cubes10ModelWriter(olapmapper="${ ctx.get('sql2olap.olapmapper') }",
                                            model_path="${ ctx.props.get('olap2cubes.cubes_model', None) }",

@@ -143,7 +143,7 @@ def cubetl_config(ctx):
         #natural_key=
         #notes='',
         attributes=[
-            DimensionAttribute(ctx.get('cubetl.datetime.date'), alias='request_date', label="Request Date"),
+            DimensionAttribute(ctx.get('cubetl.datetime.date'), name='request_date', label="Request Date"),
             #ctx.get('cubetl.datetime.date'),
             DimensionAttribute(ctx.get('cubetl.http.protocol')),
             DimensionAttribute(ctx.get('cubetl.http.request.client_address')),
@@ -160,7 +160,7 @@ def cubetl_config(ctx):
             #DimensionAttribute(ctx.get('cubetl.http.response.status')),
             #DimensionAttribute(ctx.get('cubetl.http.mimetype')),
             DimensionAttribute(ctx.get('cubetl.http.response.is_download')),
-            DimensionAttribute(ctx.get('cubetl.net.domain'), alias="referer_domain", label="Referer Domain"),
+            DimensionAttribute(ctx.get('cubetl.net.domain'), name="referer_domain", label="Referer Domain"),
             DimensionAttribute(ctx.get('cubetl.http.request.referer_path')),
             #ctx.get('cubetl.http.referer'),
             DimensionAttribute(ctx.get('cubetl.http.user_agent')),

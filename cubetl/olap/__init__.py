@@ -177,7 +177,7 @@ class HierarchyDimension(Dimension):
         # If no hierarchies are defined, create a single hierarchy with all dimensions
         if not self.hierarchies:
             logger.debug("Automatically creating single hierarchy for %s", self)
-            levels = [dim.alias for dim in self.get_dimensions()]
+            levels = [dimattr.name for dimattr in self.get_dimensions()]
             hierarchy = Hierarchy(self.name, levels, self.label)
             self.hierarchies = [hierarchy]
 

@@ -28,6 +28,11 @@ clean:
 	rm -rf $(BUILD_DIR)
 	$(MAKE) -C doc clean
 
+.PHONY: test
+test:
+	echo Testing: $(VERSION)
+	. $(VIRTUALENV_ACTIVATE) && cd tests && pytest .
+
 .PHONY: build
 build:
 	echo Version: $(VERSION)

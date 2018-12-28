@@ -220,26 +220,35 @@ class Context():
         else:
             return copy.copy(m)
 
-    def _do_process(self, process, ctx):
+    def _do_process(self, process, ctx, multiple):
         item = ctx.copy_message(ctx.start_item)
         msgs = ctx.comp.process(process, item)
         count = 0
-        m = None
+        result = [] if multiple else None
         for m in msgs:
             count = count + 1
-        return (m, count)
+            if multiple:
+                result.append(m)
+            else:
+                result = m
+        return (result, count)
 
-    def run(self, start_node):
+    def run(self, start_node, multiple=False):
 
         ctx = self
 
+        if isinstance(start_node, str):
+            start_node_comp = ctx.get(start_node, fail=False)
+        else:
+            start_node_comp = start_node
+
         # Launch process
-        if not start_node:
-            logger.error("Start process '%s' not found in configuration" % ctx.start_node)
+        if not start_node_comp:
+            logger.error("Start process '%s' not found in configuration" % start_node)
             if ctx.cli:
                 sys.exit(1)
             else:
-                raise Exception("Start process '%s' not found in configuration" % ctx.start_node)
+                raise Exception("Start process '%s' not found in configuration" % start_node)
 
         result = None
         processed = 0
@@ -247,20 +256,20 @@ class Context():
         # Launch process and consume items
         try:
             logger.debug("Initializing components")
-            ctx.comp.initialize(start_node)
+            ctx.comp.initialize(start_node_comp)
 
-            logger.info("Processing %s" % start_node)
+            logger.info("Processing %s" % start_node_comp)
 
             if ctx.profile:
                 logger.warning("Profiling execution (WARNING this is SLOW) and saving results to: %s" % ctx.profile)
                 cProfile.runctx("count = self._do_process(process, ctx)", globals(), locals(), ctx.profile)
             else:
-                (result, processed) = self._do_process(start_node, ctx)
+                (result, processed) = self._do_process(start_node_comp, ctx, multiple=multiple)
 
             logger.debug("%s items resulted from the process" % processed)
 
             logger.debug("Finalizing components")
-            ctx.comp.finalize(start_node)
+            ctx.comp.finalize(start_node_comp)
 
             ctx.comp.cleanup()
 

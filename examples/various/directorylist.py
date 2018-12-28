@@ -1,3 +1,8 @@
+# CubETL
+# Copyright (c) 2013-2019 Jose Juan Montes
+
+# This is a CubETL example
+# See: https://github.com/jjmontesl/cubetl
 
 
 import random

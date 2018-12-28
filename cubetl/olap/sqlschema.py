@@ -12,10 +12,10 @@ import re
 logger = logging.getLogger(__name__)
 
 
-class SQLSchemaFromOLAP(Component):
+class OLAPToSQL(Component):
 
     @staticmethod
-    def generate_star_schema_mapper(ctx, connection):
+    def olap2sql(ctx, connection):
         """
         Automatically generates OLAP to SQL mappings using a normalized approach.
         """
@@ -25,7 +25,7 @@ class SQLSchemaFromOLAP(Component):
 
         facts = ctx.find(type=cubetl.olap.Fact)
         for fact in facts:
-            entity_mapper = OlapSQLSchema.generate_star_schema_mapper_entity(ctx, connection, olapmapper, fact)
+            entity_mapper = OLAPToSQL.generate_star_schema_mapper_entity(ctx, connection, olapmapper, fact)
             ctx.add(entity_mapper.sqltable.urn, entity_mapper.sqltable)
             olapmapper.mappers.append(entity_mapper)
 
@@ -42,7 +42,7 @@ class SQLSchemaFromOLAP(Component):
         sqlcolumn = sql.SQLColumn(name='id', type='AutoIncrement', pk=True, label='Id', nullable=False)
         columns.append(sqlcolumn)
         key = Key("id", type="Integer", label="Id")
-        columnmapping = OlapMapping(entity, key, sqlcolumn)
+        columnmapping = OlapMapping(path=[key], sqlcolumn=sqlcolumn)
         mappings.append(columnmapping)
 
         # Dimensions
@@ -60,21 +60,21 @@ class SQLSchemaFromOLAP(Component):
 
             if flatten_entity:
                 logger.debug("Flattening dimension '%s' on '%s'.", dimension, entity)
-                dimension_mapper = OlapSQLSchema.generate_star_schema_mapper_entity(ctx, connection, olapmapper, dimension, prefix="%s.%s" % (prefix, dimension_attribute.alias))
+                dimension_mapper = OLAPToSQL.generate_star_schema_mapper_entity(ctx, connection, olapmapper, dimension, prefix="%s.%s" % (prefix, dimension_attribute.name))
                 for mapping in dimension_mapper.mappings:
                     # Skip primary keys
                     if mapping.sqlcolumn.pk:
                         continue
-                    sqlcolumn = sql.SQLColumn(name=mapping.sqlcolumn.name, type=mapping.sqlcolumn.type, label=mapping.entity.label)
+                    sqlcolumn = sql.SQLColumn(name=mapping.sqlcolumn.name, type=mapping.sqlcolumn.type, label=mapping.path[-1].label)
                     columns.append(sqlcolumn)
-                    columnmapping = OlapMapping(dimension, mapping.attribute, sqlcolumn)
+                    columnmapping = OlapMapping(path=[dimension] + mapping.path, sqlcolumn=sqlcolumn)
                     mappings.append(columnmapping)
 
             else:
 
                 #logger.debug("Joined dimension '%s' on '%s'.", dimension, entity)
                 #dimension_mapper = OlapSQLSchema.generate_star_schema_mapper_dimension(ctx, connection, dimension)
-                dimension_mapper = OlapSQLSchema.generate_star_schema_mapper_entity(ctx, connection, olapmapper, dimension, prefix="%s.%s" % (prefix, dimension_attribute.alias))
+                dimension_mapper = OLAPToSQL.generate_star_schema_mapper_entity(ctx, connection, olapmapper, dimension, prefix="%s.%s" % (prefix, dimension_attribute.name))
                 ctx.add(dimension_mapper.sqltable.urn, dimension_mapper.sqltable)
                 olapmapper.mappers.append(dimension_mapper)
 
@@ -82,7 +82,7 @@ class SQLSchemaFromOLAP(Component):
                 # Generate a SQL column for the detail
                 sqlcolumn = sql.SQLColumnFK(name=dimension.name + "_" + pk.sqlcolumn.name, type='Integer', fk_sqlcolumn=pk.sqlcolumn, pk=False, null=False, label=dimension.label)
                 columns.append(sqlcolumn)
-                columnmapping = OlapMapping(entity, dimension, sqlcolumn)
+                columnmapping = OlapMapping(path=[dimension], sqlcolumn=sqlcolumn)
                 mappings.append(columnmapping)
 
         # Map attributes
@@ -91,7 +91,7 @@ class SQLSchemaFromOLAP(Component):
             # Generate a SQL column for the attribute
             sqlcolumn = sql.SQLColumn(name=measure.name, type=measure.type, label=measure.label)
             columns.append(sqlcolumn)
-            columnmapping = OlapMapping(entity, measure, sqlcolumn)
+            columnmapping = OlapMapping(path=[measure], sqlcolumn=sqlcolumn)
             mappings.append(columnmapping)
 
         # Map attributes
@@ -100,7 +100,7 @@ class SQLSchemaFromOLAP(Component):
             # Generate a SQL column for the detail
             sqlcolumn = sql.SQLColumn(name=attribute.name, type=attribute.type, label=attribute.label)
             columns.append(sqlcolumn)
-            columnmapping = OlapMapping(entity, attribute, sqlcolumn)
+            columnmapping = OlapMapping(path=[attribute], sqlcolumn=sqlcolumn)
             mappings.append(columnmapping)
 
         # Create a SQL table for the fact, and a TableMapper

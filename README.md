@@ -5,13 +5,13 @@ CubETL is a framework and related tools for data ETL (Extract, Transform and Loa
 based in Python.
 
 CubETL provides a mechanism to run data items through a processing pipeline. It takes care
-of initializing only the components used by the process, managing the data flow across
-the process graph, logging, performance metrics and cleaning up.
+of initializing only the components used by the process, manages the data flow across
+the process graph, logging and cleanup.
 
-It provides out-of-the-box components that can deal with common data formats,
-and it also includes SQL and OLAP modules that can handle SQL and OLAP schemas
-and map data across them. This allows to insert OLAP facts across multiple tables
-in a single store operation, doing (and caching) the appropriate lookups.
+It provides out-of-the-box components that handle common data formats
+and it also includes SQL and OLAP modules that understand SQL and OLAP schemas
+and map data across them. This allows CubETL to insert OLAP facts across multiple tables
+in a single store operation, while automatically performing (and caching) the appropriate lookups.
 
 CubETL can also analyze an existing relational database and generate an OLAP schema, and
 the other way around: generate an SQL schema from an OLAP schema. It can also produce
@@ -33,9 +33,8 @@ Features:
 
 See the complete [CubETL component list]().
 
-**Note**: I built CubETL for my data transformation needs, and shared it once I thought
-it could be useful. The project is very young and tested in few environments.
-You may hit issues: please use the issue tracker for bugs, questions and suggestions!
+**Note**: The project is beta and tested in few environments. You may hit issues:
+please use the issue tracker for bugs, questions and suggestions!
 
 
 Download / Install
@@ -43,7 +42,11 @@ Download / Install
 
 In your target environment (requires Python 3.5+):
 
-    pip install cubetl
+    git clone https://github.com/jjmontesl/cubetl.git
+    cd cubetl
+    python3 -m venv env
+    . env/bin/activate
+    python setup.py install
 
 Test:
 
@@ -71,19 +74,19 @@ Visualizing a SQL database
 CubETL can inspect a SQL database and generate a CubETL OLAP schema and
 SQL mappings for it. Such schema can then be visualized using CubesViewer:
 
-    # Inspect database and generate a Cubes model and config
-    cubetl cubetl.sql2olap \
-        -p cubes_model=mydb.cubes-model.json \
-        -p cubes_config=mydb.cubes-config.ini \
-        -p db_url=sqlite:///mydb.sqlite3
+    # For this example you need this dependencies:
+    pip install cubetl cubes cubesviewer-utils
+
+    # Inspect database and generate a cubes model and config
+    cubetl cubetl.sql.db2sql cubetl.olap.sql2olap cubetl.cubes.olap2cubes \
+        -p db2sql.db_url=sqlite:///mydb.sqlite3 \
+        -p olap2cubes.cubes_model=mydb.cubes-model.json \
+        -p olap2cubes.cubes_config=mydb.cubes-config.ini
 
     # Run cubes server (in background)
-    slicer serve mydb.slicer.ini &
+    slicer serve mydb.cubes-config.ini &
 
-    # Install cubesviewer-utils if you haven't before
-    pip install cubesviewer-utils
-
-    # Run cubesviewer
+    # Runs a local cubesviewer HTTP server and opens a browser
     cvutils cv
 
 This will open a browser pointing to a local CubesViewer instance pointing to the
@@ -146,16 +149,14 @@ In order to configure and/or run a process from client code, use:
     ctx = bootstrap.init()
     ctx.debug = True
 
-    # Extra configuration
-
-    # Add components ...
-    comp = ...
+    # Add components or include a configuration file...
+    ctx.add('your_app.node_id', ...)
     cubetl.container.add_component(comp)
 
     # Launch process
-    ctx.start_node = "your_app.node_id"
-    result = bootstrap.run(ctx)
+    result = ctx.run("your_app.node_id")
 
+See the examples/python to see a full working example.
 
 Documentation
 =============

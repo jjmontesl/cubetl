@@ -55,9 +55,9 @@ class Component(object):
 
     def __repr__(self):
         args = []
-        argspec = inspect.getargspec(self.__init__)  # ArgSpec(args=['self', 'name'], varargs=None, keywords=None, defaults=None)
+        signature = inspect.signature(self.__init__)  # ArgSpec(args=['self', 'name'], varargs=None, keywords=None, defaults=None)
         #print(argspec)
-        for key in argspec.args:
+        for key in signature.parameters:
             if key == "self": continue
             value = getattr(self, key) if hasattr(self, key) else None
 

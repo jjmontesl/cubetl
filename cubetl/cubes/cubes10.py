@@ -147,7 +147,7 @@ class Cubes10ModelWriter(Node):
         mappings = mapper.sql_mappings(ctx)
 
         for mapping in mappings:
-            print(mapping)
+            #print(mapping)
             # Options are:
             # cube_name.detail = alias.column     # for details
             # dimension.attribute = alias.column  # for dimension attributes

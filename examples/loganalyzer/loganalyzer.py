@@ -8,7 +8,7 @@ from cubetl.cubes import cubes10
 from cubetl.http import useragent
 from cubetl.olap import sqlschema, query
 from cubetl.olap.sql import TableMapper
-from cubetl.sql import sql
+from cubetl.sql import sql, schemaimport
 from cubetl.table import cache
 from cubetl.text import functions
 from cubetl.util import log
@@ -35,8 +35,7 @@ def cubetl_config(ctx):
             sql.Connection(url=ctx.interpolate(None, '${ ctx.props["db_url"] }')))
 
     # Generate a SQL star schema and mappings automatically
-    sqlschema.OlapSQLSchema.generate_star_schema_mapper(ctx,
-                                                        connection=ctx.get('loganalyzer.sql.connection'))
+    sqlschema.OLAPToSQL.olap2sql(ctx, connection=ctx.get('loganalyzer.sql.connection'))
     ctx.get('olap2sql.olapmapper').entity_mapper(ctx.get('cubetl.http.request')).store_mode = TableMapper.STORE_MODE_INSERT
 
 
