@@ -61,7 +61,7 @@ class Component(object):
             if key == "self": continue
             value = getattr(self, key) if hasattr(self, key) else None
 
-            if value and isinstance(value, Component):
+            if value and isinstance(value, Component) and value.urn:
                 value = "ctx.get('%s')" % value.urn
             elif callable(value):
                 if value.__code__.co_name:

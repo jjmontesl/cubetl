@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.engine import create_engine
-from sqlalchemy.schema import Table, MetaData, Column
-from sqlalchemy.types import Integer, String, Float, Boolean, Unicode, Date, Time, DateTime
+from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
+from sqlalchemy.types import Integer, String, Float, Boolean, Unicode, Date, Time, DateTime, Binary
 import sys
 from cubetl.core import Node, Component
 from sqlalchemy.sql.expression import and_
@@ -119,6 +119,8 @@ class SQLTable(Component):
             return Time
         elif (column.type == "DateTime"):
             return DateTime
+        elif (column.type == "Binary"):
+            return Binary
         else:
             raise Exception("Invalid data type (%s): %s" % (column, column.type))
 
@@ -176,11 +178,22 @@ class SQLTable(Component):
             columns_ex.append(column.name)
 
             # Configure column
-            self.sa_table.append_column(Column(column.name,
-                                               self._get_sa_type(column),
-                                               primary_key=column.pk,
-                                               nullable=column.nullable,
-                                               autoincrement=(True if column.type == "AutoIncrement" else False)))
+            if isinstance(column, SQLColumnFK):
+                self.sa_table.append_column(Column(column.name,
+                                                   self._get_sa_type(column),
+                                                   ForeignKey(column.fk_sqlcolumn.sqltable.sa_table.columns[column.fk_sqlcolumn.name]),
+                                                   primary_key=column.pk,
+                                                   nullable=column.nullable,
+                                                   autoincrement=(True if column.type == "AutoIncrement" else False)))
+            else:
+                self.sa_table.append_column(Column(column.name,
+                                                   self._get_sa_type(column),
+                                                   primary_key=column.pk,
+                                                   nullable=column.nullable,
+                                                   autoincrement=(True if column.type == "AutoIncrement" else False)))
+
+            ForeignKey("person_type.id")
+
 
         # Check schema
 

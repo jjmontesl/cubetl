@@ -1,0 +1,23 @@
+# This is a CubETL automaticallyg enerated Cubes OLAP server config file.
+# More info: https://github.com/jjmontesl/cubetl
+
+# Slicer OLAP server configuration
+
+[workspace]
+log_level: debug
+
+[server]
+host: localhost
+port: 5000
+reload: yes
+prettyprint: yes
+json_record_limit: 5000
+allow_cors_origin: *
+processes: 6
+
+[store]
+type: sql
+url: {{ db_url }}
+
+[models]
+main: {{ }}.model.json

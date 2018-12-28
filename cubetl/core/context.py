@@ -65,7 +65,7 @@ class Context():
         self.components = OrderedDict()
 
         self.start_item = {}
-        self.start_node = None
+        self.start_nodes = []
         self.config_files = []
 
         self.props = {}

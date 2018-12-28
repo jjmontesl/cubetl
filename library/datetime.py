@@ -1,5 +1,6 @@
 
-from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy
+from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy,\
+    DimensionAttribute
 
 
 def cubetl_config(ctx):
@@ -38,42 +39,33 @@ def cubetl_config(ctx):
         name='date',
         label='Date',
         role='date',
-        hierarchies=[
-            Hierarchy(name='daily', label='Daily', levels=[
-                ctx.get('cubetl.datetime.year'),
-                ctx.get('cubetl.datetime.month'),
-                ctx.get('cubetl.datetime.day')]),
-            Hierarchy(name='weekly', label='Weekly', levels=[
-                ctx.get('cubetl.datetime.year'),
-                ctx.get('cubetl.datetime.week')])
-        ]))
+        hierarchies=[Hierarchy(name='daily', label='Daily', levels=['year', 'month', 'day']),
+                     Hierarchy(name='weekly', label='Weekly', levels=['year', 'week'])],
+        attributes=[DimensionAttribute(dimension=ctx.get('cubetl.datetime.year')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.month')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.day')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.week'))]))
 
     ctx.add('cubetl.datetime.datemonthly', HierarchyDimension(
         name='datemonthly',
         label='Month',
         role='datemonthly',
-        hierarchies=[
-            Hierarchy(name='monthly', label='Daily', levels=[
-                ctx.get('cubetl.datetime.year'),
-                ctx.get('cubetl.datetime.quarter'),
-                ctx.get('cubetl.datetime.month')])
-        ]))
+        hierarchies=[Hierarchy(name='monthly', label='Monthly', levels=['year', 'quarter', 'month'])],
+        attributes=[DimensionAttribute(dimension=ctx.get('cubetl.datetime.year')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.quarter')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.month'))]))
 
     ctx.add('cubetl.datetime.dim.dateyqmd', HierarchyDimension(
         name='dateyqmd',
         label='Date',
         role='date',
-        hierarchies=[
-            Hierarchy(name='daily', label='Daily', levels=[
-                ctx.get('cubetl.datetime.year'),
-                ctx.get('cubetl.datetime.quarter'),
-                ctx.get('cubetl.datetime.month'),
-                ctx.get('cubetl.datetime.day')]),
-            Hierarchy(name='weekly', label='Weekly', levels=[
-                ctx.get('cubetl.datetime.year'),
-                ctx.get('cubetl.datetime.week')])
-        ]))
-
+        hierarchies=[Hierarchy(name='daily', label='Daily', levels=['year', 'quarter', 'month', 'day']),
+                     Hierarchy(name='weekly', label='Weekly', levels=['year', 'week'])],
+        attributes=[DimensionAttribute(dimension=ctx.get('cubetl.datetime.year')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.quarter')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.month')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.day')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.week'))]))
 
     '''
     !!python/object:cubetl.core.Mappings

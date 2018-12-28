@@ -29,11 +29,15 @@ import pprint
 import sys
 import traceback
 
-from cubetl import APP_NAME_VERSION, util
+from cubetl import APP_NAME_VERSION, util, flow
 from cubetl.core import ContextProperties
 from cubetl.core.context import Context
 import cubetl
 from cubetl.util import config, log
+from cubetl.olap import sqlschema
+from cubetl.sql import schemaimport
+from cubetl.sql.sql import Connection
+from cubetl.cubes import cubes10
 
 
 # Get an instance of a logger
@@ -93,6 +97,7 @@ class Bootstrap:
             self.usage()
             sys.exit(2)
 
+        list_nodes = False
         for o, a in opts:
             if o in ("-h", "--help"):
                 self.usage()
@@ -110,7 +115,7 @@ class Bootstrap:
             elif o == "-r":
                 ctx.profile = a
             elif o == "-l":
-                ctx.start_node = "cubetl.config.list"
+                list_nodes = True
             elif o == "-p":
                 (key, value) = self._split_keyvalue(a)
                 if (key == None):
@@ -132,14 +137,12 @@ class Bootstrap:
             if (argument.endswith('.py')):
                 ctx.config_files.append(argument)
             else:
-                if (ctx.start_node == None):
-                    ctx.start_node = argument
-                else:
-                    print("Only one start node can be specified (found: '%s', '%s')" % (ctx.start_node, argument))
-                    self.usage()
-                    sys.exit(2)
+                ctx.start_nodes.append(argument)
 
-        if ctx.start_node is None:
+        if list_nodes:
+            ctx.start_nodes.append("cubetl.config.list")
+
+        if not ctx.start_nodes:
             print("One starting node must be specified, but none found.")
             self.usage()
             sys.exit(2)
@@ -154,7 +157,7 @@ class Bootstrap:
 
         if not ctx.cli:
             ctx.argv = []
-            ctx.start_node = "_dummy"
+            ctx.start_nodes = ["_dummy"]
 
         # Set library dir
         # FIXME: Fix this so it works with setup.py/others installatiob
@@ -189,8 +192,18 @@ class Bootstrap:
             ctx.include(configfile)
 
         # Run
-        start_node = ctx.get(ctx.start_node)
-        ctx.run(start_node)
+        start_nodes = []
+        for start_node_name in ctx.start_nodes:
+            try:
+                start_node = ctx.get(start_node_name)
+                start_nodes.append(start_node)
+            except:
+                logger.error("Start node '%s' not found in config." % start_node_name)
+                print("Start node '%s' not found in config." % start_node_name)
+                sys.exit(1)
+
+        for start_node in start_nodes:
+            ctx.run(start_node)
 
     def default_config(self, ctx):
 
@@ -202,3 +215,13 @@ class Bootstrap:
         ctx.add('cubetl.util.print', util.PrettyPrint(),
                 description="Prints the current message.")
 
+        ctx.add('cubetl.sql.db2sql',
+                schemaimport.DBToSQL(connection=Connection(url="${ ctx.props['db2sql.db_url'] }")),
+                description="Generate SQL schema from existing database.")
+        ctx.add('cubetl.olap.sql2olap', sqlschema.SQLToOLAP(),
+                description="Generate OLAP schema from SQL schema.")
+        ctx.add('cubetl.cubes.olap2cubes',
+                cubes10.Cubes10ModelWriter(olapmapper="${ ctx.get('sql2olap.olapmapper') }",
+                                           model_path="${ ctx.props.get('olap2cubes.cubes_model', None) }",
+                                           config_path="${ ctx.props.get('olap2cubes.cubes_config', None) }"),
+                description="Generate OLAP schema from SQL schema.")

@@ -42,13 +42,11 @@ def cubetl_config(ctx):
     ctx.add('cubetl.http.request.path', HierarchyDimension(
         name='request_path',
         label='Path',
-        hierarchies=[
-            Hierarchy(name='path14', label='Path', levels=[
-                Dimension(name='path1', label='Path 1'),
-                Dimension(name='path2', label='Path 2'),
-                Dimension(name='path3', label='Path 3'),
-                Dimension(name='path4', label='Path 4')])
-        ]))
+        hierarchies=[Hierarchy(name='path14', label='Path', levels=["path1", "path2", "path3", "path4"])],
+        attributes=[DimensionAttribute(dimension=Dimension(name='path1', label='Path 1')),
+                    DimensionAttribute(dimension=Dimension(name='path2', label='Path 2')),
+                    DimensionAttribute(dimension=Dimension(name='path3', label='Path 3')),
+                    DimensionAttribute(dimension=Dimension(name='path4', label='Path 4'))]))
 
     ctx.add('cubetl.http.protocol',
             Dimension(name='protocol', label='Protocol'))
@@ -61,18 +59,15 @@ def cubetl_config(ctx):
 
     ctx.add('cubetl.http.response.status.type',
             Dimension(name='status_type', label='Status Type', attributes=[
-                Attribute(name='type_label', type='String', label='Status Type'),
-                Attribute(name='type_code', type='String', label='Status Type Code')]))
+                Attribute(name='status_type_label', type='String', label='Status Type'),
+                Attribute(name='status_type_code', type='String', label='Status Type Code')]))
 
     ctx.add('cubetl.http.response.status', HierarchyDimension(
-        name='status',
+        name='response_status',
         label='Status',
-        hierarchies=[
-            Hierarchy(name='http_status', label='Status', levels=[
-                ctx.get('cubetl.http.response.status.type'),
-                ctx.get('cubetl.http.response.status.code')
-                ])
-        ]))
+        hierarchies=[Hierarchy(name='http_status', label='Status', levels=['type', 'code'])],
+        attributes=[DimensionAttribute(ctx.get('cubetl.http.response.status.type')),
+                    DimensionAttribute(ctx.get('cubetl.http.response.status.code'))]))
 
     ctx.add('cubetl.http.request.referer_path',
             Dimension(name='referer_path', label='Referer Path'))
@@ -95,20 +90,23 @@ def cubetl_config(ctx):
     ctx.add('cubetl.http.user_agent', HierarchyDimension(
         name='user_agent',
         label='User Agent',
-        levels=[Dimension(name='user_agent_family', label='User Agent'),
-                Dimension(name='user_agent_version', label='Version')]))
+        attributes=[DimensionAttribute(Dimension(name='user_agent_family', label='User Agent')),
+                    DimensionAttribute(Dimension(name='user_agent_version', label='Version'))
+                    ]))
 
     ctx.add('cubetl.os.operating_system', HierarchyDimension(
         name='operating_system',
         label='Operating System',
-        levels=[Dimension(name='operating_system_family', label='OS'),
-                Dimension(name='operating_system_version', label='Version')]))
+        attributes=[DimensionAttribute(Dimension(name='operating_system_family', label='OS')),
+                    DimensionAttribute(Dimension(name='operating_system_version', label='Version'))
+                    ]))
 
     ctx.add('cubetl.http.mimetype', HierarchyDimension(
         name='mimetype',
         label='MIME Type',
-        levels=[Dimension(name='mimetype_type', label='Type'),
-                Dimension(name='mimetype_subtype', label='Subtype')]))
+        attributes=[DimensionAttribute(Dimension(name='mimetype_type', label='Type')),
+                    DimensionAttribute(Dimension(name='mimetype_subtype', label='Subtype'))
+                    ]))
 
     ctx.add('cubetl.os.device',
             Dimension(name='device', label='Device'))
@@ -144,7 +142,7 @@ def cubetl_config(ctx):
         label='HTTP Request',
         #natural_key=
         #notes='',
-        dimensions=[
+        attributes=[
             DimensionAttribute(ctx.get('cubetl.datetime.date'), alias='request_date', label="Request Date"),
             #ctx.get('cubetl.datetime.date'),
             DimensionAttribute(ctx.get('cubetl.http.protocol')),
@@ -159,8 +157,8 @@ def cubetl_config(ctx):
             DimensionAttribute(ctx.get('cubetl.http.request.is_tablet')),
             DimensionAttribute(ctx.get('cubetl.http.request.is_mobile')),
             DimensionAttribute(ctx.get('cubetl.geo.contcountry')),
-            DimensionAttribute(ctx.get('cubetl.http.response.status')),
-            DimensionAttribute(ctx.get('cubetl.http.mimetype')),
+            #DimensionAttribute(ctx.get('cubetl.http.response.status')),
+            #DimensionAttribute(ctx.get('cubetl.http.mimetype')),
             DimensionAttribute(ctx.get('cubetl.http.response.is_download')),
             DimensionAttribute(ctx.get('cubetl.net.domain'), alias="referer_domain", label="Referer Domain"),
             DimensionAttribute(ctx.get('cubetl.http.request.referer_path')),
@@ -168,15 +166,12 @@ def cubetl_config(ctx):
             DimensionAttribute(ctx.get('cubetl.http.user_agent')),
             DimensionAttribute(ctx.get('cubetl.os.operating_system')),
             DimensionAttribute(ctx.get('cubetl.os.device')),
-            ],
-        measures=[
-            Measure(name='served_bytes', type='Integer', label="Served Bytes"),
-            #olap.Measure(name='serve_time', type='Float', label="Serving Time")
-            ],
-        attributes=[
+
             Attribute(name='user_agent_string', type='String', label='User Agent String'),
             Attribute(name='verb', type='String', label='Verb'),
             #Attribute(name='referer', type='String', label='Referer')
+
+            Measure(name='served_bytes', type='Integer', label="Served Bytes"),
         ]))
 
     '''

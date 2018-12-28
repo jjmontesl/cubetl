@@ -35,12 +35,11 @@ def cubetl_config(ctx):
             Dimension(name='subdomain', label='Subdomain'))
 
     ctx.add('cubetl.net.domain', HierarchyDimension(
-        name='domain',
+        name='domain3',
         label='Domain',
-        hierarchies=[
-            Hierarchy(name='domain3', label='Domain', levels=[
-                ctx.get('cubetl.net.domain.tld'),
-                ctx.get('cubetl.net.domain.domain'),
-                ctx.get('cubetl.net.domain.subdomain')])
-        ]))
+        #info={"cv-formatter": "'.'.join()"},
+        hierarchies=[Hierarchy(name='domain3', label='Domain', levels=['tld', 'domain', 'subdomain'])],
+        attributes=[DimensionAttribute(ctx.get('cubetl.net.domain.tld')),
+                    DimensionAttribute(ctx.get('cubetl.net.domain.domain')),
+                    DimensionAttribute(ctx.get('cubetl.net.domain.subdomain'))]))
 

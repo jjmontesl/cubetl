@@ -1,6 +1,7 @@
 
 
-from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure
+from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure,\
+    DimensionAttribute
 from cubetl.text import RegExp
 from cubetl import table
 
@@ -26,12 +27,9 @@ def cubetl_config(ctx):
     ctx.add('cubetl.geo.contcountry', HierarchyDimension(
         name='contcountry',
         label='Country',
-        hierarchies=[
-            Hierarchy(name='contcountry', label='Country', levels=[
-                ctx.get('cubetl.geo.continent'),
-                ctx.get('cubetl.geo.country')
-                ])
-        ]))
+        hierarchies=[Hierarchy(name='contcountry', label='Country', levels=['continent', 'country'])],
+        attributes=[DimensionAttribute(ctx.get('cubetl.geo.continent')),
+                    DimensionAttribute(ctx.get('cubetl.geo.country'))]))
 
 '''
 ---

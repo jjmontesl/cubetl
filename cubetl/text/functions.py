@@ -4,6 +4,7 @@ from dateutil import parser
 from slugify import slugify
 import mimetypes
 from urllib import parse
+import string
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -15,6 +16,10 @@ def slug(value):
 
 def slugu(value):
     return slug(value).replace("-", "_")
+
+
+def labelify(value):
+    return string.capwords(slugify(value).replace("-", " "))
 
 
 def re_search(pattern, text, match = 0):

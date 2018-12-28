@@ -1,18 +1,40 @@
-import cubetl
+# CubETL
+# Copyright (c) 2013-2019 Jose Juan Montes
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 from abc import ABCMeta, abstractmethod
-from cubetl.core import Component, Node
-from cubetl.text.functions import parsebool
-from cubetl.sql.sql import SQLTable
-from cubetl.sql.cache import CachedSQLTable
 import logging
-from cubetl.script import Eval
-from cubetl.core.exceptions import ETLConfigurationException
-from cubetl.olap import Measure, Key, FactDimension, HierarchyDimension,\
-    Dimension
 import sys
-from sqlalchemy.orm.session import sessionmaker
+
+from cubetl.core import Component, Node
+from cubetl.core.exceptions import ETLConfigurationException, ETLException
+from cubetl.olap import Measure, Key, HierarchyDimension, \
+    Dimension
+from cubetl.script import Eval
+from cubetl.sql.cache import CachedSQLTable
+from cubetl.sql.sql import SQLTable
 from sqlalchemy.orm import mapper
+from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.functions import func
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +47,17 @@ class OlapMapping(Component):
     FUNCTION_YEAR = "year"
     FUNCTION_WEEK = "week"
 
-    def __init__(self, entity, sqlcolumn, function=None):
+    def __init__(self, path, sqlcolumn, function=None):
         super().__init__()
 
-        self.entity = entity
-        self.sqlcolumn = sqlcolumn
-        self.function = function
+        #self.entity = entity        # Entity to which the attribute belongs
+        #self.attribute = attribute  # Mapped attribute
+        self.path = path            # Attribute path to the mapped attribute (relative to the mapper entity)
+        self.sqlcolumn = sqlcolumn  # SQLColumn of the SQLTable that contains the attribute
+        self.function = function    # Extract function
 
     def __str__(self):
-        return "OlapMapping(entity=%s, sqlcolumn=%s, f=%s)" % (self.entity, self.sqlcolumn, self.function)
+        return "OlapMapping(path=%s, sqlcolumn=%s, f=%s)" % (self.path, self.sqlcolumn, self.function)
 
 
 class OlapSQLJoin(Component):
@@ -50,17 +74,27 @@ class OlapSQLMapping():
     """
     This is a mapping already resolved for querying, returned by sql_mappings.
     """
-    def __init__(self, parent, field, alias, sqlcolumn, function=None):
+    def __init__(self, path, entity, attribute, sqltable, sqlcolumn, sqltable_alias, sqlcolumn_alias, function=None):
         super().__init__()
 
-        self.parent = parent  # X.x = x.x
-        self.field = field
-        self.alias = alias
+        #self.parent = parent  # X.x = x.x
+        self.path = path            # Array of fields that reach this field, this included
+        self.entity = entity        # Entity to which this attribute belongs
+        self.attribute = attribute
+        self.sqltable_alias = sqltable_alias
+        self.sqlcolumn_alias = sqlcolumn_alias
+        self.sqltable = sqltable
         self.sqlcolumn = sqlcolumn
         self.function = function
 
+        #self.entity = entity
+        #self.attribute = attribute  # Mapped attribute
+        #self.sqlcolumn = sqlcolumn  # SQLColumn of the SQLTable that contains the attribute
+        #self.function = function    # Extract function
+
+
     def __repr__(self):
-        return "%s.%s -> %s.%s" % (self.parent, self.field, self.alias, self.sqlcolumn)
+        return "%s -> %s.%s" % (self.path, self.sqltable_alias, self.sqlcolumn_alias)
 
 
 class TableMapper(Component):
@@ -88,7 +122,7 @@ class TableMapper(Component):
 
     olapmapper = None
 
-    def __init__(self, entity, sqltable, mappings=None):
+    def __init__(self, entity, sqltable, mappings=None, lookup_cols=None):
         super(TableMapper, self).__init__()
 
         self.eval = []
@@ -96,7 +130,7 @@ class TableMapper(Component):
         self.sqltable = sqltable
         self.mappings = mappings if mappings else []
 
-        self.lookup_cols = None
+        self.lookup_cols = lookup_cols
 
         self._lookup_changed_fields = []
 
@@ -134,34 +168,72 @@ class TableMapper(Component):
         # Return own mappings
         result = []
         for mapping in self.mappings:
-            sqlmapping = OlapSQLMapping(self.entity, mapping.entity, self.sqltable.name if self.sqltable else None, mapping.sqlcolumn, mapping.function)
+            #sqlmapping = OlapSQLMapping(mapping. self.entity, mapping.entity, self.sqltable.name if self.sqltable else None, mapping.sqlcolumn, mapping.function)
+            sqlmapping = OlapSQLMapping([p.name for p in mapping.path],
+                                        None, mapping.path[-1],
+                                        self.sqltable, mapping.sqlcolumn,
+                                        [], mapping.sqlcolumn.name,
+                                        mapping.function)
             result.append(sqlmapping)
+
+        # Add related dimension mappings
+        # TODO: allow for a "publish: False" setting to avoid publishing dimensions recursively?
+        for dimensionattribute in self.entity.get_dimensions():
+            dimension = dimensionattribute.dimension
+            mapper = self.olapmapper.entity_mapper(dimension, fail=False)
+            if mapper:
+                dim_mappings = mapper.sql_mappings(ctx)
+                for mapping in dim_mappings:
+                    sqlmapping = OlapSQLMapping([dimensionattribute.name] + mapping.path,
+                                                mapping.entity, mapping.attribute,
+                                                mapping.sqltable, mapping.sqlcolumn,
+                                                [dimensionattribute.name] + mapping.sqltable_alias, mapping.sqlcolumn_alias,
+                                                mapping.function)
+
+                    #if sqlmapping.sqlcolumn is None:
+                    #    self_olap_mapping = self.mappings[0]
+                    #    sqlmapping = OlapSQLMapping(mapping.parent, mapping.field, self.entity.name, self.entity, mapping.function)
+
+                    #print("MAPPING: %s" % sqlmapping)
+                    result.append(sqlmapping)
+
         return result
 
     def sql_joins(self, ctx, master=None):
         """
         Joins related to this entity.
         """
-        # Embedded mappings
+        joins = []
 
+        for dim_attr in self.entity.get_dimensions():
+            dim = dim_attr.dimension
+            dim_mapper = self.olapmapper.entity_mapper(dim, fail=False)
+            if dim_mapper:
+                entity_joins = dim_mapper.sql_joins(ctx, self.entity)
+                for join in entity_joins:
+                    join['alias'] = [dim_attr.name] + join['alias']
+                    joins.append(join)
+
+        # Embedded mappings
         pk = self.pk(ctx)
         if pk is None or pk.sqlcolumn is None:
-            return []
-        if master is not None:
+            pass
+        elif master is not None:
             # Search column name of the foreign key that references this primary key
-            master_column_name = "Basura" #self.entity.name
+            master_column_name = "<EXPORT ERROR>" #self.entity.name
             for column in self.olapmapper.entity_mapper(master).sqltable.columns:
                 if hasattr(column, "fk_sqlcolumn"):
                     if column.fk_sqlcolumn == pk.sqlcolumn:
                         master_column_name = column.name
 
-            return [{"master_entity": master,
-                     "master_column": master_column_name,
-                     "detail_entity": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.sqltable.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.sqltable.name,
-                     "detail_column": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.name,
-                     }]
-        else:
-            return []
+            joins.append({"alias": [],
+                          "master_entity": master,
+                          "master_column": master_column_name,
+                          "detail_entity": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.sqltable.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.sqltable.name,
+                          "detail_column": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.name,
+                          })
+
+        return joins
 
     '''
     def _extend_mappings(self, ctx, mappings, newmappings):
@@ -234,7 +306,7 @@ class TableMapper(Component):
         #Mappings.includes(ctx, self.mappings)
         for mapping in self.mappings:
             try:
-                if mapping.entity is None:
+                if mapping.path is None:
                     raise Exception("Mapping entity is None: %s" % self)
             except TypeError as e:
                 raise Exception("Could not initialize mapping '%s' of '%s': %s" % (mapping, self, e))
@@ -260,7 +332,7 @@ class TableMapper(Component):
         #Returns the primary key mapping.
 
         #mappings = self._mappings(ctx)
-        pk_mappings = [mapping for mapping in self.mappings if isinstance(mapping.entity, Key)]
+        pk_mappings = [mapping for mapping in self.mappings if isinstance(mapping.path[-1], Key)]
 
         if (len(pk_mappings) > 1):
             raise Exception("%s has multiple primary keys mapped: %s" % (self, pk_mappings))
@@ -286,6 +358,7 @@ class TableMapper(Component):
         q = session.query()
 
         #q = q.add_columns(self.sqltable.sa_table.columns['is_bot_id'].label("x"))
+        #q = q.add_entity(self.sqltable.sa_table)
 
         # Include measures
         for measure in [m for m in mappings if isinstance(m.field, Measure)]:
@@ -293,13 +366,17 @@ class TableMapper(Component):
             q = q.add_columns(func.avg(sa_column).label(measure.field.name + "_avg"))
             q = q.add_columns(func.sum(sa_column).label(measure.field.name + "_sum"))
 
-        q = q.add_columns(func.count('*').label("record_count"))
+        q = q.add_columns(func.count(self.sqltable.sa_table).label("record_count"))
 
         # Drills
         for dimension in [m for m in mappings if isinstance(m.field, Dimension)]:
-            # We shoulld check the dimension-path here, with drills
+            # We shoulld check the dimension-path here, with drills, and use key/lookup for drill
             if dimension.field.name in drills:
-                sa_column = self.sqltable.sa_table.columns[dimension.sqlcolumn.name]
+                sa_column = None
+                try:
+                    sa_column = self.sqltable.sa_table.columns[dimension.sqlcolumn.name]
+                except KeyError as e:
+                    raise ETLException("Unknown column in backend SQL table (table=%s, column=%s). Columns: %s" % (self.sqltable.sa_table, dimension.sqlcolumn.name, [c.name for c in self.sqltable.sa_table.columns]))
                 q = q.add_columns(sa_column)
                 q = q.group_by(sa_column)
 
@@ -317,7 +394,9 @@ class TableMapper(Component):
         # Limit
         q = q.limit(5000)
 
-        rows = connection.execute(q.statement).fetchall()
+        statement = q.statement
+        logger.debug("Statement: %s", str(statement).replace("\n", " "))
+        rows = connection.execute(statement).fetchall()
 
         return rows
 
@@ -327,19 +406,23 @@ class TableMapper(Component):
         Eval.process_evals(ctx, m, self.eval)
 
         # Store automatically or include dimensions
-        if (self.auto_store != None):
+        if self.auto_store is not None:
             logger.debug("Storing automatically: %s" % (self.auto_store))
             for ast in self.auto_store:
                 did = self.olapmapper.entity_mapper(ast).store(ctx, m)
                 # TODO: Review and use PK properly
                 m[ast.name + "_id"] = did
-        elif (isinstance(self.entity, cubetl.olap.Fact)):
-            logger.debug("Storing automatically: %s" % ([da.dimension.name for da in self.entity.dimensions]))
-            for dim_attr in self.entity.dimensions:
-                dim = dim_attr.dimension
-                did = self.olapmapper.entity_mapper(dim).store(ctx, m)
-                # FIXME: shall use the correct foreign key column according to mappings
-                m[dim.name + "_id"] = did
+        else:
+            dimensions = self.entity.get_dimensions()
+            if dimensions:
+                logger.debug("Storing automatically: %s" % ([da.dimension.name for da in self.entity.get_dimensions()]))
+                for dim_attr in self.entity.get_dimensions():
+                    dim = dim_attr.dimension
+                    mapper = self.olapmapper.entity_mapper(dim, False)
+                    if mapper:
+                        did = self.olapmapper.entity_mapper(dim).store(ctx, m)
+                        # FIXME: shall use the correct foreign key column according to mappings
+                        m[dim.name + "_id"] = did
 
         logger.debug("Storing entity in %s (mode: %s, lookup: %s)" % (self, self.store_mode, self.lookup_cols))
 
@@ -350,7 +433,10 @@ class TableMapper(Component):
         for mapping in mappings:
             if (mapping.sqlcolumn.name in self.lookup_cols):
                 if (mapping.sqlcolumn.type != "AutoIncrement"):
-                    data[mapping.sqlcolumn.name] = m[mapping.sqlcolumn.name]
+                    try:
+                        data[mapping.sqlcolumn.name] = m[mapping.sqlcolumn.name]
+                    except KeyError as e:
+                        raise ETLException("Could not find key '%s' on message when storing data in %s (fields: %s)." % (mapping.sqlcolumn.name, self.entity, sorted([str(k) for k in m.keys()])))
 
         row = None
         if (self.store_mode == TableMapper.STORE_MODE_LOOKUP):
@@ -360,7 +446,7 @@ class TableMapper(Component):
             #print(mapping.sqlcolumn.name + "->" + mapping.field.name)
             if (mapping.sqlcolumn.type != "AutoIncrement"):
                 if mapping.sqlcolumn.name not in m:
-                    raise Exception("Field '%s' does not exist in message when assigning data for column %s in %s (fields: %s)" % (mapping.field.name, mapping.sqlcolumn.name, self, [f for f in m.keys()]))
+                    raise Exception("Key '%s' does not exist in message when assigning data for column %s in %s (fields: %s)" % (mapping.field.name, mapping.sqlcolumn.name, self, [f for f in m.keys()]))
                 data[mapping.sqlcolumn.name] = m[mapping.sqlcolumn.name]
 
         if (not row):
@@ -394,123 +480,7 @@ class TableMapper(Component):
         return row[pk.sqlcolumn.name] if pk else None
 
 
-class FactMapper(TableMapper):
-
-    '''
-    mappings = [mapping.copy() for mapping in self.mappings]
-    for mapping in mappings:
-        if (not "entity" in mapping):
-            mapping["entity"] = self.entity
-
-    for dimension in self.entity.dimensions:
-        #if (not dimension.name in [mapping["name"] for mapping in self.mappings]):
-        dimension_mapper = self.olapmapper.entity_mapper(dimension)
-        dimension_mappings = dimension_mapper._mappings_join(ctx)
-
-        # TODO: Check if entity/attribute is already mapped?
-        self._extend_mappings(ctx, mappings, dimension_mappings)
-
-    for measure in self.entity.measures:
-        self._extend_mappings(ctx, mappings, [{
-                              "name": measure["name"],
-                              "type": measure["type"] if ("type" in measure  and  measure["type"] != None) else "Float",
-                              "entity": self.entity
-                              }])
-    for attribute in self.entity.attributes:
-        try:
-            self._extend_mappings(ctx, mappings, [{
-                                  "name": attribute["name"],
-                                  "type": attribute["type"],
-                                  "entity": self.entity
-                                  }])
-        except KeyError as e:
-            raise ETLConfigurationException("Definition of attribute %s of %s is missing %s" % (attribute, self.entity, e))
-
-    self._ensure_mappings(ctx, mappings)
-    return mappings
-    '''
-
-    def sql_joins(self, ctx, master=None):
-        """
-        Joins that can be done with this entity.
-        """
-        joins = super().sql_joins(ctx, master)
-        for dim_attr in self.entity.dimensions:
-            dim = dim_attr.dimension
-            dim_mapper = self.olapmapper.entity_mapper(dim)
-            joins.extend(dim_mapper.sql_joins(ctx, self.entity))
-
-        return joins
-
-    def sql_mappings(self, ctx):
-        # Add own mappings
-        result = super().sql_mappings(ctx)
-
-        # Add related dimension mappings
-        # TODO: allow for a "publish: False" setting to avoid publishing dimensions recursively?
-        for dimensionattribute in self.entity.dimensions:
-            dimension = dimensionattribute.dimension
-            mapper = self.olapmapper.entity_mapper(dimension)
-            dim_mappings = mapper.sql_mappings(ctx)
-            for mapping in dim_mappings:
-                # TODO: Here we should respect aliased dimensions (carry an extra field?)
-                sqlmapping = OlapSQLMapping(mapping.parent, mapping.field, mapping.alias, mapping.sqlcolumn, mapping.function)
-
-                if sqlmapping.sqlcolumn is None:
-                    self_olap_mapping = self.mappings[0]
-                    sqlmapping = OlapSQLMapping(mapping.parent, mapping.field, self.entity.name, self.entity, mapping.function)
-
-                #print("MAPPING: %s" % sqlmapping)
-                result.append(sqlmapping)
-
-        return result
-
-
-class DimensionMapper(TableMapper):
-    """
-    DimensionMapper maps a dimension entity to a relational table using
-    an SQLTable component.
-
-    See :class:`TableMapper`
-    """
-
-    _automapping_warning = []
-
-    def dimension(self):
-        return self.entity
-
-    '''
-    def _mappings(self, ctx):
-
-        Mappings.includes(ctx, self.mappings)
-        mappings = list(self.mappings)
-
-        #for mapping in mappings:
-        #    if "entity" not in mapping:
-        #        mapping["entity"] = self.entity
-
-        """
-        for attribute in self.entity.attributes:
-
-            # Add dimension attributes as fields for the mapper if not existing
-            mapping = { "name": attribute["name"], "entity": self.entity }
-            if ("type" in attribute and attribute["type"] != None):
-                mapping["type"] = attribute["type"]
-
-            if not attribute["name"] in [m["name"] for m in mappings]:
-                if not (self.entity.name + "_" + attribute["name"]) in self._automapping_warning:
-                    logger.debug("Automatically adding mapping for attribute '%s' of %s since no mapping was defined for that attribute." % (attribute["name"], self.entity))
-                    self._automapping_warning.append((self.entity.name + "_" + attribute["name"]))
-
-            self._extend_mappings(ctx, mappings, [ mapping ])
-
-        self._ensure_mappings(ctx, mappings)
-        """
-
-        return mappings
-    '''
-
-
+'''
 class CompoundDimensionMapper(TableMapper):
     """
     The CompoundDimensionMapper maps together two or more entities onto
@@ -691,7 +661,7 @@ class EmbeddedDimensionMapper(DimensionMapper):
         if (self.lookup_cols != None):
             raise Exception("No lookup_cols can be defined for an embedded dimension.")
 
-        '''
+        """
         if (hasattr(self.entity, "hierarchies")):
             logger.debug("Creating CompoundHierarchyDimensionMapper for %s." % (self))
             self._back_mapper = CompoundHierarchyDimensionMapper()
@@ -705,17 +675,17 @@ class EmbeddedDimensionMapper(DimensionMapper):
         else:
             # TODO, may also be a CompoundDimensionMapper if not hierarchies
             pass
-        '''
+        """
 
 
-    '''
+    """
     def sql_mappings(self, ctx):
         result = []
         for mapping in self.mappings:
             sqlmapping = OlapSQLMapping(self.entity, mapping.entity, None, None, mapping.function)
             result.append(sqlmapping)
         return result
-    '''
+    """
 
     def sql_mappings(self, ctx):
         result = []
@@ -724,7 +694,7 @@ class EmbeddedDimensionMapper(DimensionMapper):
             result.append(sqlmapping)
         return result
 
-    '''
+    """
     def _mappings_join(self, ctx):
 
         mappings = self._mappings(ctx)
@@ -741,7 +711,7 @@ class EmbeddedDimensionMapper(DimensionMapper):
             mappings = [m for m in mappings if isinstance(m.entity, Key)]
 
         return mappings
-    '''
+    """
 
     def sql_joins(self, ctx, master):
         return []
@@ -819,8 +789,9 @@ class FactDimensionMapper(EmbeddedDimensionMapper):
     def pk(self, ctx):
         mapper = self.olapmapper.entity_mapper(self.entity.fact)
         return mapper.pk(ctx)
+'''
 
-
+'''
 class AliasDimensionMapper(DimensionMapper):
     """
     This mapping can have a single mapping, referencing the AliasDimension itself and
@@ -880,7 +851,7 @@ class AliasDimensionMapper(DimensionMapper):
             # TODO: We need to carry extra arguments for aliased mappings?
             # We should prefix dimensions?
             # Override parent, but not for dimensions
-            '''
+            """
             if isinstance(self.entity.dimension, FactDimension) and mapping.parent == self.entity.dimension.fact:
                 sqlmapping = OlapSQLMapping(self.entity, mapping.field, self.entity.name, mapping.sqlcolumn, mapping.function)
             elif isinstance(mapper, EmbeddedDimensionMapper):
@@ -892,7 +863,7 @@ class AliasDimensionMapper(DimensionMapper):
 
             if sqlmapping.sqlcolumn is None:
                 sqlmapping = OlapSQLMapping(self.entity, mapping.field, self.entity.name, None, mapping.function)
-            '''
+            """
 
             # Replace alias for joined dimensions
             alias = mapping.alias
@@ -927,4 +898,4 @@ class AliasDimensionMapper(DimensionMapper):
         pk = mapper.pk(ctx)
         #print(pk)
         return pk
-
+'''
