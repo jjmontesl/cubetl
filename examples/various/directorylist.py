@@ -5,10 +5,11 @@
 # See: https://github.com/jjmontesl/cubetl
 
 
+import os
 import random
+
 from cubetl import text, flow, fs, script
 from cubetl.util import log
-import os
 
 
 def cubetl_config(ctx):

@@ -21,33 +21,21 @@
 
 
 import logging
-from cubetl import olap, flow
-import cubetl
-from cubetl.sql import sql, schemaimport
-from cubetl.olap import sql as olapsql, HierarchyDimension, Key
-from cubetl.olap.sql import OlapMapping
-from cubetl.core import Component
+import re
 
+from cubetl.core import Node
+from cubetl.text import functions
 from sqlalchemy.engine import create_engine
+import cubetl
 import slugify
 import sqlalchemy
-
-from cubetl import olap, cubes
-from cubetl.flow import Chain
-from cubetl.util.config import PrintConfig
-from cubetl.util import Print, PrettyPrint
-from cubetl.sql import sql
-from cubetl.olap.sql import OlapMapping
-from cubetl.olap import Measure, Key, Attribute
-from cubetl.text import functions
-import re
 
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
-class DBToSQL(Component):
+class DBToSQL(Node):
     """
     Connects to a database through a connection and generates CubETL objects
     that represent the tables and columns.
@@ -169,11 +157,16 @@ def coltype(dbcol):
     # TODO: This shall be standarized in CubETL
     if str(dbcol.type) in ("FLOAT", "REAL", "DECIMAL"):
         return "Float"
-    elif str(dbcol.type) in ("INTEGER", "BIGINT"):
+    elif (str(dbcol.type) in ("INTEGER", "BIGINT") or
+          str(dbcol.type).startswith("NUMERIC")):
         return "Integer"
     elif str(dbcol.type) in ("DATETIME"):
         return "DateTime"
-    elif str(dbcol.type) in ("BOOLEAN", "TEXT") or str(dbcol.type).startswith("VARCHAR") or str(dbcol.type).startswith("CHAR"):
+    elif (str(dbcol.type) in ("BOOLEAN", "TEXT") or
+          str(dbcol.type).startswith("VARCHAR") or
+          str(dbcol.type).startswith("NVARCHAR") or
+          str(dbcol.type).startswith("CHAR") or
+          str(dbcol.type).startswith("NCHAR")):
         return "String"
     elif str(dbcol.type) in ("BLOB"):
         return "Binary"

@@ -10,6 +10,8 @@ from cubetl.util import PrettyPrint, Print
 from cubetl.core.exceptions import ETLConfigurationException
 from cubetl import olap
 import sys
+from cubetl.template.jinja import JinjaTemplateRenderer
+import os
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -33,6 +35,7 @@ class Cubes10ModelWriter(Node):
         self.ignore_serialize_errors = False
 
         self._print = None
+        self._template_renderer = None
 
     def initialize(self, ctx):
 
@@ -47,6 +50,13 @@ class Cubes10ModelWriter(Node):
         self._print._lexer = JsonLexer()
         self._print.eval = '${ m["cubesmodel_json"] }'
         ctx.comp.initialize(self._print)
+
+        config_path = ctx.interpolate(None, self.config_path)
+        if config_path:
+            template_path = os.path.dirname(__file__) + "/cubes.config.template"
+            logger.info("Reading cubes config template from: %s", template_path)
+            template_text = open(template_path).read()
+            self._template_renderer = JinjaTemplateRenderer(template=template_text)
 
     def finalize(self, ctx):
 
@@ -77,9 +87,17 @@ class Cubes10ModelWriter(Node):
 
         model_path = ctx.interpolate(m, self.model_path)
         if model_path:
-            logger.info("Writing Cubes model path to: %s", model_path)
+            logger.info("Writing Cubes server model to: %s", model_path)
             with open(model_path, "w") as f:
                 f.write(m["cubesmodel_json"])
+
+        config_path = ctx.interpolate(None, self.config_path)
+        if config_path:
+            logger.info("Writing Cubes server config to: %s", config_path)
+            config_text = self._template_renderer.render(ctx, {'model_path': model_path, 'db_url': self._olapmapper.mappers[0].sqltable.connection.url})
+            with open(config_path, "w") as f:
+                f.write(config_text)
+
 
         #print m["cubesmodel_json"]
         #_python_lexer = JsonLexer()

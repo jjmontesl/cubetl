@@ -5,7 +5,7 @@ from cubetl.sql import sql
 from cubetl.olap import sql as olapsql, HierarchyDimension, Key, Measure,\
     Attribute, DimensionAttribute
 from cubetl.olap.sql import OlapMapping
-from cubetl.core import Component
+from cubetl.core import Component, Node
 import re
 
 # Get an instance of a logger
@@ -114,7 +114,7 @@ class OLAPToSQL(Component):
         return entitymapper
 
 
-class SQLToOLAP(Component):
+class SQLToOLAP(Node):
     """
     """
 
@@ -196,6 +196,7 @@ class SQLToOLAP(Component):
             #olapmapper.include = []
 
             factmappings = []
+            key_count = 0
 
             for dbcol in sqltable.columns:
 
@@ -214,6 +215,8 @@ class SQLToOLAP(Component):
 
                     factmapping = OlapMapping(path=[key], sqlcolumn=dbcol)
                     factmappings.append(factmapping)
+
+                    key_count += 1
 
                 if isinstance(dbcol, cubetl.sql.sql.SQLColumnFK):
                     #
@@ -325,6 +328,10 @@ class SQLToOLAP(Component):
             if len(factmappings) == 0:
                 factmappings = [ { 'name': 'index', 'pk': True, 'type': 'Integer' } ]
             '''
+
+            if key_count > 1:
+                logger.warn("More than one Key found in table %s (not supported, ignoring table)")
+                continue
 
             mapper = olap.sql.TableMapper(entity=fact, sqltable=sqltable, mappings=factmappings)
             olapmapper.mappers.append(mapper)

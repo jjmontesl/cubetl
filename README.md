@@ -33,7 +33,7 @@ Features:
 
 See the complete [CubETL component list]().
 
-**Note**: The project is beta and tested in few environments. You may hit issues:
+**Note**: This project is in alpha stage and is tested in few environments. You will hit issues:
 please use the issue tracker for bugs, questions, suggestions and contributions.
 
 
@@ -69,10 +69,6 @@ Cubetl provides a command line tool, `cubetl`:
         -h   show this help and exit
         -v   print version and exit
 
-      Builtin entry points:
-          cubetl.config.print  Print configuration.
-          cubetl.config.list   List configured components.
-
 
 You can also use CubETL directly from Python code.
 
@@ -106,11 +102,12 @@ This will open a browser pointing to a local CubesViewer instance pointing to th
 previously launched Cubes server. Alternatively, you can download CubesViewer and
 load the HTML application locally.
 
-The CubETL project contains an example database that you can use to test this
-(see the [Generate OLAP schema from SQL database and visualize]() example below).
+The CubETL project contains an example database that you can use to test this (see the
+[Generate OLAP schema from SQL database and visualize](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2olap)
+example below).
 
-You can control the schema generation output with options. Check the documentation
-for more information.
+You can control the schema generation process using with options. Check the documentation
+below for further information.
 
 
 Creating a new ETL process config
@@ -138,7 +135,7 @@ Example ETL processes
 Example ETL processes included with the project:
 
   * [Simple CubETL process (local directory list)](https://github.com/jjmontesl/cubetl/tree/master/examples/various)
-  * Generate OLAP schema from SQL database and visualize in CubesViewer
+  * [Generate OLAP schema from SQL database and visualize in CubesViewer](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2olap)
   * OLAP schema definition, SQL generation and random data load (fictional web shop)
   * [Apache web server log file parsing and SQL loading in OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/loganalyzer)
   * [PCAxis to SQL OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/pcaxis)
@@ -164,13 +161,13 @@ In order to configure and/or run a process from client code, use:
     ctx = cubetl.cubetl()
 
     # Add components or include a configuration file...
-    ctx.add('your_app.node_id', ...)
-    cubetl.container.add_component(comp)
+    ctx.add('your_app.node_name', ...)
 
     # Launch process
     result = ctx.run("your_app.node_id")
 
 See the examples/python to see a full working example.
+
 
 Documentation
 =============

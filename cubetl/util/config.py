@@ -3,6 +3,8 @@ import logging
 from cubetl.core import Node
 import slugify
 from cubetl.util import Print
+from cubetl.template.jinja import JinjaTemplateRenderer
+import os
 
 
 # Get an instance of a logger
@@ -72,17 +74,35 @@ class ListConfig(Node):
         yield m
 
 
-'''
-class CreateConfig(JinjaTemplateRenderer):
+class CreateTemplateConfig(Node):
 
-    def __init__(self, template_path):
-        super().__init__(template_path, engine=MakoTemplateEngine)
-        self.template_path = template_path
-        self.data = data
+    def __init__(self, config_name="myproject", config_path=None):
+        super().__init__()
+        self.config_name = config_name
+        self.config_path = config_path
+        self._template_renderer = None
+
+    def initialize(self, ctx):
+        super().initialize(ctx)
+        self._template_renderer = JinjaTemplateRenderer(template=None)
 
     def process(self, ctx, m):
-        res = super(process
-        res = self.list_config(ctx, m)
-        print(res)
+
+        template_path = os.path.dirname(__file__) + "/config.py.template"
+        #logger.debug("Reading cubes config template from: %s", template_path)
+        template_text = open(template_path).read()
+        self._template_renderer.template = template_text
+
+        m['config_name'] = ctx.interpolate(m, self.config_name)
+        config_text = self._template_renderer.render(ctx, {'m': m})
+        m['config_text'] = config_text
+        print(config_text)
+
+        config_path = ctx.interpolate(None, self.config_path)
+        if config_path:
+            logger.info("Writing Cubes server config to: %s", config_path)
+            with open(config_path, "w") as f:
+                f.write(config_text)
+
         yield m
-'''
+

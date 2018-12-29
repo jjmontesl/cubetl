@@ -1,14 +1,16 @@
+# CubETL
+# Copyright (c) 2013-2019 Jose Juan Montes
+
+# This is a CubETL example
+# See: https://github.com/jjmontesl/cubetl
 
 
-import datetime
-import random
-
-from cubetl import text, flow, fs, script, olap, pcaxis, table, geoip
+from cubetl import flow, fs, script, olap, table, geoip
 from cubetl.cubes import cubes10
 from cubetl.http import useragent
 from cubetl.olap import sqlschema, query
 from cubetl.olap.sql import TableMapper
-from cubetl.sql import sql, schemaimport
+from cubetl.sql import sql
 from cubetl.table import cache
 from cubetl.text import functions
 from cubetl.util import log
@@ -18,8 +20,10 @@ def cubetl_config(ctx):
 
     #ctx.include('${ ctx.library_path }/datetime.py')
     #ctx.include('${ ctx.library_path }/geo.py')
-    ctx.include('${ ctx.library_path }/http.py')
     #ctx.include('${ ctx.library_path }/net.py')
+    ctx.include('${ ctx.library_path }/http.py')
+
+    # Process configuration
 
     ctx.props['db_url'] = 'sqlite:///loganalyzer.sqlite3'
 
@@ -30,44 +34,26 @@ def cubetl_config(ctx):
     ctx.props['download_extensions_list'] = [e.strip().lower() for e in ctx.props['download_extensions'].split(',')]
     ctx.props['download_size_bytes'] = 10 * 1024 * 1024
 
+
     # Database connection for loaded OLAP data
     ctx.add('loganalyzer.sql.connection',
             sql.Connection(url=ctx.interpolate(None, '${ ctx.props["db_url"] }')))
+
 
     # Generate a SQL star schema and mappings automatically
     sqlschema.OLAPToSQL.olap2sql(ctx, connection=ctx.get('loganalyzer.sql.connection'))
     ctx.get('olap2sql.olapmapper').entity_mapper(ctx.get('cubetl.http.request')).store_mode = TableMapper.STORE_MODE_INSERT
 
 
-    ctx.add('loganalyzer.query', flow.Chain(steps=[
-
-        #ctx.get('cubetl.config.print'),
-
-        query.OlapQueryAggregate(fact=ctx.get('cubetl.http.request'),
-                                 mapper=ctx.get('olap2sql.olapmapper'),
-                                 #drills=['is_pc.is_pc'],
-                                 cuts={'contcountry.id': 16}),
-
-        #query.OlapQueryFacts(fact=ctx.get('cubetl.http.request'),
-        #                     mapper=ctx.get('olap2sql.olapmapper'),
-        #                     cuts={'contcountry': 16}),
-
-        #query.OlapQueryDimension(fact=ctx.get('cubetl.http.request'),
-        #                         mapper=ctx.get('olap2sql.olapmapper'),
-        #                         drill=['contcountry.country']),
-
-        ctx.get('cubetl.util.print'),
-
-        ]))
-
+    # Processes a log file and loads the database for OLAP
     ctx.add('loganalyzer.process', flow.Chain(steps=[
 
         ctx.get('cubetl.config.print'),
 
         # Generate a Cubes model
         cubes10.Cubes10ModelWriter(olapmapper=ctx.get('olap2sql.olapmapper'),
-                                   model_path="loganalyzer.model.json"),
-        #cubes10.Cubes10ModelWriter(config_path="ine.slicer.ini"),
+                                   model_path="loganalyzer.model.json",
+                                   model_path="loganalyzer.config.ini"),
         script.Delete(['cubesmodel', 'cubesmodel_json']),
 
         sql.Transaction(connection=ctx.get('loganalyzer.sql.connection')),
@@ -88,16 +74,34 @@ def cubetl_config(ctx):
 
         ctx.get('cubetl.util.print'),
 
-        #olap.Store(entity=ctx.get('ine.autonomyprovince'),
-        #           mapper=ctx.get('olap2sql.olapmapper')),
         olap.Store(entity=ctx.get('cubetl.http.request'),
                    mapper=ctx.get('olap2sql.olapmapper')),
-
 
         log.LogPerformance(),
 
         ]))
 
+    # This node runs several test queries
+    ctx.add('loganalyzer.query', flow.Chain(steps=[
+
+        #ctx.get('cubetl.config.print'),
+
+        query.OlapQueryAggregate(fact=ctx.get('cubetl.http.request'),
+                                 mapper=ctx.get('olap2sql.olapmapper'),
+                                 #drills=['referer.source'],
+                                 cuts={'contcountry.id': 16}),
+
+        #query.OlapQueryFacts(fact=ctx.get('cubetl.http.request'),
+        #                     mapper=ctx.get('olap2sql.olapmapper'),
+        #                     cuts={'contcountry': 16}),
+
+        #query.OlapQueryDimension(fact=ctx.get('cubetl.http.request'),
+        #                         mapper=ctx.get('olap2sql.olapmapper'),
+        #                         drill=['contcountry.country']),
+
+        ctx.get('cubetl.util.print'),
+
+        ]))
 
 def process_data(ctx, m):
 
@@ -160,6 +164,7 @@ def process_data(ctx, m):
     m['is_download'] = m['file_extension'].lower() in ctx.props['download_extensions_list'] or int(m['served_bytes']) >= int(ctx.props['download_size_bytes'])
 
 
+'''
 def process_sessions(ctx, m):
 
     # Check that time hasn't gone backwards
@@ -203,3 +208,4 @@ def process_sessions(ctx, m):
     # IP PTR -> SOA authority ( IP owner? )
     # organic/etc by referer?? (requires db)
 
+'''

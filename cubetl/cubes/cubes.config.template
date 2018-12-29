@@ -1,4 +1,4 @@
-# This is a CubETL automaticallyg enerated Cubes OLAP server config file.
+# This is a CubETL automatically generated Cubes OLAP server config file.
 # More info: https://github.com/jjmontesl/cubetl
 
 # Slicer OLAP server configuration
@@ -20,4 +20,6 @@ type: sql
 url: {{ db_url }}
 
 [models]
-main: {{ }}.model.json
+main: {{ model_path }}
+
+

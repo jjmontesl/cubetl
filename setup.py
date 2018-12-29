@@ -40,7 +40,8 @@ setup(
     install_requires = [
         "repoze.lru >= 0.5.0",
         "sqlalchemy >= 0.7.9",
-        "fs >= 0.3.0"
+        "fs >= 0.3.0",
+        "Jinja2 >= 2.10"
     ],
 
     entry_points={'console_scripts': ['cubetl=cubetl.core.bootstrap:main']},

@@ -318,7 +318,7 @@ class TableMapper(Component):
                 pk = self.pk(ctx)
                 if (pk is None) or (pk.sqlcolumn.type == "AutoIncrement"):
                     raise Exception("No lookup cols defined for %s" % self)
-                self.lookup_cols = [ pk ]
+                self.lookup_cols = [pk]
 
             ctx.comp.initialize(self._sqltable)
 
@@ -335,7 +335,9 @@ class TableMapper(Component):
         pk_mappings = [mapping for mapping in self.mappings if isinstance(mapping.path[-1], Key)]
 
         if (len(pk_mappings) > 1):
-            raise Exception("%s has multiple primary keys mapped: %s" % (self, pk_mappings))
+            #raise Exception("%s has multiple primary keys mapped: %s" % (self, pk_mappings))
+            logger.warn("%s has multiple primary keys mapped: %s (ignoring)" % (self, pk_mappings))
+            return None
         elif (len(pk_mappings) == 1):
             return pk_mappings[0]
         #elif (len(pk_mappings) == 0 and len(mappings) == 1):

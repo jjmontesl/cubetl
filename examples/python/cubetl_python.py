@@ -5,10 +5,8 @@
 # See: https://github.com/jjmontesl/cubetl
 
 
-import random
 from cubetl import text, flow, fs, script
 from cubetl.util import log
-from cubetl.core.bootstrap import Bootstrap
 import cubetl
 
 
