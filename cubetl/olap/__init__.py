@@ -285,53 +285,6 @@ class Fact(OlapEntity):
         super().initialize(ctx)
 
 
-'''
-class FactDimension(Dimension):
-
-    fact = None
-
-    #dimensions = None
-    #attributes = None
-    #measures = None
-
-    def __init__(self, fact):
-        super(FactDimension, self).__init__(name=None)
-        self.fact = fact
-        #self.dimensions = []
-        #self.attributes = []
-        #self.measures = []
-
-    def finalize(self, ctx):
-        ctx.comp.finalize(self.fact)
-        super(FactDimension, self).finalize(ctx)
-
-    def initialize(self, ctx):
-
-        super(FactDimension, self).initialize(ctx)
-        ctx.comp.initialize(self.fact)
-
-        if (len(self.attributes) > 0):
-            raise Exception("Cannot define attributes for a FactDimension (it's defined by the linked fact)")
-
-        #self.dimensions = self.fact.dimensions
-        #self.measures = self.fact.measures
-        #self.attributes = self.fact.attributes
-
-        if self.name != None:
-            raise ETLConfigurationException("FactDimension %s name is '%s' but it should be None as it automatically matches name of fact %s ('%s')" % (self, self.name, self.fact, self.fact.name))
-
-
-    """
-    def attribute(self, search):
-        att = [attr for attr in self.fact.attributes if attr["name"] == search]
-        if (len(att) != 1):
-            raise Exception("Could not find attribute %s in fact dimension %s" % (search, self.name))
-
-        return att[0]
-    """
-'''
-
-
 class Key(Component):
 
     # TODO: Maybe remove, and use one of the attributes (and so reference the key by name or the attribute directly?) +1
@@ -408,15 +361,16 @@ class EntityPath():
 
 class OlapMapper(Component):
 
-    mappers = []
-    include = []
+    def __init__(self):
+        self.mappers = []
+        self.include = []
 
     def __str__(self):
         return "%s(mappers=%d,include=%d)" % (self.__class__.__name__, len(self.mappers), len(self.include))
 
     def initialize(self, ctx):
 
-        super(OlapMapper, self).initialize(ctx)
+        super().initialize(ctx)
 
         for incl in self.include:
             ctx.comp.initialize(incl)
@@ -430,7 +384,7 @@ class OlapMapper(Component):
             ctx.comp.finalize(incl)
         for mapper in self.mappers:
             ctx.comp.finalize(mapper)
-        super(OlapMapper, self).finalize(ctx)
+        super().finalize(ctx)
 
 
     def entity_mapper(self, entity, fail=True):

@@ -1,8 +1,7 @@
 CubETL
 ======
 
-CubETL is a framework and related tools for data ETL (Extract, Transform and Load),
-based in Python.
+CubETL is a tool for data ETL (Extract, Transform and Load).
 
 CubETL provides a mechanism to run data items through a processing pipeline. It takes care
 of initializing only the components used by the process, manages the data flow across
@@ -41,12 +40,10 @@ Download / Install
 ------------------
 
 While CubETL is in development, no *pip* packages are provided.
-In your target environment (requires Python 3.5+):
+Using a virtualenv is recommended. In your target environment (requires Python 3.5+):
 
     git clone https://github.com/jjmontesl/cubetl.git
     cd cubetl
-    python3 -m venv env
-    . env/bin/activate
     python setup.py install  # or: python setup.py develop
 
 Test:
@@ -68,6 +65,13 @@ Cubetl provides a command line tool, `cubetl`:
         -h   show this help and exit
         -v   print version and exit
 
+Each CubETL configuration can contain one or more *process nodes*. You must specify
+the list of configuration files (.py files), followed by the process nodes you
+want to run.
+
+Note that, when running a complete ETL process, you need to remove print nodes
+or to use the `-q` command line option to remove prints to standard output, which
+will otherwise heavily slowdown the process.
 
 You can also use CubETL directly from Python code.
 
@@ -82,9 +86,6 @@ Visualizing a SQL database
 CubETL can inspect a SQL database and generate a CubETL OLAP schema and
 SQL mappings for it. Such schema can then be visualized using CubesViewer:
 
-    # For this example you need these dependencies:
-    pip install cubes cubesviewer-utils  # and cubetl
-
     # Inspect database and generate a cubes model and config
     cubetl cubetl.sql.db2sql cubetl.olap.sql2olap cubetl.cubes.olap2cubes \
         -p db2sql.db_url=sqlite:///mydb.sqlite3 \
@@ -92,9 +93,11 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
         -p olap2cubes.cubes_config=mydb.cubes-config.ini
 
     # Run cubes server (in background with &)
+    pip install cubes
     slicer serve mydb.cubes-config.ini &
 
     # Run a local cubesviewer HTTP server (also opens a browser)
+    pip install cubesviewer-utils
     cvutils cv
 
 This will open a browser pointing to a local CubesViewer instance pointing to the
@@ -135,12 +138,12 @@ Example ETL processes included with the project:
 
   * [Simple CubETL process (local directory list)](https://github.com/jjmontesl/cubetl/tree/master/examples/various)
   * [Generate OLAP schema from SQL database and visualize in CubesViewer](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2olap)
-  * OLAP schema definition, SQL generation and random data load (fictional web shop)
   * [Apache web server log file parsing and SQL loading in OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/loganalyzer)
+  * [SDMX schema and data import](https://github.com/jjmontesl/cubetl/tree/master/examples/sdmx)
   * [PCAxis to SQL OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/pcaxis)
+  * OLAP schema definition and fake data loading (fictional web shop)
   * Querying a SQL database and exporting to CSV
   * Wikipedia huge XML load
-  * Importing SDMX schema and data
   * HTML scraping
 
 To run these examples you'll need the *examples* directory of the *cubetl* project, which
@@ -217,4 +220,3 @@ CubETL is published under MIT license. For full license see the LICENSE file.
 Other sources:
 
 * Country list from: http://www.geonames.org (CC-A 3.0)
-

@@ -34,7 +34,7 @@ def cubetl_config(ctx):
 
 
     # Define the data load process
-    ctx.add('estat.process.eip', flow.Chain(steps=[
+    ctx.add('estat.process', flow.Chain(steps=[
 
         #ctx.get('cubetl.config.print'),
 

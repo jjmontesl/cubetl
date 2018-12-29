@@ -66,9 +66,9 @@ def extract_date(value, dayfirst, fuzzy=True):
 
 def extract_number(value):
 
-    if (value == None): return None
-    if (isinstance(value, int)): return value
-    if (isinstance(value, float)): return value
+    if value is None: return None
+    if isinstance(value, int): return value
+    if isinstance(value, float): return value
 
     text = value
     text = re.sub(r'\&\#[0-9A-Fa-f]+', '', text)

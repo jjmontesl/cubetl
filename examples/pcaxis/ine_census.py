@@ -9,11 +9,12 @@ import datetime
 
 from cubetl import text, flow, fs, script, olap, pcaxis, table
 from cubetl.cubes import cubes10
-from cubetl.olap import sqlschema
+from cubetl.olap import sqlschema, DimensionAttribute, Measure
 from cubetl.olap.sql import TableMapper
 from cubetl.sql import sql
 from cubetl.table import cache
 from cubetl.util import log
+from cubetl.text import functions
 
 
 def cubetl_config(ctx):
@@ -94,8 +95,8 @@ def cubetl_config(ctx):
     ctx.add('ine.autonomyprovince', olap.HierarchyDimension(
         name='autonomyprovince',
         label='Province',
-        levels=[ctx.get('ine.autonomy'),
-                ctx.get('ine.province')]))
+        attributes=[DimensionAttribute(ctx.get('ine.autonomy')),
+                    DimensionAttribute(ctx.get('ine.province'))]))
 
     ctx.add('ine.nationality', olap.Dimension(
         name='nationality',
@@ -108,22 +109,21 @@ def cubetl_config(ctx):
         #must_slice=ctx.get('cubetl.datetime.datemonthly'),  # study when and how dimensions can be aggregated, this cube requires slicing by date or results are invalid
         #natural_key=
         #notes='',
-        dimensions=[#olap.Attribute('sample_date', label="Date", entity=ctx.get('cubetl.datetime.datemonthly')),
-                    ctx.get('cubetl.datetime.datemonthly'),
-                    ctx.get('ine.autonomyprovince'),
-                    ctx.get('ine.nationality'),
-                    ctx.get('cubetl.person.gender'),
-                    ctx.get('cubetl.person.age_range')],
-        measures=[olap.Measure(name='census', type='Integer', label="Population")]))  # TODO: Should not present avg/max/min
+        attributes=[DimensionAttribute(ctx.get('cubetl.datetime.datemonthly')),
+                    DimensionAttribute(ctx.get('ine.autonomyprovince')),
+                    DimensionAttribute(ctx.get('ine.nationality')),
+                    DimensionAttribute(ctx.get('cubetl.person.gender')),
+                    DimensionAttribute(ctx.get('cubetl.person.age_range')),
+                    Measure(name='census', type='Integer', label="Population")]))  # TODO: Should not present avg/max/min
 
 
     # Generate a SQL star schema and mappings automatically
-    sqlschema.OlapSQLSchema.generate_star_schema_mapper(ctx, connection=ctx.get('ine.sql.connection'))
+    sqlschema.OLAPToSQL.olap2sql(ctx, connection=ctx.get('ine.sql.connection'))
     ctx.get('olap2sql.olapmapper').entity_mapper(ctx.get('ine.census')).store_mode = TableMapper.STORE_MODE_INSERT
 
 
     # Define the data load process
-    ctx.add('ine.process.census', flow.Chain(steps=[
+    ctx.add('ine.process', flow.Chain(steps=[
 
         #ctx.get('cubetl.config.print'),
 
@@ -154,7 +154,7 @@ def cubetl_config(ctx):
 
             script.Function(process_data),
 
-            flow.Filter(condition="${ m['date'].year < 2002 }"),
+            #flow.Filter(condition="${ m['date'].year < 2002 }"),
 
             cache.CachedTableLookup(
                 table=ctx.get("ine.autonomy_province.table"),
@@ -178,6 +178,7 @@ def process_data(ctx, m):
     m['date'] = datetime.datetime(int(m['Periodo'].split(" ")[-1]), 7 if 'julio' in m['Periodo'] else 1, 1)
     m['nationality'] = m.get('Nacionalidad', 'Unknown')
     m['age_range'] = m.get('Grupo quinquenal de edad', None) or m.get('Grupo de edad')
+    m['age_num'] = functions.re_search('(\d+)', m['age_range'])
     m['census'] = m['value']
 
     # For autonomy dimension

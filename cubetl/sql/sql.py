@@ -136,8 +136,8 @@ class SQLTable(Component):
             logger.info("SQLTable %-18s ins/upd/sel: %6d/%6d/%-6d " %
                             (self.name, self._inserts, self._updates, self._selects))
         if (self._unicode_errors > 0):
-            logger.warn("SQLTable %s found %d warnings assigning non-unicode fields to unicode columns" %
-                        (self.name, self._unicode_errors))
+            logger.warning("SQLTable %s found %d warnings assigning non-unicode fields to unicode columns" %
+                           (self.name, self._unicode_errors))
 
         ctx.comp.finalize(self.connection)
 

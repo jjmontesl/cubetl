@@ -34,7 +34,7 @@ clean:
 .PHONY: test
 test:
 	@echo Testing: $(VERSION)
-	. $(VIRTUALENV_ACTIVATE) && cd tests && pytest .
+	. $(VIRTUALENV_ACTIVATE) && pytest --cov=cubetl tests
 
 .PHONY: build
 build:

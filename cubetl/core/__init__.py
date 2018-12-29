@@ -48,7 +48,7 @@ class Component(object):
 
     def finalize(self, ctx):
         #self.ctx = None
-        pass
+        self._initialized = False
 
     def __str__(self, *args, **kwargs):
         return "%s(%s)" % (self.__class__.__name__, self.urn)

@@ -76,16 +76,13 @@ class Context():
         self.working_dir = os.getcwd()
         self.library_path = os.path.dirname(os.path.realpath(__file__)) + "/../../library"
 
-        self._globals = {
-                         "text": functions,
+        self._globals = {"text": functions,
                          "xml": xmlfunctions,
-                         "cubetl": cubetl,
                          "datetime": datetime,
                          "re": re,
                          "sys": sys,
                          "urllib": urllib,
-                         "random": random.Random()
-                         }
+                         "random": random.Random()}
 
         self._compiled = LRUCache(512)  # TODO: Configurable
 
@@ -219,12 +216,15 @@ class Context():
         return result
 
     def copy_message(self, m):
+        # TODO: Create a copy-on-write message instead of actually copying (?)
         if m is None:
             return {}
         else:
             return copy.copy(m)
 
     def _do_process(self, process, ctx, multiple):
+        # TODO: When using multiple, this should allow to yield,
+        # TODO: Also, this method shall be called "consume" or something, and public
         item = ctx.copy_message(ctx.start_item)
         msgs = ctx.comp.process(process, item)
         count = 0
@@ -279,6 +279,7 @@ class Context():
 
         except KeyboardInterrupt as e:
             logger.error("User interrupted")
+            sys.exit(1)
 
         except Exception as e:
             '''
@@ -291,7 +292,6 @@ class Context():
 
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             '''
-
             raise
 
         return result

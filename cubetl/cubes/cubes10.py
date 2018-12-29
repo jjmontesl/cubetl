@@ -370,9 +370,6 @@ class Cubes10ModelWriter(Node):
                     dim["hierarchies"].append(chierarchy)
 
             # Add cubesviewer datefilter info
-            print(dimension)
-            print(dimension.role)
-
             if (dimension.role == "date"):
                 dim["role"] = "time"
                 dim["info"] = {

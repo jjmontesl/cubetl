@@ -1,7 +1,7 @@
-# Spanish census
+# PC-AXIS
 
-This sample defines an OLAP structure for the Spanish census data from the
-Spanish National Statistics Institute, provided in PC-AXIS format.
+This sample imports an OLAP structure from a PCAXIS statistics file. The example
+contains census data with several axis of observation.
 
 ## Guide
 
@@ -66,11 +66,12 @@ Inspect the CubETL process definition (ine_census.py),
 
 ## Data
 
-Población residente por fecha, sexo, grupo de edad y nacionalidad (agrupación de países) (2002)
-From: http://www.ine.es/dynt3/inebase/es/index.htm?padre=1894&capsel=1895
+This example data comes from the Spanish National Statistics Institute (INE):
 
-Población residente por fecha, sexo y grupo de edad (1971)
-From: http://www.ine.es/dynt3/inebase/index.htm?padre=1949&capsel=1953
+* Población residente por fecha, sexo, grupo de edad y nacionalidad (agrupación de países) (2002) -
+  [link](http://www.ine.es/dynt3/inebase/es/index.htm?padre=1894&capsel=1895)
+* Población residente por fecha, sexo y grupo de edad (1971) -
+  [link](http://www.ine.es/dynt3/inebase/index.htm?padre=1949&capsel=1953)
 
 
 
