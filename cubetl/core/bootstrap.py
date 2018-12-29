@@ -229,3 +229,12 @@ class Bootstrap:
                                            model_path="${ ctx.props.get('olap2cubes.cubes_model', None) }",
                                            config_path="${ ctx.props.get('olap2cubes.cubes_config', None) }"),
                 description="Generate OLAP schema from SQL schema.")
+
+
+def main():
+    """
+    Application entry point.
+    """
+    bootstrap = Bootstrap()
+    bootstrap.start(sys.argv[1:])
+

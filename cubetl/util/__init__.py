@@ -42,12 +42,15 @@ class Print(Node):
     A default instance can be found in CubETL default objects.
     """
 
-    def __init__(self, eval=None, condition=None, truncate_line=120):
+    def __init__(self, eval=None, condition=None, truncate_line=120, style='friendly'):
         super().__init__()
 
         self.eval = eval
         self.truncate_line = truncate_line
         self.condition = condition
+
+        #['friendly', 'perldoc', 'vs', 'xcode', 'abap', 'autumn', 'bw', 'lovelace', 'paraiso-light', 'algol', 'arduino', 'rrt', 'algol_nu', 'paraiso-dark', 'colorful', 'manni', 'pastie', 'emacs', 'igor', 'trac', 'vim', 'murphy', 'rainbow_dash', 'default', 'tango', 'native', 'fruity', 'monokai', 'borland']
+        self.style = style
 
         self._lexer = None
         self._formatter = None
@@ -58,7 +61,7 @@ class Print(Node):
 
         self._lexer = PythonLexer()
         #self._formatter = TerminalFormatter()
-        self._formatter = Terminal256Formatter()
+        self._formatter = Terminal256Formatter(style=self.style)
 
         logger.debug("Initializing Print node %s" % (self))
 

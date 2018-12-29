@@ -34,11 +34,13 @@ Features:
 See the complete [CubETL component list]().
 
 **Note**: The project is beta and tested in few environments. You may hit issues:
-please use the issue tracker for bugs, questions and suggestions!
+please use the issue tracker for bugs, questions, suggestions and contributions.
 
 
 Download / Install
 ------------------
+
+While CubETL is in development, no *pip* packages are provided:
 
 In your target environment (requires Python 3.5+):
 
@@ -46,7 +48,7 @@ In your target environment (requires Python 3.5+):
     cd cubetl
     python3 -m venv env
     . env/bin/activate
-    python setup.py install
+    python setup.py install  # or: python setup.py develop
 
 Test:
 
@@ -55,13 +57,24 @@ Test:
 Usage
 -----
 
-Cubetl provides a command line tool:
+Cubetl provides a command line tool, `cubetl`:
 
-* `cubetl` runs ETL processes.
+    cubetl [-dd] [-q] [-h] [-p property=value] [-m attribute=value] [config.py ...] <start-node>
+
+        -p   set a context property
+        -m   set an attribute for the start item
+        -d   debug mode (can be used twice for extra debug)
+        -q   quiet mode (bypass print nodes)
+        -l   list config nodes ('cubetl.config.list' as start-node)
+        -h   show this help and exit
+        -v   print version and exit
+
+      Builtin entry points:
+          cubetl.config.print  Print configuration.
+          cubetl.config.list   List configured components.
+
 
 You can also use CubETL directly from Python code.
-
-See the Documentation section below for further information.
 
 
 Examples
@@ -74,8 +87,8 @@ Visualizing a SQL database
 CubETL can inspect a SQL database and generate a CubETL OLAP schema and
 SQL mappings for it. Such schema can then be visualized using CubesViewer:
 
-    # For this example you need this dependencies:
-    pip install cubetl cubes cubesviewer-utils
+    # For this example you need these dependencies:
+    pip install cubes cubesviewer-utils  # and cubetl
 
     # Inspect database and generate a cubes model and config
     cubetl cubetl.sql.db2sql cubetl.olap.sql2olap cubetl.cubes.olap2cubes \
@@ -83,14 +96,15 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
         -p olap2cubes.cubes_model=mydb.cubes-model.json \
         -p olap2cubes.cubes_config=mydb.cubes-config.ini
 
-    # Run cubes server (in background)
+    # Run cubes server (in background with &)
     slicer serve mydb.cubes-config.ini &
 
     # Runs a local cubesviewer HTTP server and opens a browser
     cvutils cv
 
 This will open a browser pointing to a local CubesViewer instance pointing to the
-previously launched Cubes server.
+previously launched Cubes server. Alternatively, you can download CubesViewer and
+load the HTML application locally.
 
 The CubETL project contains an example database that you can use to test this
 (see the [Generate OLAP schema from SQL database and visualize]() example below).
@@ -104,7 +118,7 @@ Creating a new ETL process config
 
 Create a directory for your ETL process and run:
 
-    cubetl cubetl.config.new -c config.name=myprocess
+    cubetl cubetl.config.new -p config.name=myprocess
 
 This will create a new file `myprocess.py`, which you can use as a template
 for your new ETL process.
@@ -123,13 +137,15 @@ Example ETL processes
 
 Example ETL processes included with the project:
 
-  * Simple CubETL process (local directory list)
-  * PCAxis to SQL OLAP star-schema (Spanish census)
-  * OLAP schema definition, SQL generation and random data load (fictional web shop)
-  * Apache web server log file parsing and SQL loading in OLAP star-schema
-  * Wikipedia huge XML load to SQL star schema
+  * [Simple CubETL process (local directory list)](https://github.com/jjmontesl/cubetl/tree/master/examples/various)
   * Generate OLAP schema from SQL database and visualize in CubesViewer
+  * OLAP schema definition, SQL generation and random data load (fictional web shop)
+  * [Apache web server log file parsing and SQL loading in OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/loganalyzer)
+  * [PCAxis to SQL OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/pcaxis)
   * Querying a SQL database and exporting to CSV
+  * Wikipedia huge XML load
+  * Importing SDMX data
+  * HTML scraping
 
 To run these examples you'll need the *examples* directory of the *cubetl* project, which
 is not included in the PyPI *pip* download. You can get them by cloning the cubetl
@@ -142,12 +158,10 @@ Running from Python
 
 In order to configure and/or run a process from client code, use:
 
-    from cubetl.core.bootstrap import Bootstrap
+    import cubetl
 
     # Create Cubetl context
-    bootstrap = Bootstrap()
-    ctx = bootstrap.init()
-    ctx.debug = True
+    ctx = cubetl.cubetl()
 
     # Add components or include a configuration file...
     ctx.add('your_app.node_id', ...)
@@ -199,9 +213,7 @@ See AUTHORS file for more information.
 License
 =======
 
-CubETL is published under MIT license.
-
-For full license see the LICENSE file.
+CubETL is published under MIT license. For full license see the LICENSE file.
 
 Other sources:
 

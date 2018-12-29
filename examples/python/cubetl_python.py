@@ -9,6 +9,7 @@ import random
 from cubetl import text, flow, fs, script
 from cubetl.util import log
 from cubetl.core.bootstrap import Bootstrap
+import cubetl
 
 
 def cubetl_config(ctx):
@@ -33,10 +34,7 @@ def cubetl_config(ctx):
 
 def main():
 
-    # Create Cubetl context
-    bootstrap = Bootstrap()
-    ctx = bootstrap.init()
-    ctx.debug = True
+    ctx = cubetl.cubetl(debug=False, quiet=False)
 
     # Include other configuration files
     ctx.include(ctx.library_path + "/datetime.py")

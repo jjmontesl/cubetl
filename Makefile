@@ -26,6 +26,7 @@ loc:
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf cubetl.egg-info
 	$(MAKE) -C doc clean
 
 .PHONY: test

@@ -16,12 +16,10 @@ a message generated for each number.
 
 In order to run a CubETL process you need a CubETL context.
 
-    from cubetl.core.bootstrap import Bootstrap
+    import cubetl
 
     # Create Cubetl context
-    bootstrap = Bootstrap()
-    ctx = bootstrap.init()
-    ctx.debug = True
+    ctx = cubetl.cubetl()
 
 You can now add your CubETL components to the context, in the same way
 cubetl configurations are defined. You can also include other configuration

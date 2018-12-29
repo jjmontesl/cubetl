@@ -1,6 +1,5 @@
 appdirs==1.4.3
 chardet==3.0.4
--e git+https://jjmontesl@github.com/jjmontesl/cubetl.git@66184070594b8b3935d9a39ed62c973716421536#egg=CubETL
 dateutils==0.6.6
 fake-factory==0.5.7
 fs==2.1.2

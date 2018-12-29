@@ -1,9 +1,11 @@
 from setuptools import setup, find_packages
+import cubetl
 
 setup(
 
-    name = 'CubETL',
-    version = '1.0.5',
+    name = 'cubetl',
+    #package = 'cubetl',
+    version = cubetl.APP_VERSION,
 
     author = 'Jose Juan Montes',
     author_email = 'jjmontes@gmail.com',
@@ -12,15 +14,15 @@ setup(
 
     include_package_data=True,
     package_data = {
-        'cubetl': ['*.yaml']
+        'cubetl': ['*.template']
     },
 
-    scripts = ['bin/cubetl'],
+    #scripts = ['bin/cubetl'],
 
     url='https://github.com/jjmontesl/cubetl',
     license='LICENSE.txt',
-    description='Data manipulation tool (ETL)',
-    long_description="CubETL is a data manipulation tool (also known as ETL for Extract, Transform and Load). It allows data processing flows to be defined on a configuration file. It can access and store files, databases, HTTP, FTP, SFTP resources and is extensible and scriptable.",
+    description='Data manipulation (ETL) tool and library',
+    long_description="CubETL is a framework and related tools for data ETL (Extract, Transform and Load). It allows data processing flows to be defined on a configuration file. It can access and store files, databases, HTTP, FTP, SFTP resources and is extensible and scriptable.",
 
     classifiers = [
         'Development Status :: 3 - Alpha',
@@ -40,5 +42,7 @@ setup(
         "sqlalchemy >= 0.7.9",
         "fs >= 0.3.0"
     ],
+
+    entry_points={'console_scripts': ['cubetl=cubetl.core.bootstrap:main']},
 )
 
