@@ -26,22 +26,21 @@ Features:
   * Star-schema generation and data loading
   * SQL-to-OLAP schema generator
   * Cubes OLAP Server model export
-* Support for text templating, GeoIP, network queries
+  * SDMX and PC-Axis support
+* Support for text templating, GeoIP, network queries.
 * Insert / upsert for memory and SQL tables and OLAP entities.
 * Extensible
 * Caching
 
-See the complete [CubETL component list]().
-
-**Note**: This project is in alpha stage and is tested in few environments. You will hit issues:
-please use the issue tracker for bugs, questions, suggestions and contributions.
+**Note**: This project is in alpha stage and is tested in few environments. Documentation
+is incomplete. You will hit issues. Please use the issue tracker for bugs, questions,
+suggestions and contributions.
 
 
 Download / Install
 ------------------
 
-While CubETL is in development, no *pip* packages are provided:
-
+While CubETL is in development, no *pip* packages are provided.
 In your target environment (requires Python 3.5+):
 
     git clone https://github.com/jjmontesl/cubetl.git
@@ -95,7 +94,7 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
     # Run cubes server (in background with &)
     slicer serve mydb.cubes-config.ini &
 
-    # Runs a local cubesviewer HTTP server and opens a browser
+    # Run a local cubesviewer HTTP server (also opens a browser)
     cvutils cv
 
 This will open a browser pointing to a local CubesViewer instance pointing to the
@@ -141,7 +140,7 @@ Example ETL processes included with the project:
   * [PCAxis to SQL OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/pcaxis)
   * Querying a SQL database and exporting to CSV
   * Wikipedia huge XML load
-  * Importing SDMX data
+  * Importing SDMX schema and data
   * HTML scraping
 
 To run these examples you'll need the *examples* directory of the *cubetl* project, which
@@ -172,18 +171,21 @@ See the examples/python to see a full working example.
 Documentation
 =============
 
-* Quick Start (cubetl and cubeutil)
-
 * Usage
-  * Introduction and basics (components and nodes)
+  * Overview
   * Creating and running ETL processes
-  * Running CubETL
-  * Running from Python
-  * Configuration files
+  * Configuration files (include, library...)
   * Process flow
   * Expressions (message, context, ternary operator...)
 
-* Component Reference
+* Library
+  * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
+  * [Geo](https://github.com/jjmontesl/cubetl/blob/master/library/geo.py)
+  * [Net](https://github.com/jjmontesl/cubetl/blob/master/library/net.py)
+  * [HTTP](https://github.com/jjmontesl/cubetl/blob/master/library/http.py)
+  * [Person](https://github.com/jjmontesl/cubetl/blob/master/library/person.py)
+
+* [Components](https://github.com/jjmontesl/cubetl/tree/master/doc)
 
 
 Support

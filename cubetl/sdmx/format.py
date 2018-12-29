@@ -89,7 +89,6 @@ class SDMXDSD(object):
 class SDMXData(object):
 
     def __init__(self, path_dsd, path_sdmx):
-
         self.path_dsd = path_dsd
         self.path_sdmx = path_sdmx
 
@@ -124,8 +123,8 @@ class SDMXData(object):
                 fact = {}
                 for dimension_key, dimension in dsd.data['dimensions'].items():
                     attr_value = series.attrib[dimension_key]
-                    fact[dimension_key + "_code"] = unicode(attr_value)
-                    fact[dimension_key + "_label"] = unicode(dimension['codelist']['codes'][attr_value]["label"])
+                    fact[dimension_key + "_code"] = attr_value
+                    fact[dimension_key + "_label"] = dimension['codelist']['codes'][attr_value]["label"]
 
                 fact2 = copy.copy(fact)
 
@@ -135,17 +134,18 @@ class SDMXData(object):
 
                     for dimension_key, dimension in dsd.data['timedimensions'].items():
                         attr_value = obs.attrib[dimension_key]
-                        fact2[dimension_key] = unicode(attr_value)
+                        fact2[dimension_key] = attr_value
 
                     for measure_key, measure in dsd.data['measures'].items():
                         try:
                             attr_value = obs.attrib[measure_key]
                             fact2[measure_key] = attr_value
                         except KeyError as e:
-                            logger.debug("SDMX observation without value. Discarding fact.")
+                            logger.debug("SDMX observation without value. Discarding cell.")
                             valid = False
 
-                    if valid: yield fact2
+                    if valid:
+                        yield fact2
 
         ctx.comp.finalize(self._xmlPullParser)
 

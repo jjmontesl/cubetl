@@ -5,7 +5,8 @@ CLOC=cloc
 BASE_DIR=.
 BUILD_DIR=$(BASE_DIR)/build
 
-VERSION=$(shell cat VERSION.txt)
+#VERSION=$(shell cat VERSION.txt)
+VERSION=$(shell grep '^APP_VERSION = ' $(BASE_DIR)/cubetl/__init__.py | sed -E 's/^APP_VERSION = \"(.*)\"/\1/' )
 
 
 .PHONY: doc
@@ -21,7 +22,8 @@ doc-package:
 
 .PHONY: loc
 loc:
-	cloc cubetl/ bin/ library/ examples/ tests/ # --exclude-dir=cubetl/xxx
+	@echo LOC: $(VERSION)
+	cloc cubetl/ library/ examples/ tests/ --exclude-dir=examples/sdmx/data
 
 .PHONY: clean
 clean:
@@ -31,7 +33,7 @@ clean:
 
 .PHONY: test
 test:
-	echo Testing: $(VERSION)
+	@echo Testing: $(VERSION)
 	. $(VIRTUALENV_ACTIVATE) && cd tests && pytest .
 
 .PHONY: build

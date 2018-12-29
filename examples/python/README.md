@@ -12,7 +12,7 @@ You can run this example using:
 This process is a simple example that iterates from 1 to 10. You should see
 a message generated for each number.
 
-** Code explained **
+## Code
 
 In order to run a CubETL process you need a CubETL context.
 
@@ -30,6 +30,8 @@ files:
 
     # Add CubETL process components
     cubetl_config(ctx)
+
+Finally, you can launch an ETL process by running your start node:
 
     # Launch process
     result = ctx.run("my_app.process")

@@ -36,6 +36,8 @@ develop-eggs
 *.sqlite3
 *.model.json
 *.slicer.ini
+*.cubes-model.json
+*.cubes-config.ini
 
 *~
 

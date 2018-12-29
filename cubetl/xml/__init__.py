@@ -30,7 +30,7 @@ class XmlPullParser(Node):
                     doc.expandNode(node)
 
                     m2 = ctx.copy_message(m)
-                    xmltext = node.toxml().encode('utf-8')
+                    xmltext = node.toxml()  #.encode('utf-8')
                     xmltext = "<root>" + xmltext + "</root>"
                     parser = etree.XMLParser(recover=True, encoding="utf-8")
                     xml = etree.fromstring(xmltext, parser=parser)

@@ -39,12 +39,15 @@ logger = logging.getLogger(__name__)
 class OlapEntity(Component):
     """
     """
-    def __init__(self, name, attributes=None, label=None, role=None, info=None, hierarchies=None):
+    def __init__(self, name, attributes=None, label=None, role=None, info=None,
+                 hierarchies=None, label_attribute=None, order_attribute=None):
         super().__init__()
         self.name = name
         self.label = label
-        self.role = None
+        self.role = role
         self.info = info
+        self.label_attribute = label_attribute
+        self.order_attribute = order_attribute
         self.key = None
         self.attributes = attributes or []
         self.hierarchies = hierarchies  # point to attributes

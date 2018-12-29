@@ -148,7 +148,11 @@ class Context():
         self.components[urn] = component
         return component
 
+    # TODO: Put value first
     def interpolate(self, m, value, data = {}):
+        """
+        Interpolates expressions `${ ... }` in a value.
+        """
 
         if value == None:
             return None
@@ -204,11 +208,11 @@ class Context():
                     logger.error('Error evaluating expression "%s" called from %s:\n%s' % (expr, caller_component, ("".join(traceback.format_exception_only(exc_type, exc_value)))))
                     raise
 
-                if ((pos>0) or (pos_end < len(result) - (len(dend)))):
+                if (pos > 0) or (pos_end < len(result) - (len(dend))):
                     result = result[0:pos] + str(res) + result[pos_end + (len(dend)):]
                     pos = result.find(dstart)
                 else:
-                    # Keep non-string types
+                    # Keep type of non-string types
                     result = res
                     pos = -2
 

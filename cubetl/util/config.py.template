@@ -79,7 +79,7 @@ def cubetl_config(ctx):
 
         ctx.get('cubetl.util.print'),
 
-        #olap.Store(entity=ctx.get('ine.census'),
+        #olap.Store(entity=ctx.get('{{ m['config_name'] }}.myfact'),
         #           mapper=ctx.get('olap2sql.olapmapper')),
 
         log.LogPerformance(),

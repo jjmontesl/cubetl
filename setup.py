@@ -41,7 +41,13 @@ setup(
         "repoze.lru >= 0.5.0",
         "sqlalchemy >= 0.7.9",
         "fs >= 0.3.0",
-        "Jinja2 >= 2.10"
+        "Jinja2 >= 2.10",
+        "pygments >= 2.3.1",
+        "simplejson >= 3.16.0",
+        "dateutils >= 0.6.6",
+        "python-slugify >= 1.2.6",
+        "lxml >= 4.2.5",
+        "chardet >= 3.0.4",
     ],
 
     entry_points={'console_scripts': ['cubetl=cubetl.core.bootstrap:main']},

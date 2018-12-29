@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Structure xmlns="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/message" xmlns:common="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/common" xmlns:compact="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/compact" xmlns:cross="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/cross" xmlns:generic="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/generic" xmlns:query="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/query" xmlns:structure="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/structure" xmlns:utility="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/utility" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.SDMX.org/resources/SDMXML/schemas/v2_0/message SDMXMessage.xsd">
+<Header>
+<ID>eip_ext1_DSD</ID>
+<Test>false</Test>
+<Truncated>false</Truncated>
+<Name xml:lang="en">eip_ext1_DSD</Name>
+<Prepared>2016-04-07T13:57:59</Prepared>
+<Sender id="EUROSTAT">
+<Name xml:lang="en">EUROSTAT</Name>
+</Sender>
+<Receiver id="XML">
+<Name xml:lang="en">XML File</Name>
+</Receiver>
+</Header>
+
+<CodeLists>
+<structure:CodeList id="CL_PARTNER" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">Geopolitical entity (partner)</structure:Name>
+<structure:Name xml:lang="de">Geopolitische Partnereinheit</structure:Name>
+<structure:Name xml:lang="fr">Entité géopolitique (partenaire)</structure:Name>
+<structure:Code value="INT_EU27">
+<structure:Description xml:lang="en">Intra-EU-27</structure:Description>
+<structure:Description xml:lang="de">Intra-EU-27</structure:Description>
+<structure:Description xml:lang="fr">Intra-UE-27</structure:Description>
+</structure:Code>
+<structure:Code value="EXT_EU27">
+<structure:Description xml:lang="en">Extra EU-27</structure:Description>
+<structure:Description xml:lang="de">Extra-EU-27</structure:Description>
+<structure:Description xml:lang="fr">Extra-UE-27</structure:Description>
+</structure:Code>
+<structure:Code value="TOTAL">
+<structure:Description xml:lang="en">Total</structure:Description>
+<structure:Description xml:lang="de">Insgesamt</structure:Description>
+<structure:Description xml:lang="fr">Total</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_UNIT" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">Unit of measure</structure:Name>
+<structure:Name xml:lang="de">Maßeinheit</structure:Name>
+<structure:Name xml:lang="fr">Unité de mesure</structure:Name>
+<structure:Code value="THS_EUR">
+<structure:Description xml:lang="en">Thousand euro</structure:Description>
+<structure:Description xml:lang="de">Tausend Euro</structure:Description>
+<structure:Description xml:lang="fr">Milliers d'euros</structure:Description>
+</structure:Code>
+<structure:Code value="PC">
+<structure:Description xml:lang="en">Percentage</structure:Description>
+<structure:Description xml:lang="de">Prozent</structure:Description>
+<structure:Description xml:lang="fr">Pourcentage</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_NACE_R2" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">Classification of economic activities - NACE Rev.2</structure:Name>
+<structure:Name xml:lang="de">Klassifikation der Wirtschaftszweige - NACE Rev.2</structure:Name>
+<structure:Name xml:lang="fr">Classification des activités économiques - NACE Rév.2</structure:Name>
+<structure:Code value="TOTAL">
+<structure:Description xml:lang="en">Total - All NACE activities</structure:Description>
+<structure:Description xml:lang="de">Insgesamt - Alle NACE-Wirtschaftszweige</structure:Description>
+<structure:Description xml:lang="fr">Total - Ensemble des activités NACE</structure:Description>
+</structure:Code>
+<structure:Code value="B-E">
+<structure:Description xml:lang="en">Industry (except construction)</structure:Description>
+<structure:Description xml:lang="de">Industrie (ohne Baugewerbe)</structure:Description>
+<structure:Description xml:lang="fr">Industrie (sauf construction)</structure:Description>
+</structure:Code>
+<structure:Code value="B">
+<structure:Description xml:lang="en">Mining and quarrying</structure:Description>
+<structure:Description xml:lang="de">Bergbau und Gewinnung von Steinen und Erden</structure:Description>
+<structure:Description xml:lang="fr">Industries extractives</structure:Description>
+</structure:Code>
+<structure:Code value="D">
+<structure:Description xml:lang="en">Electricity, gas, steam and air conditioning supply</structure:Description>
+<structure:Description xml:lang="de">Energieversorgung</structure:Description>
+<structure:Description xml:lang="fr">Production et distribution d'électricité, de gaz, de vapeur et d'air conditionné</structure:Description>
+</structure:Code>
+<structure:Code value="E">
+<structure:Description xml:lang="en">Water supply; sewerage, waste management and remediation activities</structure:Description>
+<structure:Description xml:lang="de">Wasserversorgung; Abwasser- und Abfallentsorgung und Beseitigung von Umweltverschmutzungen</structure:Description>
+<structure:Description xml:lang="fr">Production et distribution d'eau; assainissement, gestion des déchets et dépollution</structure:Description>
+</structure:Code>
+<structure:Code value="F">
+<structure:Description xml:lang="en">Construction</structure:Description>
+<structure:Description xml:lang="de">Baugewerbe/Bau</structure:Description>
+<structure:Description xml:lang="fr">Construction</structure:Description>
+</structure:Code>
+<structure:Code value="G">
+<structure:Description xml:lang="en">Wholesale and retail trade; repair of motor vehicles and motorcycles</structure:Description>
+<structure:Description xml:lang="de">Handel; Instandhaltung und Reparatur von Kraftfahrzeugen</structure:Description>
+<structure:Description xml:lang="fr">Commerce; réparation d'automobiles et de motocycles</structure:Description>
+</structure:Code>
+<structure:Code value="H">
+<structure:Description xml:lang="en">Transportation and storage</structure:Description>
+<structure:Description xml:lang="de">Verkehr und Lagerei</structure:Description>
+<structure:Description xml:lang="fr">Transports et entreposage</structure:Description>
+</structure:Code>
+<structure:Code value="J">
+<structure:Description xml:lang="en">Information and communication</structure:Description>
+<structure:Description xml:lang="de">Information und Kommunikation</structure:Description>
+<structure:Description xml:lang="fr">Information et communication</structure:Description>
+</structure:Code>
+<structure:Code value="L">
+<structure:Description xml:lang="en">Real estate activities</structure:Description>
+<structure:Description xml:lang="de">Grundstücks- und Wohnungswesen</structure:Description>
+<structure:Description xml:lang="fr">Activités immobilières</structure:Description>
+</structure:Code>
+<structure:Code value="M">
+<structure:Description xml:lang="en">Professional, scientific and technical activities</structure:Description>
+<structure:Description xml:lang="de">Erbringung von freiberuflichen, wissenschaftlichen und technischen Dienstleistungen</structure:Description>
+<structure:Description xml:lang="fr">Activités spécialisées, scientifiques et techniques</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_SIZECLAS" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">Size classes in number of employees</structure:Name>
+<structure:Name xml:lang="de">Größenklassen nach Anzahl der Arbeitnehmer</structure:Name>
+<structure:Name xml:lang="fr">Classes de taille en nombre de salariés </structure:Name>
+<structure:Code value="TOTAL">
+<structure:Description xml:lang="en">Total</structure:Description>
+<structure:Description xml:lang="de">Insgesamt</structure:Description>
+<structure:Description xml:lang="fr">Total</structure:Description>
+</structure:Code>
+<structure:Code value="LT10">
+<structure:Description xml:lang="en">Fewer than 10 employees</structure:Description>
+<structure:Description xml:lang="de">Weniger als 10 Arbeitnehmer</structure:Description>
+<structure:Description xml:lang="fr">Moins de 10 salariés</structure:Description>
+</structure:Code>
+<structure:Code value="10-49">
+<structure:Description xml:lang="en">From 10 to 49 employees</structure:Description>
+<structure:Description xml:lang="de">10 bis 49 Arbeitnehmer</structure:Description>
+<structure:Description xml:lang="fr">De 10 à 49 salariés</structure:Description>
+</structure:Code>
+<structure:Code value="50-249">
+<structure:Description xml:lang="en">From 50 to 249 employees</structure:Description>
+<structure:Description xml:lang="de">50 bis 249 Arbeitnehmer</structure:Description>
+<structure:Description xml:lang="fr">De 50 à 249 salariés</structure:Description>
+</structure:Code>
+<structure:Code value="GE250">
+<structure:Description xml:lang="en">250 employees or more</structure:Description>
+<structure:Description xml:lang="de">250 Arbeitnehmer und mehr</structure:Description>
+<structure:Description xml:lang="fr">250 salariés ou plus</structure:Description>
+</structure:Code>
+<structure:Code value="UNK">
+<structure:Description xml:lang="en">Unknown</structure:Description>
+<structure:Description xml:lang="de">Unbekannt</structure:Description>
+<structure:Description xml:lang="fr">Inconnu</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_INDIC_ET" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">External trade indicator</structure:Name>
+<structure:Name xml:lang="de">Indikator zum Außenhandel</structure:Name>
+<structure:Name xml:lang="fr">Indicateur du commerce extérieur</structure:Name>
+<structure:Code value="AVG_IMP_VAL">
+<structure:Description xml:lang="en">Average import value</structure:Description>
+<structure:Description xml:lang="de">Gemittelte Wert von Einfuhren</structure:Description>
+<structure:Description xml:lang="fr">Valeur moyenne des importations</structure:Description>
+</structure:Code>
+<structure:Code value="AVG_EXP_VAL">
+<structure:Description xml:lang="en">Average export value</structure:Description>
+<structure:Description xml:lang="de">Gemittelte Wert von Ausfuhren</structure:Description>
+<structure:Description xml:lang="fr">Valeur moyenne des exportations</structure:Description>
+</structure:Code>
+<structure:Code value="IMP_VAL">
+<structure:Description xml:lang="en">Import value</structure:Description>
+<structure:Description xml:lang="de">Wert von Einfuhren </structure:Description>
+<structure:Description xml:lang="fr">Valeur des importations</structure:Description>
+</structure:Code>
+<structure:Code value="EXP_VAL">
+<structure:Description xml:lang="en">Export value</structure:Description>
+<structure:Description xml:lang="de">Wert von Ausfuhren</structure:Description>
+<structure:Description xml:lang="fr">Valeur des exportations</structure:Description>
+</structure:Code>
+<structure:Code value="PC_IMP_SZCL">
+<structure:Description xml:lang="en">Percentage of imports by sizeclas (%)</structure:Description>
+<structure:Description xml:lang="de">Einfuhranteil nach Größenklasse (%)</structure:Description>
+<structure:Description xml:lang="fr">Part des importations par classe de taille (%)</structure:Description>
+</structure:Code>
+<structure:Code value="PC_EXP_SZCL">
+<structure:Description xml:lang="en">Percentage of exports by sizeclas (%)</structure:Description>
+<structure:Description xml:lang="de">Ausfuhranteil nach Größenklasse (%)</structure:Description>
+<structure:Description xml:lang="fr">Part des exportations par classe de taille (%)</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_GEO" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">Geopolitical entity (reporting)</structure:Name>
+<structure:Name xml:lang="de">Geopolitische Meldeeinheit</structure:Name>
+<structure:Name xml:lang="fr">Entité géopolitique (déclarante)</structure:Name>
+<structure:Code value="BE">
+<structure:Description xml:lang="en">Belgium</structure:Description>
+<structure:Description xml:lang="de">Belgien</structure:Description>
+<structure:Description xml:lang="fr">Belgique</structure:Description>
+</structure:Code>
+<structure:Code value="BG">
+<structure:Description xml:lang="en">Bulgaria</structure:Description>
+<structure:Description xml:lang="de">Bulgarien</structure:Description>
+<structure:Description xml:lang="fr">Bulgarie</structure:Description>
+</structure:Code>
+<structure:Code value="CZ">
+<structure:Description xml:lang="en">Czech Republic</structure:Description>
+<structure:Description xml:lang="de">Tschechische Republik</structure:Description>
+<structure:Description xml:lang="fr">République tchèque</structure:Description>
+</structure:Code>
+<structure:Code value="DK">
+<structure:Description xml:lang="en">Denmark</structure:Description>
+<structure:Description xml:lang="de">Dänemark</structure:Description>
+<structure:Description xml:lang="fr">Danemark</structure:Description>
+</structure:Code>
+<structure:Code value="DE">
+<structure:Description xml:lang="en">Germany (until 1990 former territory of the FRG)</structure:Description>
+<structure:Description xml:lang="de">Deutschland (bis 1990 früheres Gebiet der BRD)</structure:Description>
+<structure:Description xml:lang="fr">Allemagne (jusqu'en 1990, ancien territoire de la RFA)</structure:Description>
+</structure:Code>
+<structure:Code value="EE">
+<structure:Description xml:lang="en">Estonia</structure:Description>
+<structure:Description xml:lang="de">Estland</structure:Description>
+<structure:Description xml:lang="fr">Estonie</structure:Description>
+</structure:Code>
+<structure:Code value="IE">
+<structure:Description xml:lang="en">Ireland</structure:Description>
+<structure:Description xml:lang="de">Irland</structure:Description>
+<structure:Description xml:lang="fr">Irlande</structure:Description>
+</structure:Code>
+<structure:Code value="EL">
+<structure:Description xml:lang="en">Greece</structure:Description>
+<structure:Description xml:lang="de">Griechenland</structure:Description>
+<structure:Description xml:lang="fr">Grèce</structure:Description>
+</structure:Code>
+<structure:Code value="ES">
+<structure:Description xml:lang="en">Spain</structure:Description>
+<structure:Description xml:lang="de">Spanien</structure:Description>
+<structure:Description xml:lang="fr">Espagne</structure:Description>
+</structure:Code>
+<structure:Code value="FR">
+<structure:Description xml:lang="en">France</structure:Description>
+<structure:Description xml:lang="de">Frankreich</structure:Description>
+<structure:Description xml:lang="fr">France</structure:Description>
+</structure:Code>
+<structure:Code value="HR">
+<structure:Description xml:lang="en">Croatia</structure:Description>
+<structure:Description xml:lang="de">Kroatien</structure:Description>
+<structure:Description xml:lang="fr">Croatie</structure:Description>
+</structure:Code>
+<structure:Code value="IT">
+<structure:Description xml:lang="en">Italy</structure:Description>
+<structure:Description xml:lang="de">Italien</structure:Description>
+<structure:Description xml:lang="fr">Italie</structure:Description>
+</structure:Code>
+<structure:Code value="CY">
+<structure:Description xml:lang="en">Cyprus</structure:Description>
+<structure:Description xml:lang="de">Zypern</structure:Description>
+<structure:Description xml:lang="fr">Chypre</structure:Description>
+</structure:Code>
+<structure:Code value="LV">
+<structure:Description xml:lang="en">Latvia</structure:Description>
+<structure:Description xml:lang="de">Lettland</structure:Description>
+<structure:Description xml:lang="fr">Lettonie</structure:Description>
+</structure:Code>
+<structure:Code value="LT">
+<structure:Description xml:lang="en">Lithuania</structure:Description>
+<structure:Description xml:lang="de">Litauen</structure:Description>
+<structure:Description xml:lang="fr">Lituanie</structure:Description>
+</structure:Code>
+<structure:Code value="LU">
+<structure:Description xml:lang="en">Luxembourg</structure:Description>
+<structure:Description xml:lang="de">Luxemburg</structure:Description>
+<structure:Description xml:lang="fr">Luxembourg</structure:Description>
+</structure:Code>
+<structure:Code value="HU">
+<structure:Description xml:lang="en">Hungary</structure:Description>
+<structure:Description xml:lang="de">Ungarn</structure:Description>
+<structure:Description xml:lang="fr">Hongrie</structure:Description>
+</structure:Code>
+<structure:Code value="MT">
+<structure:Description xml:lang="en">Malta</structure:Description>
+<structure:Description xml:lang="de">Malta</structure:Description>
+<structure:Description xml:lang="fr">Malte</structure:Description>
+</structure:Code>
+<structure:Code value="NL">
+<structure:Description xml:lang="en">Netherlands</structure:Description>
+<structure:Description xml:lang="de">Niederlande</structure:Description>
+<structure:Description xml:lang="fr">Pays-Bas</structure:Description>
+</structure:Code>
+<structure:Code value="AT">
+<structure:Description xml:lang="en">Austria</structure:Description>
+<structure:Description xml:lang="de">Österreich</structure:Description>
+<structure:Description xml:lang="fr">Autriche</structure:Description>
+</structure:Code>
+<structure:Code value="PL">
+<structure:Description xml:lang="en">Poland</structure:Description>
+<structure:Description xml:lang="de">Polen</structure:Description>
+<structure:Description xml:lang="fr">Pologne</structure:Description>
+</structure:Code>
+<structure:Code value="PT">
+<structure:Description xml:lang="en">Portugal</structure:Description>
+<structure:Description xml:lang="de">Portugal</structure:Description>
+<structure:Description xml:lang="fr">Portugal</structure:Description>
+</structure:Code>
+<structure:Code value="RO">
+<structure:Description xml:lang="en">Romania</structure:Description>
+<structure:Description xml:lang="de">Rumänien</structure:Description>
+<structure:Description xml:lang="fr">Roumanie</structure:Description>
+</structure:Code>
+<structure:Code value="SI">
+<structure:Description xml:lang="en">Slovenia</structure:Description>
+<structure:Description xml:lang="de">Slowenien</structure:Description>
+<structure:Description xml:lang="fr">Slovénie</structure:Description>
+</structure:Code>
+<structure:Code value="SK">
+<structure:Description xml:lang="en">Slovakia</structure:Description>
+<structure:Description xml:lang="de">Slowakei</structure:Description>
+<structure:Description xml:lang="fr">Slovaquie</structure:Description>
+</structure:Code>
+<structure:Code value="FI">
+<structure:Description xml:lang="en">Finland</structure:Description>
+<structure:Description xml:lang="de">Finnland</structure:Description>
+<structure:Description xml:lang="fr">Finlande</structure:Description>
+</structure:Code>
+<structure:Code value="SE">
+<structure:Description xml:lang="en">Sweden</structure:Description>
+<structure:Description xml:lang="de">Schweden</structure:Description>
+<structure:Description xml:lang="fr">Suède</structure:Description>
+</structure:Code>
+<structure:Code value="UK">
+<structure:Description xml:lang="en">United Kingdom</structure:Description>
+<structure:Description xml:lang="de">Vereinigtes Königreich</structure:Description>
+<structure:Description xml:lang="fr">Royaume-Uni</structure:Description>
+</structure:Code>
+<structure:Code value="NO">
+<structure:Description xml:lang="en">Norway</structure:Description>
+<structure:Description xml:lang="de">Norwegen</structure:Description>
+<structure:Description xml:lang="fr">Norvège</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_TIME_FORMAT" agencyID="SDMX" isFinal="true">
+<structure:Name xml:lang="en">Time Format</structure:Name>
+<structure:Code value="P1Y">
+<structure:Description xml:lang="en">Annual</structure:Description>
+</structure:Code>
+<structure:Code value="P6M">
+<structure:Description xml:lang="en">Semi-annual</structure:Description>
+</structure:Code>
+<structure:Code value="P3M">
+<structure:Description xml:lang="en">Quarterly</structure:Description>
+</structure:Code>
+<structure:Code value="P1M">
+<structure:Description xml:lang="en">Monthly</structure:Description>
+</structure:Code>
+<structure:Code value="P7D">
+<structure:Description xml:lang="en">Weekly</structure:Description>
+</structure:Code>
+<structure:Code value="P1D">
+<structure:Description xml:lang="en">Daily</structure:Description>
+</structure:Code>
+<structure:Code value="PT1M">
+<structure:Description xml:lang="en">Minutely</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_FREQ" agencyID="SDMX" isFinal="true">
+<structure:Name xml:lang="en">Frequency code list</structure:Name>
+<structure:Code value="A">
+<structure:Description xml:lang="en">Annual</structure:Description>
+</structure:Code>
+<structure:Code value="S">
+<structure:Description xml:lang="en">Half-yearly, semester</structure:Description>
+</structure:Code>
+<structure:Code value="Q">
+<structure:Description xml:lang="en">Quarterly</structure:Description>
+</structure:Code>
+<structure:Code value="M">
+<structure:Description xml:lang="en">Monthly</structure:Description>
+</structure:Code>
+<structure:Code value="W">
+<structure:Description xml:lang="en">Weekly</structure:Description>
+</structure:Code>
+<structure:Code value="B">
+<structure:Description xml:lang="en">Business week</structure:Description>
+</structure:Code>
+<structure:Code value="D">
+<structure:Description xml:lang="en">Daily</structure:Description>
+</structure:Code>
+<structure:Code value="H">
+<structure:Description xml:lang="en">Hourly</structure:Description>
+</structure:Code>
+<structure:Code value="N">
+<structure:Description xml:lang="en">Minutely</structure:Description>
+</structure:Code>
+</structure:CodeList>
+<structure:CodeList id="CL_OBS_STATUS" agencyID="EUROSTAT" isFinal="true">
+<structure:Name xml:lang="en">Observation status code list</structure:Name>
+<structure:Code value="b">
+<structure:Description xml:lang="en">break in time series</structure:Description>
+<structure:Description xml:lang="de">Zeitreihenbruch</structure:Description>
+<structure:Description xml:lang="fr">rupture de série</structure:Description>
+</structure:Code>
+<structure:Code value="c">
+<structure:Description xml:lang="en">confidential</structure:Description>
+<structure:Description xml:lang="de">vertraulich</structure:Description>
+<structure:Description xml:lang="fr">confidentiel</structure:Description>
+</structure:Code>
+<structure:Code value="d">
+<structure:Description xml:lang="en">definition differs (see metadata)</structure:Description>
+<structure:Description xml:lang="de">abweichende Definition (siehe Metadaten)</structure:Description>
+<structure:Description xml:lang="fr">définition différente (voir métadonnées)</structure:Description>
+</structure:Code>
+<structure:Code value="e">
+<structure:Description xml:lang="en">estimated</structure:Description>
+<structure:Description xml:lang="de">geschätzt</structure:Description>
+<structure:Description xml:lang="fr">estimé</structure:Description>
+</structure:Code>
+<structure:Code value="f">
+<structure:Description xml:lang="en">forecast</structure:Description>
+<structure:Description xml:lang="de">Prognose</structure:Description>
+<structure:Description xml:lang="fr">prévision</structure:Description>
+</structure:Code>
+<structure:Code value="i">
+<structure:Description xml:lang="en">see metadata (phased out)</structure:Description>
+<structure:Description xml:lang="de">siehe Metadaten (in Zukunft nicht mehr verwendet)</structure:Description>
+<structure:Description xml:lang="fr">voir métadonnées (bientôt supprimé)</structure:Description>
+</structure:Code>
+<structure:Code value="n">
+<structure:Description xml:lang="en">not significant</structure:Description>
+<structure:Description xml:lang="de">unbedeutend</structure:Description>
+<structure:Description xml:lang="fr">non significatif</structure:Description>
+</structure:Code>
+<structure:Code value="p">
+<structure:Description xml:lang="en">provisional</structure:Description>
+<structure:Description xml:lang="de">vorläufig</structure:Description>
+<structure:Description xml:lang="fr">provisoire</structure:Description>
+</structure:Code>
+<structure:Code value="r">
+<structure:Description xml:lang="en">revised</structure:Description>
+<structure:Description xml:lang="de">revidiert</structure:Description>
+<structure:Description xml:lang="fr">révisé</structure:Description>
+</structure:Code>
+<structure:Code value="s">
+<structure:Description xml:lang="en">Eurostat estimate (phased out)</structure:Description>
+<structure:Description xml:lang="de">Eurostat Schätzung (in Zukunft nicht mehr verwendet)</structure:Description>
+<structure:Description xml:lang="fr">estimation Eurostat (cet attribut sera bientôt supprimé)</structure:Description>
+</structure:Code>
+<structure:Code value="u">
+<structure:Description xml:lang="en">low reliability</structure:Description>
+<structure:Description xml:lang="de">geringe Zuverlässigkeit</structure:Description>
+<structure:Description xml:lang="fr">peu fiable</structure:Description>
+</structure:Code>
+<structure:Code value="z">
+<structure:Description xml:lang="en">not applicable</structure:Description>
+<structure:Description xml:lang="de">nicht zutreffend</structure:Description>
+<structure:Description xml:lang="fr">non applicable</structure:Description>
+</structure:Code>
+</structure:CodeList>
+</CodeLists>
+
+<Concepts>
+<structure:ConceptScheme agencyID="EUROSTAT" id="CONCEPTS" isFinal="true">
+<structure:Name xml:lang="en">Concepts</structure:Name>
+<structure:Concept id="FREQ"><structure:Name xml:lang="en">Frequency</structure:Name>
+</structure:Concept>
+<structure:Concept id="partner"><structure:Name xml:lang="en">Geopolitical entity (partner)</structure:Name>
+<structure:Name xml:lang="de">Geopolitische Partnereinheit</structure:Name>
+<structure:Name xml:lang="fr">Entité géopolitique (partenaire)</structure:Name>
+</structure:Concept>
+<structure:Concept id="unit"><structure:Name xml:lang="en">Unit of measure</structure:Name>
+<structure:Name xml:lang="de">Maßeinheit</structure:Name>
+<structure:Name xml:lang="fr">Unité de mesure</structure:Name>
+</structure:Concept>
+<structure:Concept id="nace_r2"><structure:Name xml:lang="en">Classification of economic activities - NACE Rev.2</structure:Name>
+<structure:Name xml:lang="de">Klassifikation der Wirtschaftszweige - NACE Rev.2</structure:Name>
+<structure:Name xml:lang="fr">Classification des activités économiques - NACE Rév.2</structure:Name>
+</structure:Concept>
+<structure:Concept id="sizeclas"><structure:Name xml:lang="en">Size classes in number of employees</structure:Name>
+<structure:Name xml:lang="de">Größenklassen nach Anzahl der Arbeitnehmer</structure:Name>
+<structure:Name xml:lang="fr">Classes de taille en nombre de salariés </structure:Name>
+</structure:Concept>
+<structure:Concept id="indic_et"><structure:Name xml:lang="en">External trade indicator</structure:Name>
+<structure:Name xml:lang="de">Indikator zum Außenhandel</structure:Name>
+<structure:Name xml:lang="fr">Indicateur du commerce extérieur</structure:Name>
+</structure:Concept>
+<structure:Concept id="geo"><structure:Name xml:lang="en">Geopolitical entity (reporting)</structure:Name>
+<structure:Name xml:lang="de">Geopolitische Meldeeinheit</structure:Name>
+<structure:Name xml:lang="fr">Entité géopolitique (déclarante)</structure:Name>
+</structure:Concept>
+<structure:Concept id="TIME_PERIOD"><structure:Name xml:lang="en">Time period or range</structure:Name>
+</structure:Concept>
+<structure:Concept id="OBS_VALUE"><structure:Name xml:lang="en">Observation Value</structure:Name>
+</structure:Concept>
+<structure:Concept id="OBS_STATUS"><structure:Name xml:lang="en">Observation Status</structure:Name>
+</structure:Concept>
+<structure:Concept id="TIME_FORMAT"><structure:Name xml:lang="en">Time Format</structure:Name>
+</structure:Concept>
+</structure:ConceptScheme>
+</Concepts>
+
+<KeyFamilies>
+<structure:KeyFamily id="eip_ext1_DSD" agencyID="EUROSTAT" isFinal="true" isExternalReference="false"><structure:Name xml:lang="en">eip_ext1_DSD</structure:Name>
+
+<structure:Components>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="FREQ" codelistAgency="SDMX" codelist="CL_FREQ" isFrequencyDimension="true"/>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="partner" codelistAgency="ESTAT" codelist="CL_PARTNER" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="true" crossSectionalAttachObservation="false"></structure:Dimension>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="unit" codelistAgency="ESTAT" codelist="CL_UNIT" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="true" crossSectionalAttachObservation="false"></structure:Dimension>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="nace_r2" codelistAgency="ESTAT" codelist="CL_NACE_R2" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="true" crossSectionalAttachObservation="false"></structure:Dimension>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="sizeclas" codelistAgency="ESTAT" codelist="CL_SIZECLAS" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="true" crossSectionalAttachObservation="false"></structure:Dimension>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="indic_et" codelistAgency="ESTAT" codelist="CL_INDIC_ET" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="true" crossSectionalAttachObservation="false"></structure:Dimension>
+<structure:Dimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="geo" codelistAgency="ESTAT" codelist="CL_GEO" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="true" crossSectionalAttachObservation="false"></structure:Dimension>
+<structure:TimeDimension conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="TIME_PERIOD"><structure:TextFormat textType="String"></structure:TextFormat>
+</structure:TimeDimension>
+<structure:PrimaryMeasure conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="OBS_VALUE">
+<structure:TextFormat textType="Double"></structure:TextFormat>
+</structure:PrimaryMeasure>
+
+<structure:Attribute conceptRef="TIME_FORMAT" conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" codelistAgency="SDMX" codelist="CL_TIME_FORMAT" attachmentLevel="Series" assignmentStatus="Mandatory"></structure:Attribute>
+<structure:Attribute conceptSchemeRef="CONCEPTS" conceptSchemeAgency="EUROSTAT" conceptRef="OBS_STATUS" codelistAgency="EUROSTAT" codelist="CL_OBS_STATUS" attachmentLevel="Observation" assignmentStatus="Conditional" crossSectionalAttachDataSet="false" crossSectionalAttachGroup="false" crossSectionalAttachSection="false" crossSectionalAttachObservation="true"><structure:TextFormat textType="String"></structure:TextFormat>
+</structure:Attribute>
+</structure:Components>
+</structure:KeyFamily>
+</KeyFamilies>
+
+</Structure>

@@ -52,8 +52,8 @@ def cubetl_config(ctx):
 
         # Generate a Cubes model
         cubes10.Cubes10ModelWriter(olapmapper=ctx.get('olap2sql.olapmapper'),
-                                   model_path="loganalyzer.model.json",
-                                   model_path="loganalyzer.config.ini"),
+                                   model_path="loganalyzer.cubes-model.json",
+                                   config_path="loganalyzer.cubes-config.ini"),
         script.Delete(['cubesmodel', 'cubesmodel_json']),
 
         sql.Transaction(connection=ctx.get('loganalyzer.sql.connection')),

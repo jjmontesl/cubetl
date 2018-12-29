@@ -213,7 +213,8 @@ class Bootstrap:
                 description="List available CubETL nodes (same as: cubetl -l).")
         ctx.add('cubetl.config.new', config.CreateTemplateConfig(
             config_name="${ ctx.props.get('config.name', 'myproject') }",
-            config_path="${ ctx.props.get('config.path', ctx.props.get('config.name') + '.py') }"))
+            config_path="${ ctx.props.get('config.path', ctx.props.get('config.name', 'myproject') + '.py') }"),
+            description="Creates a cubetl blank configuration file from a template.")
         ctx.add('cubetl.util.print', util.PrettyPrint(),
                 description="Prints the current message.")
 

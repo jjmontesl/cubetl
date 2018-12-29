@@ -1,17 +1,37 @@
-import logging
+# CubETL
+# Copyright (c) 2013-2019 Jose Juan Montes
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from pygments.lexers.data import JsonLexer
 import json
-from cubetl.core import Node
-from cubetl.olap import HierarchyDimension, Fact, \
-    Dimension
-from pygments.formatters.terminal import TerminalFormatter
-from pygments import highlight
-from pygments.lexers.web import JsonLexer, JavascriptLexer
-from cubetl.util import PrettyPrint, Print
-from cubetl.core.exceptions import ETLConfigurationException
-from cubetl import olap
-import sys
-from cubetl.template.jinja import JinjaTemplateRenderer
+import logging
 import os
+import sys
+
+from cubetl import olap
+from cubetl.core import Node
+from cubetl.core.exceptions import ETLConfigurationException
+from cubetl.olap import Fact, Dimension
+from cubetl.template.jinja import JinjaTemplateRenderer
+from cubetl.util import Print
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -24,15 +44,16 @@ class Cubes10ModelWriter(Node):
     to run a server that can serve OLAP queries for such model.
 
     Note that, since Cubes does not support nested dimensions, the model is
-    'flattened' so it can be managed by Cubes.
+    'expanded' so it can be managed by Cubes.
     """
 
-    def __init__(self, olapmapper, model_path=None, config_path=None):
+    def __init__(self, olapmapper, model_path=None, config_path=None, add_data=False):
         super().__init__()
         self.olapmapper = olapmapper
         self.model_path = model_path
         self.config_path = config_path
         self.ignore_serialize_errors = False
+        self.add_data = add_data
 
         self._print = None
         self._template_renderer = None
@@ -48,7 +69,7 @@ class Cubes10ModelWriter(Node):
         self._print.depth = None
         self._print.truncate_line = None
         self._print._lexer = JsonLexer()
-        self._print.eval = '${ m["cubesmodel_json"] }'
+        #self._print.eval = '${ m["cubesmodel_json"] }'
         ctx.comp.initialize(self._print)
 
         config_path = ctx.interpolate(None, self.config_path)
@@ -73,23 +94,27 @@ class Cubes10ModelWriter(Node):
         self._exportolapmapper(ctx, model, self._olapmapper)
 
         # Prepare result
-        m["cubesmodel"] = model
-        m["cubesmodel_json"] = json.dumps(model,
-                                          indent=4,
-                                          sort_keys=True,
-                                          default=str if self.ignore_serialize_errors else None)
+        model_json = json.dumps(model,
+                                indent=4,
+                                sort_keys=True,
+                                default=str if self.ignore_serialize_errors else None)
+
+        # Add to message
+        if self.add_data:
+            m["cubesmodel"] = model
+            m["cubesmodel_json"] = model_json
 
         # Send to print node
         #print m["cubesmodel_json"]
-        res = ctx.comp.process(self._print, m)
-        for m in res:
+        res = ctx.comp.process(self._print, model_json)
+        for m2 in res:
             pass
 
         model_path = ctx.interpolate(m, self.model_path)
         if model_path:
             logger.info("Writing Cubes server model to: %s", model_path)
             with open(model_path, "w") as f:
-                f.write(m["cubesmodel_json"])
+                f.write(model_json)
 
         config_path = ctx.interpolate(None, self.config_path)
         if config_path:
@@ -97,12 +122,6 @@ class Cubes10ModelWriter(Node):
             config_text = self._template_renderer.render(ctx, {'model_path': model_path, 'db_url': self._olapmapper.mappers[0].sqltable.connection.url})
             with open(config_path, "w") as f:
                 f.write(config_text)
-
-
-        #print m["cubesmodel_json"]
-        #_python_lexer = JsonLexer()
-        #_terminal_formatter = TerminalFormatter()
-        #print highlight(m["cubesmodel_json"], _python_lexer, _terminal_formatter)
 
         yield m
 
@@ -120,26 +139,7 @@ class Cubes10ModelWriter(Node):
                       "alias": "_".join(join['alias'])}
             c_joins.append(c_join)
 
-            """
-            if (not isinstance(dimmapper, SQLEmbeddedDimensionMapper)):
-                if (ctx.debug2): logger.debug ("Exporting join for dimension %s for cube %s" % (dim.name, fact_mapper.fact.name))
-                join = {}
-                join["master"] = fact_mapper.table + "." + fieldmapping["column"]
-                join["detail"] = dimmapper.table + "." + dimmapper.pk(ctx)["column"]
-                join["alias"] = dimmapper.table
-                joins.append(join)
-            elif (isinstance(dimmapper, SQLFactDimensionMapper)):
-                if (ctx.debug2): logger.debug ("Exporting fact join for dimension %s for cube %s" % (dim.name, fact_mapper.fact.name))
-                join = {}
-                join["master"] = fact_mapper.table + "." + fieldmapping["column"]
-                join["detail"] = self.olapmapper.getFactMapper(dimmapper.dimension.fact).table + "." + self.olapmapper.getFactMapper(dimmapper.dimension.fact).pk(ctx)["column"]
-                join["alias"] = self.olapmapper.getFactMapper(dimmapper.dimension.fact).table
-                joins.append(join)
-
-                joins.extend(self._get_joins_recursively(ctx, self.olapmapper.getFactMapper(dimmapper.dimension.fact)))
-            """
-
-        # TODO: FIXME: Hack because Cubes 1.0 requires joins to be declared in reverse order of dependency
+        # Cubes 1.0 requires joins to be declared in reverse order of dependency
         c_joins.reverse()
 
         return c_joins
@@ -192,84 +192,6 @@ class Cubes10ModelWriter(Node):
             except:
                 logger.error("Cannot export mapping: %s", mapping)
                 raise
-
-        '''
-
-        if (isinstance(mapper, FactMapper)):
-
-            for dim in mapper.entity.dimensions:
-                if isinstance(dim, AliasDimension):
-                    # For AliasDimensions, the table is aliased
-                    # TODO: this should come from OlapMapper, and not here ? (olapmapper will also need to expand mappings recursively)
-
-                    dim_mapper = mapper.olapmapper.entity_mapper(dim.dimension)
-                    sub_mappings = self._get_cube_mappings_recursively(ctx, dim_mapper, base_mapper, mapper)
-
-                    print(dim.dimension)
-
-                    for sm in sub_mappings.items():
-                        # Account for "extracted" fields, that return a dictionary:
-                        key = parent_mapper.entity.name + "." + sm[1].split(".")[1]
-                        if isinstance(sm[1], dict):
-                            c_mappings[key] = {"column": mapper.entity.name + "." + sm[1]["column"].split(".")[1],
-                                               "extract": sm[1]["extract"]}
-                        else:
-                            c_mappings[key] = mapper.entity.name + "." + sm[1].split(".")[1]
-                else:
-                dim_mapper = mapper.olapmapper.entity_mapper(dim)
-                sub_mappings = self._get_cube_mappings(ctx, dim_mapper, base_mapper, mapper)
-                c_mappings.update(sub_mappings)
-
-        elif (isinstance(mapper, MultiTableHierarchyDimensionMapper)):
-            for dim in mapper.entity.levels:
-                dim_mapper = self.olapmapper.entity_mapper(dim, False)
-                sub_mappings = self._get_mappings(ctx, dim_mapper, base_mapper, mapper)
-                for k, v in sub_mappings.items():
-                    mapping_entityattribute = mapper.entity.name + "." + k.split(".")[1]
-                    if mapping_entityattribute in c_mappings:
-                        raise ETLConfigurationException("Attribute '%s' in %s is being mapped more than once. This can happen if the same column name is used by more than one levels in the hierarchy (hint: this happens often due to the same 'id' or 'names' attribute name being used by several dimensions in the hierarchy: use different names)." % (mapping_entityattribute, mapper))
-                    c_mappings[mapping_entityattribute] = v
-
-        elif (isinstance(mapper, EmbeddedDimensionMapper)):
-            mappings = mapper._mappings_join(ctx)
-            for mapping in mappings:
-                #if "extract" in mapping:
-                #    c_mappings[mapper.entity.name + "." + mapping["name"]] = {
-                #        "column": parent_mapper.table + "." + mapping["column"],
-                #        "extract": mapping["extract"]
-                #        }
-                #else:
-                    c_mappings[mapper.entity.name + "." + mapping.entity.name] = parent_mapper.sqltable.name + "." + mapping.sqlcolumn.name
-
-        elif (isinstance(mapper, DimensionMapper) or (isinstance(mapper, CompoundHierarchyDimensionMapper))):
-            mappings = mapper._mappings(ctx)
-            for mapping in mappings:
-                c_mappings[mapper.entity.name + "." + mapping.entity.name] = mapping.sqlcolumn.sqltable.name + "." + mapping.sqlcolumn.name
-        else:
-            raise Exception("Unknown mapper type for cubes export: %s" % mapper)
-
-        joins = mapper._joins(ctx, None)
-        mappings = mapper._mappings(ctx)
-
-        # TODO: Why is this section for? comment!
-        for mapping in mappings:
-            #if (mapping["entity"] == mapper.entity):
-            #    c_mappings[mapping["entity"].name + "." + mapping["name"]] = mapper.table + "." + mapping["column"]
-            if (mapping.entity not in [join['detail_entity'] for join in joins]):
-                c_mappings[mapping.entity.name + "." + mapping.sqlcolumn.name] = mapping.sqlcolumn.sqltable.name + "." + mapping.sqlcolumn.name
-            else:
-
-                dim_mapper = mapper.olapmapper.entity_mapper(mapping.entity)
-                sub_mappings = self._get_mappings(ctx, dim_mapper)
-
-                if (isinstance(dim_mapper, MultiTableHierarchyDimensionMapper)):
-                    # Enforce current entity (for hierarchies, this causes that all levels are
-                    # mapped for the current dimension, forcing them to have different attribute names)
-                    for k,v in sub_mappings.items():
-                        c_mappings[mapping["entity"].name + "." + k.split(".")[1]] = v
-                else:
-                    c_mappings.update(sub_mappings)
-        '''
 
         return c_mappings
 
@@ -372,12 +294,10 @@ class Cubes10ModelWriter(Node):
 
         level["name"] = entity.name
         level["label"] = entity.label
-        level["label_attribute"] = None
-        level["order_attribute"] = None
+        level["label_attribute"] = entity.label_attribute
+        level["order_attribute"] = entity.order_attribute
         level["attributes"] = []
         #level["key"] = entity.key.field.name if hasattr(entity.key, "field") else pk.entity.name
-        if hasattr(entity, 'order_attribute'):
-            level['order_attribute'] = entity.order_attribute
 
         for attribute in entity.attributes:
 
@@ -389,7 +309,6 @@ class Cubes10ModelWriter(Node):
 
             if isinstance(attribute, olap.Attribute) and level["label_attribute"] is None:
                 level["label_attribute"] = attribute.name
-                level["order_attribute"] = attribute.name
 
             # Cubesviewer dates
             if (entity.role == "year"):
@@ -405,6 +324,8 @@ class Cubes10ModelWriter(Node):
 
         #if level["label_attribute"] is None:
         #    level["label_attribute"] = pk.field.name if hasattr(pk, "field") else pk.entity.name
+        if level["order_attribute"] is None:
+            level["order_attribute"] = level["label_attribute"]
 
         return level
 
@@ -417,10 +338,6 @@ class Cubes10ModelWriter(Node):
         dim["name"] = alias_name or dimension.name
         dim["label"] = alias_label or dimension.label
         dim["levels"] = []
-
-        # Resolve aliased dimensions
-        #dimension = mapper.entity
-        #dimension_mapper = mapper.olapmapper.entity_mapper(dimension)
 
         # Attributes are levels
         if not dimension.hierarchies:
@@ -453,11 +370,14 @@ class Cubes10ModelWriter(Node):
                     dim["hierarchies"].append(chierarchy)
 
             # Add cubesviewer datefilter info
+            print(dimension)
+            print(dimension.role)
+
             if (dimension.role == "date"):
                 dim["role"] = "time"
                 dim["info"] = {
                     "cv-datefilter": True,
-                    "cv-datefilter-hierarchy": finest_hierarchy["name"]
+                    "cv-datefilter-hierarchy": finest_hierarchy.name
                 }
 
         return dim
@@ -472,5 +392,4 @@ class Cubes10ModelWriter(Node):
         for mapper in olapmapper.mappers:
             if isinstance(mapper.entity, Fact):
                 self._export_cube(ctx, model, mapper)
-
 

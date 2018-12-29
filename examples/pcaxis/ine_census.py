@@ -6,7 +6,6 @@
 
 
 import datetime
-import random
 
 from cubetl import text, flow, fs, script, olap, pcaxis, table
 from cubetl.cubes import cubes10
@@ -117,108 +116,26 @@ def cubetl_config(ctx):
                     ctx.get('cubetl.person.age_range')],
         measures=[olap.Measure(name='census', type='Integer', label="Population")]))  # TODO: Should not present avg/max/min
 
+
     # Generate a SQL star schema and mappings automatically
-    sqlschema.OlapSQLSchema.generate_star_schema_mapper(ctx,
-                                                        connection=ctx.get('ine.sql.connection'))
+    sqlschema.OlapSQLSchema.generate_star_schema_mapper(ctx, connection=ctx.get('ine.sql.connection'))
     ctx.get('olap2sql.olapmapper').entity_mapper(ctx.get('ine.census')).store_mode = TableMapper.STORE_MODE_INSERT
 
 
-    '''
-    !!python/object:cubetl.olap.OlapMapper
-    id: dp.ine.census.olapmapper
-    #include:
-    mappers:
-    - !!python/object:cubetl.olap.sql.CompoundHierarchyDimensionMapper
-      entity: !ref cubetl.datetime.datemonthly
-      table: datemonthly
-      connection: !ref dp.sql.connection
-      eval:
-      - name: _cubetl_datetime_date
-        value: ${ m['date'] }
-      mappings:
-      - !ref cubetl.datetime.mappings
-    - !!python/object:cubetl.olap.sql.DimensionMapper
-      entity: !ref dp.ine.autonomy
-      table: ine_autonomy
-      connection: !ref dp.sql.connection
-      lookup_cols: autonomy
-      mappings:
-      - name: autonomy_id
-        pk: True
-        type: AutoIncrement
-      - name: autonomy
-        value: ${ m["autonomy_name"] }
-    - !!python/object:cubetl.olap.sql.DimensionMapper
-      entity: !ref dp.ine.province
-      table: ine_province
-      connection: !ref dp.sql.connection
-      lookup_cols: province
-      mappings:
-      - name: province_id
-        pk: True
-        type: Integer
-        value: ${ m['province_id'] }
-      - name: province
-        value: ${ m['province_name'] }
-    - !!python/object:cubetl.olap.sql.MultiTableHierarchyDimensionMapper
-      entity: !ref dp.ine.autonomyprovince
-    - !!python/object:cubetl.olap.sql.DimensionMapper
-      entity: !ref dp.ine.nationality
-      table: ine_nationality
-      connection: !ref dp.sql.connection
-      lookup_cols: nationality
-      mappings:
-      - name: id
-        pk: True
-        type: AutoIncrement
-    - !!python/object:cubetl.olap.sql.DimensionMapper
-      entity: !ref dp.ine.age
-      table: ine_age
-      connection: !ref dp.sql.connection
-      lookup_cols: age
-      mappings:
-      - name: id
-        pk: True
-        type: AutoIncrement
-    - !!python/object:cubetl.olap.sql.DimensionMapper
-      entity: !ref dp.ine.genre
-      table: ine_genre
-      connection: !ref dp.sql.connection
-      lookup_cols: genre
-      mappings:
-      - name: id
-        pk: True
-        type: AutoIncrement
-    - !!python/object:cubetl.olap.sql.FactMapper
-      entity: !ref dp.ine.census
-      table: ine_census
-      connection: !ref dp.sql.connection
-      lookup_cols: datemonthly_id, autonomy_id, province_id, genre_id, nationality_id, age_id
-      store_mode: insert
-      auto_store:
-      - !ref cubetl.datetime.datemonthly
-      - !ref dp.ine.nationality
-      - !ref dp.ine.genre
-      - !ref dp.ine.age
-      mappings:
-      - name: id
-        pk: True
-        type: AutoIncrement
-    '''
-
+    # Define the data load process
     ctx.add('ine.process.census', flow.Chain(steps=[
 
-        ctx.get('cubetl.config.print'),
+        #ctx.get('cubetl.config.print'),
 
         # Generate a Cubes model
         cubes10.Cubes10ModelWriter(olapmapper=ctx.get('olap2sql.olapmapper'),
-                                   model_path="ine.model.json"),
-        #cubes10.Cubes10ModelWriter(config_path="ine.slicer.ini"),
+                                   model_path="ine.cubes-model.json",
+                                   config_path="ine.cubes-config.ini"),
         script.Delete(['cubesmodel', 'cubesmodel_json']),
 
         sql.Transaction(connection=ctx.get('ine.sql.connection')),
 
-        fs.FileReader(path='census-1971.px', encoding=None),
+        fs.FileReader(path='census-2002.px', encoding=None),
         pcaxis.PCAxisParser(),
 
         flow.Chain(fork=True, steps=[
@@ -227,9 +144,9 @@ def cubetl_config(ctx):
             script.Delete(['data', 'pcaxis']),
 
             flow.Filter(condition="${ m['Sexo'] != 'Ambos sexos' }"),
-            #flow.Filter(condition="${ m['Grupo quinquenal de edad'] != 'Total' }"),
-            flow.Filter(condition="${ m['Grupo de edad'] != 'Total' }"),
-            #flow.Filter(condition="${ m['Nacionalidad'] != 'Total' }"),
+            flow.Filter(condition="${ m['Grupo quinquenal de edad'] != 'Total' }"),
+            #flow.Filter(condition="${ m['Grupo de edad'] != 'Total' }"),
+            flow.Filter(condition="${ m['Nacionalidad'] != 'Total' }"),
             flow.Filter(condition="${ m['Provincias'] != 'Total Nacional' }"),
 
             #flow.Skip(skip="${ random.randint(1, 1000) }"),
@@ -245,12 +162,6 @@ def cubetl_config(ctx):
 
             ctx.get('cubetl.util.print'),
 
-            #olap.Store(entity=ctx.get('ine.autonomy'),
-            #           mapper=ctx.get('olap2sql.olapmapper')),
-            #olap.Store(entity=ctx.get('ine.province'),
-            #           mapper=ctx.get('olap2sql.olapmapper')),
-            #olap.Store(entity=ctx.get('ine.autonomyprovince'),
-            #           mapper=ctx.get('olap2sql.olapmapper')),
             olap.Store(entity=ctx.get('ine.census'),
                        mapper=ctx.get('olap2sql.olapmapper')),
 
@@ -284,10 +195,10 @@ def process_data(ctx, m):
     m['icon'] = None
 
     del(m['Provincias'])
-    #del(m['Nacionalidad'])
+    del(m['Nacionalidad'])
     del(m['Periodo'])
-    #del(m['Grupo quinquenal de edad'])
-    del(m['Grupo de edad'])
+    del(m['Grupo quinquenal de edad'])
+    #del(m['Grupo de edad'])
     del(m['Sexo'])
     del(m['value'])
 

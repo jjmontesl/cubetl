@@ -1,6 +1,22 @@
+# CubETL
+# Copyright (c) 2013-2019
+# See AUTHORS and LICENSE files for more information.
+
+# This file is part of the CubETL library.
+
+# This file is meant to be included from other CubETL configuration files,
+# it provides data types, schema and other objects.
+
 
 from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy,\
     DimensionAttribute
+
+
+'''
+CubETL Date and Time types library.
+
+This file provides OLAP dimensions for typical date and time dimensions and hierarchies.
+'''
 
 
 def cubetl_config(ctx):
@@ -49,7 +65,7 @@ def cubetl_config(ctx):
     ctx.add('cubetl.datetime.datemonthly', HierarchyDimension(
         name='datemonthly',
         label='Month',
-        role='datemonthly',
+        role='date',
         hierarchies=[Hierarchy(name='monthly', label='Monthly', levels=['year', 'quarter', 'month'])],
         attributes=[DimensionAttribute(dimension=ctx.get('cubetl.datetime.year')),
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.quarter')),
@@ -67,24 +83,3 @@ def cubetl_config(ctx):
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.day')),
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.week'))]))
 
-    '''
-    !!python/object:cubetl.core.Mappings
-    id: cubetl.datetime.mappings
-    mappings:
-    - name: id
-      value: ${ text.slugu(m["_cubetl_datetime_date"].strftime('%Y-%m-%d')) }
-      pk: True
-      type: String
-    - name: year
-      value: ${ m["_cubetl_datetime_date"].year }
-    - name: quarter
-      value: ${ int((m["_cubetl_datetime_date"].month - 1) / 3) + 1 }
-    - name: month
-      value: ${ m["_cubetl_datetime_date"].month }
-    - name: week
-      value: ${ int(m["_cubetl_datetime_date"].strftime('%W')) }
-    - name: day
-      value: ${ m["_cubetl_datetime_date"].day }
-    - name: dow
-      value: ${ m["_cubetl_datetime_date"].isoweekday() }
-    '''
