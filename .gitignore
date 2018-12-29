@@ -18,8 +18,9 @@ develop-eggs
 .pydevproject
 .settings
 
-*.sqlite
+.coverage
 
+*.sqlite
 
 /TODO.txt
 /ROADMAP
