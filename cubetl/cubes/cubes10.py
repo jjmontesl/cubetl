@@ -31,6 +31,7 @@ from cubetl.core.exceptions import ETLConfigurationException
 from cubetl.olap import Fact, Dimension
 from cubetl.template.jinja import JinjaTemplateRenderer
 from cubetl.util import Print
+from cubetl.sql.sql import Connection
 
 
 # Get an instance of a logger
@@ -91,7 +92,8 @@ class Cubes10ModelWriter(Node):
         model = {"dimensions": [],
                  "cubes": []}
 
-        self._exportolapmapper(ctx, model, self._olapmapper)
+        # FIXME: repeated parameter to track base mapper, elsewhere found from ctx,.. all olapmapper including incorrect
+        self._exportolapmapper(ctx, model, self._olapmapper, self._olapmapper)
 
         # Prepare result
         model_json = json.dumps(model,
@@ -118,19 +120,21 @@ class Cubes10ModelWriter(Node):
 
         config_path = ctx.interpolate(None, self.config_path)
         if config_path:
-            logger.info("Writing Cubes server config to: %s", config_path)
-            config_text = self._template_renderer.render(ctx, {'model_path': model_path, 'db_url': self._olapmapper.mappers[0].sqltable.connection.url})
-            with open(config_path, "w") as f:
-                f.write(config_text)
+            connection = ctx.find(Connection)
+            if connection:
+                logger.info("Writing Cubes server config to: %s", config_path)
+                config_text = self._template_renderer.render(ctx, {'model_path': model_path, 'db_url': connection[0].url})
+                with open(config_path, "w") as f:
+                    f.write(config_text)
 
         yield m
 
-    def _get_cube_joins(self, ctx, mapper):
+    def _get_cube_joins(self, ctx, olapmapper, mapper):
 
         c_joins = []
         for join in mapper.sql_joins(ctx, None):
 
-            master_table_aliased = mapper.olapmapper.entity_mapper(join["master_entity"]).sqltable.name
+            master_table_aliased = olapmapper.entity_mapper(join["master_entity"]).sqltable.name
             if len(join['alias']) > 1:
                 master_table_aliased = "_".join(join['alias'][:-1])
 
@@ -227,7 +231,7 @@ class Cubes10ModelWriter(Node):
 
         return result
 
-    def _export_cube(self, ctx, model, mapper):
+    def _export_cube(self, ctx, model, olapmapper, mapper):
 
         cubename = mapper.entity.name
         if (cubename in [cube["name"] for cube in model["cubes"]]): return
@@ -273,7 +277,7 @@ class Cubes10ModelWriter(Node):
         cube["aggregates"].append(c_aggregate)
 
         # Joins
-        cube["joins"] = self._get_cube_joins(ctx, mapper)
+        cube["joins"] = self._get_cube_joins(ctx, olapmapper, mapper)
 
         # Details
         cube["details"] = []
@@ -379,14 +383,14 @@ class Cubes10ModelWriter(Node):
 
         return dim
 
-    def _exportolapmapper(self, ctx, model, olapmapper):
+    def _exportolapmapper(self, ctx, model, basemapper, olapmapper):
 
         # Call includes
         for inc in olapmapper.include:
-            self._exportolapmapper(ctx, model, inc)
+            self._exportolapmapper(ctx, model, basemapper, inc)
 
         # Export mappers
         for mapper in olapmapper.mappers:
             if isinstance(mapper.entity, Fact):
-                self._export_cube(ctx, model, mapper)
+                self._export_cube(ctx, model, basemapper, mapper)
 

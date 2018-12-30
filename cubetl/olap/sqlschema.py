@@ -175,6 +175,7 @@ class SQLToOLAP(Node):
 
         facts = {}
         factdimensions = {}
+        olapmappers = []
 
         logger.info("Generating CubETL Olap schema from SQL schema.")
 
@@ -330,11 +331,12 @@ class SQLToOLAP(Node):
             '''
 
             if key_count > 1:
-                logger.warn("More than one Key found in table %s (not supported, ignoring table)")
+                logger.warn("More than one Key found in table %s (not supported, ignoring table)", sqltable.name)
                 continue
 
             mapper = olap.sql.TableMapper(entity=fact, sqltable=sqltable, mappings=factmappings)
             olapmapper.mappers.append(mapper)
+            olapmappers.append(olapmapper)
             #ctx.register(mapper)  #, uri='%s:fact' % ctx.uri(sqltable)
 
 
@@ -366,7 +368,6 @@ class SQLToOLAP(Node):
         '''
 
         olapmapper = olap.OlapMapper()
-        olapmappers = ctx.find(type=cubetl.olap.OlapMapper)
         olapmapper.include = [i for i in olapmappers]
         olapmapper_urn = "%s.olapmapper" % (prefix)
         ctx.add(olapmapper_urn, olapmapper)

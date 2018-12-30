@@ -375,8 +375,6 @@ class OlapMapper(Component):
         for incl in self.include:
             ctx.comp.initialize(incl)
         for mapper in self.mappers:
-            # TODO: FIXME: if we do this, mappers shall be "prototype", in case there are several references
-            mapper.olapmapper = self
             ctx.comp.initialize(mapper)
 
     def finalize(self, ctx):
@@ -405,7 +403,7 @@ class OlapMapper(Component):
                 return mapper
 
         if fail:
-            raise Exception("No OLAP mapper found for: %s" % entity)
+            raise Exception("No OLAP mapper found for: %s (mappers=%s, includes=%s)" % (entity, [e.entity.name for e in self.mappers], len(self.include)))
 
         return None
 

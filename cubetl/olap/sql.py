@@ -27,7 +27,7 @@ import sys
 from cubetl.core import Component, Node
 from cubetl.core.exceptions import ETLConfigurationException, ETLException
 from cubetl.olap import Measure, Key, HierarchyDimension, \
-    Dimension
+    Dimension, OlapMapper
 from cubetl.script import Eval
 from cubetl.sql.cache import CachedSQLTable
 from cubetl.sql.sql import SQLTable
@@ -121,8 +121,6 @@ class TableMapper(Component):
 
         self.lookup_cols = lookup_cols
 
-        self.olapmapper = None
-
         self.auto_store = None
         self.store_mode = TableMapper.STORE_MODE_LOOKUP
 
@@ -137,6 +135,9 @@ class TableMapper(Component):
             return super().__str__(*args, **kwargs)
 
     def sql_mappings(self, ctx):
+
+        olapmapper = ctx.find(OlapMapper)[0]
+
         # Return own mappings
         result = []
         for mapping in self.mappings:
@@ -152,7 +153,7 @@ class TableMapper(Component):
         # TODO: allow for a "publish: False" setting to avoid publishing dimensions recursively?
         for dimensionattribute in self.entity.get_dimensions():
             dimension = dimensionattribute.dimension
-            mapper = self.olapmapper.entity_mapper(dimension, fail=False)
+            mapper = olapmapper.entity_mapper(dimension, fail=False)
             if mapper:
                 dim_mappings = mapper.sql_mappings(ctx)
                 for mapping in dim_mappings:
@@ -175,11 +176,14 @@ class TableMapper(Component):
         """
         Joins related to this entity.
         """
+
+        olapmapper = ctx.find(OlapMapper)[0]
+
         joins = []
 
         for dim_attr in self.entity.get_dimensions():
             dim = dim_attr.dimension
-            dim_mapper = self.olapmapper.entity_mapper(dim, fail=False)
+            dim_mapper = olapmapper.entity_mapper(dim, fail=False)
             if dim_mapper:
                 entity_joins = dim_mapper.sql_joins(ctx, self.entity)
                 for join in entity_joins:
@@ -193,7 +197,7 @@ class TableMapper(Component):
         elif master is not None:
             # Search column name of the foreign key that references this primary key
             master_column_name = "<EXPORT ERROR>" #self.entity.name
-            for column in self.olapmapper.entity_mapper(master).sqltable.columns:
+            for column in olapmapper.entity_mapper(master).sqltable.columns:
                 if hasattr(column, "fk_sqlcolumn"):
                     if column.fk_sqlcolumn == pk.sqlcolumn:
                         master_column_name = column.name
@@ -201,8 +205,8 @@ class TableMapper(Component):
             joins.append({"alias": [],
                           "master_entity": master,
                           "master_column": master_column_name,
-                          "detail_entity": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.sqltable.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.sqltable.name,
-                          "detail_column": (self.olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.name,
+                          "detail_entity": (olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.sqltable.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.sqltable.name,
+                          "detail_column": (olapmapper.entity_mapper(self.entity.fact).pk(ctx).sqlcolumn.name) if (hasattr(self.entity, "fact")) else self.pk(ctx).sqlcolumn.name,
                           })
 
         return joins
@@ -332,6 +336,8 @@ class TableMapper(Component):
 
     def store(self, ctx, m):
 
+        olapmapper = ctx.find(OlapMapper)[0]
+
         # Resolve evals
         Eval.process_evals(ctx, m, self.eval)
 
@@ -339,7 +345,7 @@ class TableMapper(Component):
         if self.auto_store is not None:
             logger.debug("Storing automatically: %s" % (self.auto_store))
             for ast in self.auto_store:
-                did = self.olapmapper.entity_mapper(ast).store(ctx, m)
+                did = olapmapper.entity_mapper(ast).store(ctx, m)
                 # TODO: Review and use PK properly
                 m[ast.name + "_id"] = did
         else:
@@ -348,9 +354,9 @@ class TableMapper(Component):
                 logger.debug("Storing automatically: %s" % ([da.dimension.name for da in self.entity.get_dimensions()]))
                 for dim_attr in self.entity.get_dimensions():
                     dim = dim_attr.dimension
-                    mapper = self.olapmapper.entity_mapper(dim, False)
+                    mapper = olapmapper.entity_mapper(dim, False)
                     if mapper:
-                        did = self.olapmapper.entity_mapper(dim).store(ctx, m)
+                        did = mapper.store(ctx, m)
                         # FIXME: shall use the correct foreign key column according to mappings
                         m[dim.name + "_id"] = did
 
