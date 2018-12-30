@@ -17,10 +17,21 @@ def cubetl_config(ctx):
     ctx.add('cubetl.geo.country', Dimension(
         name='country',
         label='Country',
+        role="geo",
         info={'cv-flag-field': 'country_iso2',
               'cv-geo-ref-model-attribute': 'country_iso2',
               'cv-geo-ref-feature-attribute': 'iso_a2',
-              'cv-geo-ref-layer': 'world_countries'},
+              'cv-geo-ref-layer': 'countries',
+              'cv-geo-map-layers': [{
+                    "name": "countries",
+                    "type": "vector",
+                    "attribution": "&copy; NaturalEarth",
+                    "params": {
+                        "url": "maps/ne_110m_admin_0_countries.geo.json",
+                        "format": "geojson",
+                        "wrapX": True
+                    }
+                }]},
         attributes=[Attribute(name='country_iso2', type='String', label='Country Code'),
                     Attribute(name='country_name', type='String', label='Country')]))
 

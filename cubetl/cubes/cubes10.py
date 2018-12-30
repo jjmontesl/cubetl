@@ -301,6 +301,8 @@ class Cubes10ModelWriter(Node):
         level["label_attribute"] = entity.label_attribute
         level["order_attribute"] = entity.order_attribute
         level["attributes"] = []
+        if entity.info:
+            level["info"] = dict(entity.info)
         #level["key"] = entity.key.field.name if hasattr(entity.key, "field") else pk.entity.name
 
         for attribute in entity.attributes:
@@ -325,6 +327,8 @@ class Cubes10ModelWriter(Node):
                 level["role"] = "week"
             elif (entity.role == "day"):
                 level["role"] = "day"
+            elif (entity.role):
+                level["role"] = entity.role
 
         #if level["label_attribute"] is None:
         #    level["label_attribute"] = pk.field.name if hasattr(pk, "field") else pk.entity.name

@@ -2,13 +2,34 @@
 
 ## Directory listing
 
-This is a simple process that
+This is process that simply lists files in the CubETL library directory.
 
-    cubetl directorylist.py -l
+The config file is `directorylist.py`. First see the entry points using
+`cubetl directorylist.py -l`:
 
-The entry point is called `directorylist.process`, call `cubetl` to run it.
+    $ cubetl directorylist.py -l
+    2018-12-30 02:10:01,935 - INFO - Starting CubETL 1.1.0-beta
+    2018-12-30 02:10:01,936 - INFO - Including config file: directorylist.py
+    2018-12-30 02:10:01,958 - INFO - Processing ListConfig(cubetl.config.list)
+
+    List of nodes in CubETL configuration:
+      * cubetl.config.print  Prints current CubETL configuration.
+      * cubetl.config.list  List available CubETL nodes (same as: cubetl -l).
+      * cubetl.config.new  Creates a cubetl blank configuration file from a template.
+      * cubetl.util.print  Prints the current message.
+      * cubetl.sql.db2sql  Generate SQL schema from existing database.
+      * cubetl.olap.sql2olap  Generate OLAP schema from SQL schema.
+      * cubetl.cubes.olap2cubes  Generate OLAP schema from SQL schema.
+      * directorylist.process
+
+The entry point is the last one called `directorylist.process`,
+call `cubetl` to run it:
 
     cubetl directorylist.py directorylist.process
+
+This will produce a list of items (path entries), each of which will be printed to the output.
+Each item includes 4 fields: the file path, an identifier, the separate filename
+and a random number.
 
 Try running with `-d`. Logging is now more verbose. You may wish to use this option
 when debugging your own ETL processes:

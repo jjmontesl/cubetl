@@ -30,6 +30,13 @@ class TestExamples(object):
         # Launch process
         result = ctx.run("directorylist.process")
 
+    def test_db2olap(self, ctx, dir_examples):
+        # Include other configuration files
+        os.chdir(dir_examples + "/sql2olap")
+        # Launch process
+        raise NotImplemented("Test not implemented")
+        #result = ctx.run("process")
+
     def test_loganalyzer(self, ctx, dir_examples):
         # Include other configuration files
         os.chdir(dir_examples + "/loganalyzer")
