@@ -35,7 +35,7 @@ which silences print nodes:
 We now have a SQLite database. Run Cubes in order to serve
 analytical queries for this database:
 
-    # You may need to run: pip install cubes[all] click flask
+    pip install https://github.com/jjmontesl/cubes/archive/alias-issue.zip click flask --upgrade
     slicer serve loganalyzer.cubes-config.ini  &
 
 Note the `&` argument, which makes the process run in background. You could instead

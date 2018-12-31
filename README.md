@@ -98,7 +98,7 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
         -p olap2cubes.cubes_config=mydb.cubes-config.ini
 
     # Run cubes server (in background with &)
-    pip install cubes[all] click flask
+    pip install https://github.com/jjmontesl/cubes/archive/alias-issue.zip click flask --upgrade
     slicer serve mydb.cubes-config.ini &
 
     # Run a local cubesviewer HTTP server (also opens a browser)
