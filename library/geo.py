@@ -1,9 +1,23 @@
+# CubETL
+# Copyright (c) 2013-2019
+# See AUTHORS and LICENSE files for more information.
+
+# This file is part of the CubETL library.
+
+# This file is meant to be included from other CubETL configuration files,
+# it provides data types, schema and other objects.
 
 
-from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure,\
+from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, \
     DimensionAttribute
-from cubetl.text import RegExp
-from cubetl import table
+
+
+'''
+CubETL Geographic types library.
+
+This file provides OLAP dimensions for typical geographic dimensions and hierarchies,
+like "Continent > Country", and other common political subdivisions.
+'''
 
 
 def cubetl_config(ctx):

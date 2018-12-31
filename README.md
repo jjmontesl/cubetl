@@ -39,8 +39,8 @@ suggestions and contributions.
 Download / Install
 ------------------
 
-While CubETL is in development, no *pip* packages are provided.
-Using a virtualenv is recommended. In your target environment (requires Python 3.5+):
+While CubETL is in alpha no *pip* packages are provided, for now it must be installed
+using `python setup.py develop`. Using a virtualenv is recommended.
 
     git clone https://github.com/jjmontesl/cubetl.git
     cd cubetl
@@ -49,7 +49,7 @@ Using a virtualenv is recommended. In your target environment (requires Python 3
     python3 -m venv env
     . env/bin/activate
 
-    python setup.py install  # or: python setup.py develop
+    python setup.py develop
 
 Test:
 
@@ -185,7 +185,7 @@ Documentation
   * Creating and running ETL processes
   * Configuration files (include, library...)
   * Process flow
-  * Expressions (message, context, ternary operator...)
+  * Interpolated expressions
 
 * Library
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
@@ -194,7 +194,7 @@ Documentation
   * [HTTP](https://github.com/jjmontesl/cubetl/blob/master/library/http.py)
   * [Person](https://github.com/jjmontesl/cubetl/blob/master/library/person.py)
 
-* [Components](https://github.com/jjmontesl/cubetl/tree/master/doc)
+* [Components](https://github.com/jjmontesl/cubetl/tree/master/cubetl)
 
 
 Support

@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+
 from pygments.lexers.data import JsonLexer
 import json
 import logging
@@ -252,7 +253,7 @@ class Cubes10ModelWriter(Node):
             cube["dimensions"].append(mapped_dimension_name)
 
             if (mapped_dimension_name not in [dim["name"] for dim in model["dimensions"]]):
-                c_dim = self._export_dimension(ctx, model, mapped_dimension.entity, mapped_dimension_name, mapped_dimension.label)
+                c_dim = self._export_dimension(ctx, olapmapper, model, mapped_dimension.entity, mapped_dimension_name, mapped_dimension.label)
                 model["dimensions"].append(c_dim)
 
         # Add measures
@@ -291,7 +292,7 @@ class Cubes10ModelWriter(Node):
 
         model["cubes"].append(cube)
 
-    def _export_level(self, ctx, entity):
+    def _export_level(self, ctx, olapmapper, entity):
         level = {}
         logger.debug("Exporting level: %s" % entity)
 
@@ -302,7 +303,6 @@ class Cubes10ModelWriter(Node):
         level["attributes"] = []
         if entity.info:
             level["info"] = dict(entity.info)
-        #level["key"] = entity.key.field.name if hasattr(entity.key, "field") else pk.entity.name
 
         for attribute in entity.attributes:
 
@@ -334,9 +334,18 @@ class Cubes10ModelWriter(Node):
         if level["order_attribute"] is None:
             level["order_attribute"] = level["label_attribute"]
 
+        # Level key
+        if 'key' not in level:
+            mapper = olapmapper.entity_mapper(entity, fail=False)
+            if mapper:
+                pk = mapper.pk(ctx)
+                if pk:
+                    level["key"] = pk.sqlcolumn.name
+                    level["attributes"].insert(0, pk.sqlcolumn.name)
+
         return level
 
-    def _export_dimension(self, ctx, model, dimension, alias_name=None, alias_label=None):
+    def _export_dimension(self, ctx, olapmapper, model, dimension, alias_name=None, alias_label=None):
 
         logger.debug("Exporting dimension %s", dimension)
 
@@ -348,14 +357,14 @@ class Cubes10ModelWriter(Node):
 
         # Attributes are levels
         if not dimension.hierarchies:
-            c_lev = self._export_level(ctx, dimension)
+            c_lev = self._export_level(ctx, olapmapper, dimension)
             dim["levels"].append(c_lev)
         else:
 
             levels = []
             for level_attribute in dimension.get_dimensions():
                 level = level_attribute.dimension
-                c_lev = self._export_level(ctx, level)
+                c_lev = self._export_level(ctx, olapmapper, level)
                 #level_mapper = mapper.olapmapper.entity_mapper(level)
                 #c_lev = self._export_level(ctx, level_mapper)
                 dim["levels"].append(c_lev)
@@ -373,7 +382,7 @@ class Cubes10ModelWriter(Node):
                     # Define hierarchy
                     chierarchy = {"name": hierarchy.name,
                                   "label": hierarchy.label,
-                                  "levels": [ lev for lev in hierarchy.levels]}
+                                  "levels": [lev for lev in hierarchy.levels]}
                     dim["hierarchies"].append(chierarchy)
 
             # Add cubesviewer datefilter info

@@ -1,4 +1,6 @@
 
+# NOTE: THIS FILE IS NOT YET MIGRATED TO THE NEW CONFIG MECHANISM
+
 ---
 
 !include library/cubetl-datetime.yaml

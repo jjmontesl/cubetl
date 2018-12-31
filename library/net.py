@@ -7,16 +7,15 @@
 # This file is meant to be included from other CubETL configuration files,
 # it provides data types, schema and other objects.
 
+
 from cubetl.olap import Dimension, Key, Attribute, HierarchyDimension, Hierarchy, Fact, Measure, DimensionAttribute
-from cubetl.text import RegExp
-from cubetl import table
 
 
 '''
-CubETL HTTP types library.
+CubETL Internet types library.
 
 This file provides OLAP dimensions for typical Internet related datasets,
-eg dimensions for "Internet Domain".
+eg dimensions for "Internet Domain", "IP Address"...
 '''
 
 
