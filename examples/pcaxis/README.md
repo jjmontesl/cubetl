@@ -1,6 +1,6 @@
-# PC-AXIS
+# PC-Axis
 
-This sample imports an OLAP structure from a PCAXIS statistics file. The example
+This example imports an OLAP structure from a PC-Axis statistics file. The example
 contains census data with several axis of observation.
 
 ## Guide
@@ -38,6 +38,7 @@ use a separate terminal window if you wish.
 
 Now run CubesViewer to inspect the dataset:
 
+    # NOTE: not yet available, please download and use CubesViewer manually!
     cubext cv
 
 This will start a local HTTP service running on port 8085 for CubesViewer studio.

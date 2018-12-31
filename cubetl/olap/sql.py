@@ -346,19 +346,19 @@ class TableMapper(Component):
             logger.debug("Storing automatically: %s" % (self.auto_store))
             for ast in self.auto_store:
                 did = olapmapper.entity_mapper(ast).store(ctx, m)
-                # TODO: Review and use PK properly
+                # FIXME: Review and use PK
                 m[ast.name + "_id"] = did
         else:
             dimensions = self.entity.get_dimensions()
             if dimensions:
-                logger.debug("Storing automatically: %s" % ([da.dimension.name for da in self.entity.get_dimensions()]))
+                logger.debug("Storing automatically: %s" % ([da.name for da in self.entity.get_dimensions()]))
                 for dim_attr in self.entity.get_dimensions():
                     dim = dim_attr.dimension
                     mapper = olapmapper.entity_mapper(dim, False)
                     if mapper:
                         did = mapper.store(ctx, m)
                         # FIXME: shall use the correct foreign key column according to mappings
-                        m[dim.name + "_id"] = did
+                        m[dim_attr.name + "_id"] = did
 
         logger.debug("Storing entity in %s (mode: %s, lookup: %s)" % (self, self.store_mode, self.lookup_cols))
 

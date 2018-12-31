@@ -11,8 +11,7 @@ def cubetl_config(ctx):
     ctx.add('cubetl.geo.continent',
             Dimension(name='continent', label='Continent', attributes=[
                 Attribute(name='continent_code', type='String', label='Continent Code'),
-                Attribute(name='continent_name', type='String', label='Continent'),
-                ]))
+                Attribute(name='continent_name', type='String', label='Continent')]))
 
     ctx.add('cubetl.geo.country', Dimension(
         name='country',
@@ -27,7 +26,7 @@ def cubetl_config(ctx):
                     "type": "vector",
                     "attribution": "&copy; NaturalEarth",
                     "params": {
-                        "url": "maps/ne_110m_admin_0_countries.geo.json",
+                        "url": "maps/ne_110m_admin_0_countries.geojson",
                         "format": "geojson",
                         "wrapX": True
                     }
@@ -41,6 +40,38 @@ def cubetl_config(ctx):
         hierarchies=[Hierarchy(name='contcountry', label='Country', levels=['continent', 'country'])],
         attributes=[DimensionAttribute(ctx.get('cubetl.geo.continent')),
                     DimensionAttribute(ctx.get('cubetl.geo.country'))]))
+
+
+    ctx.add('cubetl.geo.region_3',
+            Dimension(name='region_3', label='Region', attributes=[
+                Attribute(name='region_3_code', type='String', label='Region Code'),
+                Attribute(name='region_3_name', type='String', label='Region')]))
+
+    ctx.add('cubetl.geo.region_4',
+            Dimension(name='region_4', label='Province', attributes=[
+                Attribute(name='region_4_code', type='String', label='Province Code'),
+                Attribute(name='region_4_name', type='String', label='Province')]))
+
+    ctx.add('cubetl.geo.region_5',
+            Dimension(name='region_5', label='Town', attributes=[
+                Attribute(name='region_5_code', type='String', label='Town Code'),
+                Attribute(name='region_5_name', type='String', label='Town')]))
+
+    ctx.add('cubetl.geo.region_3_4', HierarchyDimension(
+        name='Region',
+        label='Region',
+        hierarchies=[Hierarchy(name='region_3_4', label='Region', levels=['region_3', 'region_4'])],
+        attributes=[DimensionAttribute(ctx.get('cubetl.geo.region_3')),
+                    DimensionAttribute(ctx.get('cubetl.geo.region_4'))]))
+
+    ctx.add('cubetl.geo.region_3_5', HierarchyDimension(
+        name='Region',
+        label='Region',
+        hierarchies=[Hierarchy(name='region_3_5', label='Region', levels=['region_3', 'region_4', 'region_5'])],
+        attributes=[DimensionAttribute(ctx.get('cubetl.geo.region_3')),
+                    DimensionAttribute(ctx.get('cubetl.geo.region_4')),
+                    DimensionAttribute(ctx.get('cubetl.geo.region_5'))]))
+
 
 '''
 ---

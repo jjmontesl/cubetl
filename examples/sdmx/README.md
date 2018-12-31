@@ -38,6 +38,7 @@ use a separate terminal window if you wish.
 
 Now run CubesViewer to inspect the dataset:
 
+    # Note: not yet working, please download and use CubesViewer manually!
     cubext cv
 
 This will start a local HTTP service running on port 8085 for CubesViewer studio.

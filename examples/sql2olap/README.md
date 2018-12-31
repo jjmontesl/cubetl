@@ -45,6 +45,7 @@ For this example you need to have Cubes Server and CubesViewer packages installe
     slicer serve mydb.cubes-config.ini &
 
     # Run a local cubesviewer HTTP server (also opens a browser)
+    # NOTE: not yet available, please download and use CubesViewer manually!
     pip install cubesviewer-utils
     cvutils cv
 
@@ -60,14 +61,26 @@ that can be used to fine-tune how the schema generator works.
 **Changing how fields are imported**
 
 If you observe the generated schema you'll notice some columns would be more appropriate
-if treated differently. For example,
+if treated differently.
+
+For example, click on "Cubes > Album" and then on the "Facts View" icon.
+Artist dimension and Artist Name dimensions are repeated. This stems from the *SQLToOLAP* component
+treating the *Artist.Name* column a *dimension*, when it is simply an *attribute* of an album.
+
+Let's add an option to treat *Artist.Name* as an *attribute*, and also for *Album.Title*:
+
+cubetl cubetl.sql.db2sql cubetl.olap.sql2olap cubetl.cubes.olap2cubes \
+        -p db2sql.db_url=sqlite:///Chinook_Sqlite.sqlite \
+        -p olap2cubes.cubes_model=chinook.cubes-model.json \
+        -p olap2cubes.cubes_config=chinook.cubes-config.ini \
+        -p sql2olap.*.table.Artist.col.Name.type=attribute \
+        -p sql2olap.*.table.Album.col.Title.type=attribute
 
 *Note*: you need to restart your Cubes server and your CubesViewer instance to
 account for the new schema changes!
 
-**Complete command**
-
-
+Those two fields are now treated as attributes and the schema for those two cubes
+is more usable. For a full list of options, see the documentation of the *SQLToOLAP* component.
 
 **Use a shell script for this**
 
@@ -78,6 +91,37 @@ which is the final example of this. You can run it using:
 
     bash sql2olap.sh
 
+
+**Complete command**
+
+An example of the complete command would look like:
+
+    cubetl cubetl.sql.db2sql cubetl.olap.sql2olap cubetl.cubes.olap2cubes \
+        -p db2sql.db_url=sqlite:///Chinook_Sqlite.sqlite \
+        -p olap2cubes.cubes_model=chinook.cubes-model.json \
+        -p olap2cubes.cubes_config=chinook.cubes-config.ini \
+        -p sql2olap.*.table.Artist.col.Name.type=attribute \
+        -p sql2olap.*.table.Album.col.Title.type=attribute \
+        -p sql2olap.*.table.Customer.col.FirstName.type=attribute \
+        -p sql2olap.*.table.Customer.col.LastName.type=attribute \
+        -p sql2olap.*.table.Customer.col.Address.type=attribute \
+        -p sql2olap.*.table.Customer.col.PostalCode.type=attribute \
+        -p sql2olap.*.table.Customer.col.Phone.type=attribute \
+        -p sql2olap.*.table.Customer.col.Fax.type=ignore \
+        -p sql2olap.*.table.Customer.col.Email.type=attribute \
+        -p sql2olap.*.table.Employee.col.FirstName.type=attribute \
+        -p sql2olap.*.table.Employee.col.LastName.type=attribute \
+        -p sql2olap.*.table.Employee.col.Address.type=attribute \
+        -p sql2olap.*.table.Employee.col.PostalCode.type=attribute \
+        -p sql2olap.*.table.Employee.col.Phone.type=attribute \
+        -p sql2olap.*.table.Employee.col.Fax.type=ignore \
+        -p sql2olap.*.table.Employee.col.Email.type=attribute \
+        -p sql2olap.*.table.Employee.col.BirthDate.type=attribute \
+        -p sql2olap.*.table.Genre.col.Name.type=attribute \
+        -p sql2olap.*.table.MediaType.col.Name.type=attribute \
+        -p sql2olap.*.table.Playlist.col.Name.type=attribute \
+        -p sql2olap.*.table.Invoice.col.BillingAddress.type=attribute \
+        -p sql2olap.*.table.Invoice.col.BillingPostalCode.type=attribute \
 
 ## Tips
 

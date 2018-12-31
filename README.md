@@ -25,7 +25,7 @@ Features:
   * Star-schema generation and data loading
   * SQL-to-OLAP schema generator
   * Cubes OLAP Server model export
-  * SDMX and PC-Axis support
+  * SDMX and PC-Axis read support
 * Support for text templating, GeoIP, network queries.
 * Insert / upsert for memory and SQL tables and OLAP entities.
 * Extensible
@@ -44,6 +44,11 @@ Using a virtualenv is recommended. In your target environment (requires Python 3
 
     git clone https://github.com/jjmontesl/cubetl.git
     cd cubetl
+
+    # Using a virtualenv is usually recommended:
+    python3 -m venv env
+    . env/bin/activate
+
     python setup.py install  # or: python setup.py develop
 
 Test:
@@ -97,6 +102,7 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
     slicer serve mydb.cubes-config.ini &
 
     # Run a local cubesviewer HTTP server (also opens a browser)
+    # NOTE: not yet available, please download and use CubesViewer manually!
     pip install cubesviewer-utils
     cvutils cv
 
@@ -115,7 +121,7 @@ below for further information.
 Creating a new ETL process config
 ---------------------------------
 
-Create a directory for your ETL process and run:
+Create a new directory for your ETL process and inside it run:
 
     cubetl cubetl.config.new -p config.name=myprocess
 

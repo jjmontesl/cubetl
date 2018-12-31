@@ -1,12 +1,14 @@
-import logging
-from cubetl.core import Node
-#from elementtidy.TidyHTMLTreeBuilder import TidyHTMLTreeBuilder as TB
-import lxml
 from lxml import etree
 from xml.dom import pulldom
 from xml.etree import ElementTree
+import logging
+import lxml
+
+from cubetl.core import Node
+from cubetl.xml.functions import *
 
 
+#from elementtidy.TidyHTMLTreeBuilder import TidyHTMLTreeBuilder as TB
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -128,13 +130,14 @@ class BeautifulSoupParser(Node):
 
     def process(self, ctx, m):
 
-        from BeautifulSoup import BeautifulSoup
-        import beautifulsoupselect as soupselect
+        from bs4 import BeautifulSoup
+        #import beautifulsoupselect as soupselect
         # Monkeypatch BeautifulSoup
-        BeautifulSoup.findSelect = soupselect.select
+        #BeautifulSoup.findSelect = soupselect.select
 
         #logger.debug("Parsing XML")
-        m["soup"] = BeautifulSoup(m["data"]) #, self.parser)
+        m["data"] = m["data"].encode("utf-8")
+        m["soup"] = BeautifulSoup(m["data"], 'lxml', from_encoding='utf-8')
 
         yield m
 

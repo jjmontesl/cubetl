@@ -93,7 +93,7 @@ class Cubes10ModelWriter(Node):
                  "cubes": []}
 
         # FIXME: repeated parameter to track base mapper, elsewhere found from ctx,.. all olapmapper including incorrect
-        self._exportolapmapper(ctx, model, self._olapmapper, self._olapmapper)
+        connection = self._exportolapmapper(ctx, model, self._olapmapper, self._olapmapper)
 
         # Prepare result
         model_json = json.dumps(model,
@@ -118,14 +118,13 @@ class Cubes10ModelWriter(Node):
             with open(model_path, "w") as f:
                 f.write(model_json)
 
-        config_path = ctx.interpolate(None, self.config_path)
+        config_path = ctx.interpolate(m, self.config_path)
         if config_path:
-            connection = ctx.find(Connection)
-            if connection:
-                logger.info("Writing Cubes server config to: %s", config_path)
-                config_text = self._template_renderer.render(ctx, {'model_path': model_path, 'db_url': connection[0].url})
-                with open(config_path, "w") as f:
-                    f.write(config_text)
+            connection_url = connection.url if connection else None
+            logger.info("Writing Cubes server config to: %s", config_path)
+            config_text = self._template_renderer.render(ctx, {'model_path': model_path, 'db_url': connection_url})
+            with open(config_path, "w") as f:
+                f.write(config_text)
 
         yield m
 
@@ -389,12 +388,18 @@ class Cubes10ModelWriter(Node):
 
     def _exportolapmapper(self, ctx, model, basemapper, olapmapper):
 
+        connection = None
+
         # Call includes
         for inc in olapmapper.include:
-            self._exportolapmapper(ctx, model, basemapper, inc)
+            cons = self._exportolapmapper(ctx, model, basemapper, inc)
+            connection = connection or cons
 
         # Export mappers
         for mapper in olapmapper.mappers:
             if isinstance(mapper.entity, Fact):
                 self._export_cube(ctx, model, basemapper, mapper)
+                connection = mapper.sqltable.connection
 
+        # Return the connection
+        return connection

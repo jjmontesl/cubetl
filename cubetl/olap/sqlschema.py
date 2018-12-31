@@ -80,7 +80,7 @@ class OLAPToSQL(Component):
 
                 pk = dimension_mapper.pk(ctx)
                 # Generate a SQL column for the detail
-                sqlcolumn = sql.SQLColumnFK(name=dimension.name + "_" + pk.sqlcolumn.name, type='Integer', fk_sqlcolumn=pk.sqlcolumn, pk=False, null=False, label=dimension.label)
+                sqlcolumn = sql.SQLColumnFK(name=dimension_attribute.name + "_" + pk.sqlcolumn.name, type='Integer', fk_sqlcolumn=pk.sqlcolumn, pk=False, null=False, label=dimension.label)
                 columns.append(sqlcolumn)
                 columnmapping = OlapMapping(path=[dimension], sqlcolumn=sqlcolumn)
                 mappings.append(columnmapping)
@@ -201,9 +201,11 @@ class SQLToOLAP(Node):
 
             for dbcol in sqltable.columns:
 
-                logger.info("Column: %s" % (dbcol))
-
                 olap_type = _match_config(ctx.props, 'sql2olap.%s.type' % dbcol.urn, None)
+                if olap_type:
+                    logger.info("Column: %s (forced type: %s)" % (dbcol, olap_type))
+                else:
+                    logger.info("Column: %s" % (dbcol))
 
                 if olap_type == 'ignore':
                     logger.info("SQL2OLAP ignoring SQL column: %s", dbcol)

@@ -17,6 +17,9 @@ from cubetl.core.exceptions import ETLException
 logger = logging.getLogger(__name__)
 
 
+from cubetl.text.functions import *
+
+
 class LineReader(Node):
     """
     Splits text into lines.
