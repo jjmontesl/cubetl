@@ -20,7 +20,8 @@ Note that this process make take several minutes:
 
 The `-q` option makes the process run in quiet mode, so process data items will
 not be printed. The process includes a node that will print progress
-information every 10 seconds.
+information every 10 seconds (the process takes a few minutes to process
+the 600k cells in the original file).
 
 This has generated a `ine.sqlite3` database in the current directory.
 Note that the process has also generated a Cubes model and configuration file
@@ -31,6 +32,8 @@ Note that the process has also generated a Cubes model and configuration file
 We now have a SQLite database. Run Cubes in order to serve
 analytical queries for this database:
 
+    # Run cubes server (in background with &, or in other terminal)
+    pip install cubes[all] click flask
     slicer serve ine.slicer.ini  &
 
 Note the `&` argument, which makes the process run in background. You could instead
@@ -48,17 +51,21 @@ You can now inspect the *Census* cube using CubesViewer.
 
 **Views to try**
 
-Try the following views (on CubesViewer, click "Tools > Import from JSON").
+In CubesViewer Studio, click "Tools > Import from JSON", and paste the following JSON:
 
-Population chart of 2018:
-
-    {}
-
-Population nationality evolution:
-
-    {}
-
-[SCREENSHOTS]
+    {
+    "charttype":"bars-horizontal",
+    "chartoptions": {"showLegend":true,"mirrorSerie2":true},
+    "mode":"chart",
+    "drilldown":["gender"],
+    "cuts":[{"dimension":"datemonthly@monthly","value":"2018,3","invert":null}],
+    "cubename":"census",
+    "name":"2018 Population Chart",
+    "xaxis":"age_range",
+    "yaxis":"census_sum",
+    "chart-barsvertical-stacked":true,
+    "chart-disabledseries":{"key":"gender","disabled":{"Hombres":false,"Mujeres":false}}
+    }
 
 
 ## Further information

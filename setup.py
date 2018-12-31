@@ -48,7 +48,8 @@ setup(
         "python-slugify >= 1.2.6",
         "lxml >= 4.2.5",
         "chardet >= 3.0.4",
-        "beautifulsoup4>=4.6.3"
+        "beautifulsoup4>=4.6.3",
+        "psutil>=5.4.8",
     ],
 
     entry_points={'console_scripts': ['cubetl=cubetl.core.bootstrap:main']},
