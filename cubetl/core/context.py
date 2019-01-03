@@ -266,7 +266,7 @@ class Context():
 
             if ctx.profile:
                 logger.warning("Profiling execution (WARNING this is SLOW) and saving results to: %s" % ctx.profile)
-                cProfile.runctx("count = self._do_process(process, ctx)", globals(), locals(), ctx.profile)
+                cProfile.runctx("(result, processed) = self._do_process(start_node_comp, ctx, multiple=multiple)", globals(), locals(), ctx.profile)
             else:
                 (result, processed) = self._do_process(start_node_comp, ctx, multiple=multiple)
 

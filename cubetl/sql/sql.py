@@ -15,9 +15,11 @@ logger = logging.getLogger(__name__)
 
 class Connection(Component):
 
-    def __init__(self, url):
+    def __init__(self, url, connect_args=None):
         super().__init__()
         self.url = url
+        self.connect_args = connect_args or {}  # {'sslmode':'require'}
+
         self._engine = None
 
     #def __repr__(self):
@@ -26,8 +28,8 @@ class Connection(Component):
     def lazy_init(self):
         if self._engine is None:
             url = self.url
-            logger.info("Connecting to database: %s" % url)
-            self._engine = create_engine(url)
+            logger.info("Connecting to database: %s (%s)", url, self.connect_args)
+            self._engine = create_engine(url, connect_args=self.connect_args)
             self._connection = self._engine.connect()
 
     def connection(self):
@@ -179,6 +181,10 @@ class SQLTable(Component):
 
             # Configure column
             if isinstance(column, SQLColumnFK):
+                if column.fk_sqlcolumn.sqltable.sa_table is None:
+                    logger.warning("Column %s foreign key %s table (%s) has not been defined in backend (ignoring).", column, column.fk_sqlcolumn, column.fk_sqlcolumn.sqltable)
+                    continue
+
                 self.sa_table.append_column(Column(column.name,
                                                    self._get_sa_type(column),
                                                    ForeignKey(column.fk_sqlcolumn.sqltable.sa_table.columns[column.fk_sqlcolumn.name]),
@@ -192,19 +198,15 @@ class SQLTable(Component):
                                                    nullable=column.nullable,
                                                    autoincrement=(True if column.type == "AutoIncrement" else False)))
 
-            ForeignKey("person_type.id")
-
-
-        # Check schema
+        # Check schema:
 
         # Create if doesn't exist
         if (not self.connection.engine().has_table(self.name)):
             logger.info("Creating table %s" % self.name)
             self.sa_table.create(self.connection.connection())
 
-        # Extend?
-
-        # Delete columns?
+        # TODO:? Extend?  (unsafe, allow read-only connections and make them default?)
+        # TODO:? Delete columns (unsafe, allow read-only connections and make them default?)
 
     def pk(self, ctx):
         """

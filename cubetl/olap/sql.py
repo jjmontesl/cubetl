@@ -112,6 +112,12 @@ class TableMapper(Component):
     STORE_MODE_UPSERT = SQLTable.STORE_MODE_UPSERT
 
     def __init__(self, entity, sqltable, mappings=None, lookup_cols=None):
+        """
+
+        Lookup columns are used to lookup an entity when its primary key is not available
+        (if the attribute mapped to the primary key is available, it will be used instead for lookups).
+        """
+
         super().__init__()
 
         self.eval = []
@@ -233,7 +239,8 @@ class TableMapper(Component):
             #if (len(self._sqltable.columns) != 0): raise AssertionError("SQLTable '%s' columns shall be empty!" % self._sqltable.name)
 
         # If lookup_cols is a string, split by commas
-        if (isinstance(self.lookup_cols, str)): self.lookup_cols = [ key.strip() for key in self.lookup_cols.split(",") ]
+        if (isinstance(self.lookup_cols, str)):
+            self.lookup_cols = [key.strip() for key in self.lookup_cols.split(",")]
 
         #Mappings.includes(ctx, self.mappings)
         for mapping in self.mappings:
@@ -249,6 +256,7 @@ class TableMapper(Component):
             if self.lookup_cols is None:
                 pk = self.pk(ctx)
                 if (pk is None) or (pk.sqlcolumn.type == "AutoIncrement"):
+                    #logger.warning("No lookup cols defined for %s", self)   # else
                     raise Exception("No lookup cols defined for %s" % self)
                 self.lookup_cols = [pk]
 
@@ -261,7 +269,9 @@ class TableMapper(Component):
         super().finalize(ctx)
 
     def pk(self, ctx):
+
         #Returns the primary key mapping.
+        # TODO: Remove the need for 'ctx': this is usable/used before context is initialized
 
         #mappings = self._mappings(ctx)
         pk_mappings = [mapping for mapping in self.mappings if isinstance(mapping.path[-1], Key)]

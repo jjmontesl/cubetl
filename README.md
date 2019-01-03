@@ -39,7 +39,7 @@ suggestions and contributions.
 Download / Install
 ------------------
 
-While CubETL is in alpha no *pip* packages are provided, for now it must be installed
+While CubETL is in alpha no *pip* packages are provided, and it should be installed
 using `python setup.py develop`. Using a virtualenv is recommended.
 
     git clone https://github.com/jjmontesl/cubetl.git
@@ -49,6 +49,10 @@ using `python setup.py develop`. Using a virtualenv is recommended.
     python3 -m venv env
     . env/bin/activate
 
+    # Install dependencies
+    sudo apt-get install python3-dev libxml2-dev libxslt1-dev zlib1g-dev
+
+    # Install CubETL
     python setup.py develop
 
 Test:

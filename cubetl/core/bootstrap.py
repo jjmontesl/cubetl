@@ -219,7 +219,7 @@ class Bootstrap:
                 description="Prints the current message.")
 
         ctx.add('cubetl.sql.db2sql',
-                schemaimport.DBToSQL(connection=Connection(url="${ ctx.props['db2sql.db_url'] }")),
+                schemaimport.DBToSQL(connection=Connection(url="${ ctx.props['db2sql.db_url'] }")),  #, connect_args={'sslmode': 'disable'})),
                 description="Generate SQL schema from existing database.")
 
         ctx.add('cubetl.olap.sql2olap', sqlschema.SQLToOLAP(),

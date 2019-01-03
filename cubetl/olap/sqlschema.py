@@ -174,7 +174,7 @@ class SQLToOLAP(Node):
         datedimension = ctx.get("cubetl.datetime.date")
 
         facts = {}
-        factdimensions = {}
+        factattributes = []
         olapmappers = []
 
         logger.info("Generating CubETL Olap schema from SQL schema.")
@@ -182,21 +182,15 @@ class SQLToOLAP(Node):
         sqltables = ctx.find(type=cubetl.sql.sql.SQLTable)
         for sqltable in sqltables:
 
+            olap_type_table = _match_config(ctx.props, 'sql2olap.table.%s.type' % sqltable.name, None)
+
             logger.info("Fact: %s" % sqltable.name)
-
-            # Define fact
-            fact_urn = "%s.fact.%s" % (prefix, sqltable.name)
-            fact = ctx.add(fact_urn, olap.Fact(name=sqltable.name, label=sqltable.label))
-            facts[fact.name] = fact
-
-            # Create an olapmapper for this fact
-            # TODO: review whether this is necessary
-            olapmapper = olap.OlapMapper()
-            #olapmapper.id = "cubesutils.%s.olapmapper" % (tablename)
-            #olapmapper.mappers = []
-            #olapmapper.include = []
+            if olap_type_table == 'ignore':
+                logger.info("SQL2OLAP ignoring SQL table: %s", sqltable)
+                continue
 
             factmappings = []
+            factattributes = []
             key_count = 0
 
             for dbcol in sqltable.columns:
@@ -214,7 +208,7 @@ class SQLToOLAP(Node):
                 if dbcol.pk:
                     key_urn = "%s.fact.%s.key.%s" % (prefix, sqltable.name, dbcol.name)
                     key = ctx.add(key_urn, Key(name=dbcol.name, type=dbcol.type, label=dbcol.label))
-                    fact.attributes.append(key)
+                    factattributes.append(key)
 
                     factmapping = OlapMapping(path=[key], sqlcolumn=dbcol)
                     factmappings.append(factmapping)
@@ -222,8 +216,6 @@ class SQLToOLAP(Node):
                     key_count += 1
 
                 if isinstance(dbcol, cubetl.sql.sql.SQLColumnFK):
-                    #
-
                     #if len(dbcol.foreign_keys) > 1:
                     #    raise Exception("Multiple foreign keys found for column: %s" % (dbcol.name))
 
@@ -233,11 +225,15 @@ class SQLToOLAP(Node):
                         # TODO: This does not account for circular dependencies across other entities
                         logger.warn("Ignoring foreign key reference to self: %s", dbcol.name)
                         continue
-                    related_fact = facts[related_fact_name]
+
+                    related_fact = facts.get(related_fact_name, None)
+                    if related_fact is None:
+                        logger.warn("Ignoring foreign key reference from %s.%s to not available entity: %s", dbcol.sqltable.name, dbcol.name, related_fact_name)
+                        continue
 
                     # Create dimension attribute
                     dimension_attribute = olap.DimensionAttribute(related_fact, name=dbcol.name, label=dbcol.label)
-                    fact.attributes.append(dimension_attribute)
+                    factattributes.append(dimension_attribute)
 
                     # Create a mapping
                     factdimensionmapping = OlapMapping(path=[dimension_attribute], sqlcolumn=dbcol)
@@ -246,12 +242,10 @@ class SQLToOLAP(Node):
                 if not dbcol.pk and not isinstance(dbcol, cubetl.sql.sql.SQLColumnFK) and (olap_type == 'dimension' or (olap_type is None and dbcol.type == "String")):  # or (dbcol.name in force_dimensions)
                     # Embedded dimension (single column, string or integer, treated as a dimension)
 
-                    # Create dimension
-                    dim_urn = "%s.fact.%s.dim.%s" % (prefix, sqltable.name, dbcol.name)
                     dimension_attribute = olap.Attribute(name=dbcol.name, type=dbcol.type, label=dbcol.label)
                     dimension = olap.Dimension(name=dbcol.name, label=dbcol.label, attributes=[dimension_attribute])
 
-                    fact.attributes.append(DimensionAttribute(dimension, dimension.name, dimension.label))
+                    factattributes.append(DimensionAttribute(dimension, dimension.name, dimension.label))
 
                     # This dimension is mapped in the parent table
                     factmapping = OlapMapping(path=[dimension, dimension_attribute], sqlcolumn=dbcol)
@@ -260,7 +254,7 @@ class SQLToOLAP(Node):
                 if not dbcol.pk and not isinstance(dbcol, cubetl.sql.sql.SQLColumnFK) and (olap_type == 'attribute'):
                     # Attribute (detail)
                     attribute = Attribute(name=dbcol.name, type=dbcol.type, label=dbcol.label)
-                    fact.attributes.append(attribute)
+                    factattributes.append(attribute)
 
                     factmapping = OlapMapping(path=[attribute], sqlcolumn=dbcol)
                     factmappings.append(factmapping)
@@ -268,7 +262,7 @@ class SQLToOLAP(Node):
                 if not dbcol.pk and not isinstance(dbcol, cubetl.sql.sql.SQLColumnFK) and (olap_type == 'measure' or (olap_type is None and dbcol.type in ("Float", "Integer"))):
 
                     measure = Measure(name=dbcol.name, type=dbcol.type, label=dbcol.label)
-                    fact.attributes.append(measure)
+                    factattributes.append(measure)
 
                     factmapping = OlapMapping(path=[measure], sqlcolumn=dbcol)
                     factmappings.append(factmapping)
@@ -280,7 +274,7 @@ class SQLToOLAP(Node):
 
                     # Create dimension attribute
                     dimension_attribute = olap.DimensionAttribute(datedimension, name=dbcol.name, label=dbcol.label)
-                    fact.attributes.append(dimension_attribute)
+                    factattributes.append(dimension_attribute)
 
                     # TODO: This shall be common
                     #mapper = olap.sql.EmbeddedDimensionMapper(entity=datedimension, sqltable=None)
@@ -332,9 +326,22 @@ class SQLToOLAP(Node):
                 factmappings = [ { 'name': 'index', 'pk': True, 'type': 'Integer' } ]
             '''
 
+            # Ignore table if more than one primary key was found
             if key_count > 1:
-                logger.warn("More than one Key found in table %s (not supported, ignoring table)", sqltable.name)
+                logger.warn("Multiple primary key found in table %s (not supported, ignoring table)", sqltable.name)
                 continue
+
+            # Ignore table if it contains no primary key
+            if key_count == 0:
+                logger.warn("No primary key found in table %s (not supported, ignoring table)", sqltable.name)
+                continue
+
+            # Define fact
+            fact_urn = "%s.fact.%s" % (prefix, sqltable.name)
+            fact = ctx.add(fact_urn, olap.Fact(name=sqltable.name, label=sqltable.label, attributes=factattributes))
+            facts[fact.name] = fact
+            # Create an olapmapper for this fact
+            olapmapper = olap.OlapMapper()  # TODO: review whether this is necessary or we could use a single mapper
 
             mapper = olap.sql.TableMapper(entity=fact, sqltable=sqltable, mappings=factmappings)
             olapmapper.mappers.append(mapper)

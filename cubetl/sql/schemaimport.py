@@ -155,12 +155,12 @@ def coltype(dbcol):
     # TODO: Should call the DimensionClassifier facility, asking dimensions to identify the data according
     # to columns (we should have a sample of the columns)
     # TODO: This shall be standarized in CubETL
-    if str(dbcol.type) in ("FLOAT", "REAL", "DECIMAL"):
+    if str(dbcol.type) in ("FLOAT", "REAL", "DECIMAL", "DOUBLE PRECISION"):
         return "Float"
     elif (str(dbcol.type) in ("INTEGER", "BIGINT") or
           str(dbcol.type).startswith("NUMERIC")):
         return "Integer"
-    elif str(dbcol.type) in ("DATETIME"):
+    elif str(dbcol.type) in ("DATE", "DATETIME", "TIMESTAMP", "TIMESTAMP WITHOUT TIME ZONE"):
         return "DateTime"
     elif (str(dbcol.type) in ("BOOLEAN", "TEXT") or
           str(dbcol.type).startswith("VARCHAR") or
@@ -168,7 +168,9 @@ def coltype(dbcol):
           str(dbcol.type).startswith("CHAR") or
           str(dbcol.type).startswith("NCHAR")):
         return "String"
-    elif str(dbcol.type) in ("BLOB"):
+    elif str(dbcol.type) in ("BLOB", "BYTE", "BYTEA"):
         return "Binary"
+
     raise ValueError("Invalid column type (%s): %s" % (dbcol, dbcol.type))
+
 

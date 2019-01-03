@@ -101,6 +101,7 @@ class OlapEntity(Component):
 
             referenced_dimensions = dimension.get_dimensions_recursively()
             for ref_dim in referenced_dimensions:
+                # if len(ref_dim.path) > 2: continue
                 #logger.debug("Recursively including %s dimensions: %s", dimension, referenced_dimensions)
                 result.append(MappedAttribute(path=[dimension_attribute.name] + ref_dim.path, entity=ref_dim.entity, label=ref_dim.label))
 
