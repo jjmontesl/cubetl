@@ -15,7 +15,6 @@ pyparsing==2.1.1
 python-dateutil==2.7.5
 python-slugify==1.2.6
 pytz==2018.7
-PyYAML==3.11
 repoze.lru==0.7
 simplejson==3.16.0
 six==1.12.0

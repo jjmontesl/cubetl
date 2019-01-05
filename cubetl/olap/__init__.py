@@ -408,6 +408,12 @@ class OlapMapper(Component):
 
         return None
 
+    def mappers_recursive(self):
+        mappers = list(self.mappers)
+        for inc in self.include:
+            mappers.extend(inc.mappers_recursive())
+        return mappers
+
 
 class Store(Node):
 
@@ -438,3 +444,71 @@ class Store(Node):
         yield m
 
 
+class PrintMappings(Node):
+
+    def __init__(self, olapmapper):
+        super().__init__()
+        self.olapmapper = olapmapper
+
+    def print_entities(self, ctx, m):
+
+        entities = ctx.find(OlapEntity)
+
+        text = ""
+        text += "OLAP entities:\n"
+        for ent in entities:
+            text += "  * %s\n" % (ent)
+            #for m in mapper.mappings:
+            #    text += "    * %s\n" % (m)
+        return text
+
+    def print_mappings(self, ctx, m):
+
+        olapmapper = ctx.interpolate(None, self.olapmapper)
+        mappers = olapmapper.mappers_recursive()
+
+        text = ""
+        text += "OLAP mappings:\n"
+        for mapper in mappers:
+            #text += "  %s\n" % (mapper)
+            for m in mapper.mappings:
+                # Logical -> Table.Column
+                path = ".".join([p.name for p in m.path])
+                function = "(%s)" % (m.function) if m.function else ""
+                text += "  %s.%s = %s.%s %s\n" % (mapper.entity.name, path, m.sqlcolumn.sqltable.name, m.sqlcolumn.name, function)
+        return text
+
+    def print_sql_mappings(self, ctx, m):
+
+        olapmapper = ctx.interpolate(None, self.olapmapper)
+        mappers = olapmapper.mappers_recursive()
+        factmappers = [m for m in mappers if isinstance(m.entity, Fact)]
+
+        text = ""
+        text += "OLAP SQL joins (resolved):\n"
+        text += "FIXME: wrong join data structures: master-entity/detail-str! + use SQLJoin type\n"
+        for mapper in factmappers:
+            sqljoins = mapper.sql_joins(ctx)
+            for sj in sqljoins:
+                text += "  %s.%s = %s.%s as %s\n" % (sj['master_entity'].name, sj['master_column'], sj['detail_entity'], sj['detail_column'], sj['alias'])
+        text += "OLAP SQL mappings (resolved):\n"
+        for mapper in factmappers:
+            sqlmappings = mapper.sql_mappings(ctx)
+            for sm in sqlmappings:
+                text += "  %s %s\n" % (mapper.entity.name, sm)
+        return text
+
+    def process(self, ctx, m):
+
+        print()
+
+        res = self.print_entities(ctx, m)
+        print(res)
+
+        res = self.print_mappings(ctx, m)
+        print(res)
+
+        res = self.print_sql_mappings(ctx, m)
+        print(res)
+
+        yield m

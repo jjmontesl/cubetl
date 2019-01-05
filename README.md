@@ -178,7 +178,7 @@ In order to configure and/or run a process from client code, use:
     # Launch process
     result = ctx.run("your_app.node_id")
 
-See the examples/python to see a full working example.
+See the `examples/python` directory for a full working example.
 
 
 Documentation
@@ -189,7 +189,9 @@ Documentation
   * Creating and running ETL processes
   * Configuration files (include, library...)
   * Process flow
-  * Interpolated expressions
+  * Interpolated expressions and lambdas
+  * Defining an OLAP schema and load process
+  * Creating custom components and processing nodes
 
 * Library
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
@@ -199,6 +201,8 @@ Documentation
   * [Person](https://github.com/jjmontesl/cubetl/blob/master/library/person.py)
 
 * [Components](https://github.com/jjmontesl/cubetl/tree/master/cubetl)
+
+* Examples (see "Example ETL processes" above)
 
 
 Support

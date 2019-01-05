@@ -29,7 +29,7 @@ import pprint
 import sys
 import traceback
 
-from cubetl import APP_NAME_VERSION, util, flow
+from cubetl import APP_NAME_VERSION, util, flow, olap
 from cubetl.core import ContextProperties
 from cubetl.core.context import Context
 import cubetl
@@ -224,8 +224,8 @@ class Bootstrap:
 
         ctx.add('cubetl.olap.sql2olap', sqlschema.SQLToOLAP(),
                 description="Generate OLAP schema from SQL schema.")
-        #ctx.add('cubetl.olap.mappings', sqlschema.PrintMappings(),
-        #        description="Show all OLAP mappings in the defined schema.")
+        ctx.add('cubetl.olap.mappings', olap.PrintMappings(olapmapper="${ ctx.find(cubetl.olap.OlapMapper)[0] }"),
+                description="Show configured OLAP entities and mappings.")
 
         ctx.add('cubetl.cubes.olap2cubes',
                 cubes10.Cubes10ModelWriter(olapmapper="${ ctx.get('sql2olap.olapmapper') }",

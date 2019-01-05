@@ -192,7 +192,8 @@ class Cubes10ModelWriter(Node):
                 c_mappings[mapping_path] = mapping_sqltable_alias + "." + mapping.sqlcolumn_alias
                 if mapping.function:
                     c_mappings[mapping_path] = {
-                        'column': mapping_sqltable_alias + "." + mapping.sqlcolumn_alias,
+                        'table': mapping_sqltable_alias,
+                        'column': mapping.sqlcolumn_alias,  # mapping_sqltable_alias + "." +  ...
                         'extract': mapping.function
                     }
             except:

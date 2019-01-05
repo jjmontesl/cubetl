@@ -71,7 +71,7 @@ def cubetl_config(ctx):
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.quarter')),
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.month'))]))
 
-    ctx.add('cubetl.datetime.dim.dateyqmd', HierarchyDimension(
+    ctx.add('cubetl.datetime.dateyqmd', HierarchyDimension(
         name='dateyqmd',
         label='Date',
         role='date',
