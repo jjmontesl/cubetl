@@ -68,19 +68,22 @@ class CachedTableLookup(TableLookup):
         cache_key = tuple(sorted(keys.items()))
 
         result = self._cache.get(cache_key, CachedTableLookup.NOT_CACHED)
-        if (result != CachedTableLookup.NOT_CACHED):
+        if result != CachedTableLookup.NOT_CACHED:
             self.cache_hits = self.cache_hits + 1
-            if (ctx.debug2):
-                logger.debug("Query cache hit: %s" % (result))
         else:
             self.cache_misses = self.cache_misses + 1
             result = self._do_lookup(ctx, m, keys)
             self._cache.put(cache_key, result)
 
-        if (result):
+        if result:
             Eval.process_evals(ctx, m, self.mappings, result)
         else:
+            print(self.table._rows)
+            raise Exception("No rows found when looking up in %s: %s" % (self, keys))
             m.update({ k: ctx.interpolate(m, v) for k, v in self.default.items() })
+
+        if (ctx.debug2):
+            logger.debug("Cache table lookup (lookup=%s): %s" % (keys, result))
 
         yield m
 

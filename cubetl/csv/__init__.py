@@ -39,18 +39,22 @@ logger = logging.getLogger(__name__)
 
 class CsvReader(Node):
 
-    data = '${ m["data"] }'
+    def __init__(self):
+        super().__init__()
 
-    headers = None
+        self.data = '${ m["data"] }'
 
-    comment = None
-    delimiter = ","
-    row_delimiter = "\n"
-    ignore_missing = False
-    strip = False
+        self.headers = None
 
-    count = 0
-    _linenumber = 0
+        self.comment = None
+        self.delimiter = ","
+        self.row_delimiter = "\n"
+        self.ignore_missing = False
+        self.strip = False
+
+        self.count = 0
+        self._linenumber = 0
+
 
     def _utf_8_encoder(self, unicode_csv_data):
         for line in unicode_csv_data:
@@ -73,8 +77,10 @@ class CsvReader(Node):
 
         self._linenumber = 0
         rows = iter(data.split(self.row_delimiter))
+        #if self.strip:
+        #    rows = [r.strip() for r in rows]
 
-        reader = csv.reader(rows, delimiter=self.delimiter)
+        reader = csv.reader(rows, delimiter=self.delimiter, skipinitialspace=self.strip, doublequote=True, quotechar='"')
         for row in reader:
 
             # Skip empty lines

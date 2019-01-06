@@ -246,28 +246,34 @@ class Iterator(Node):
 
 
 class Union(Node):
+    """
+    Unites the output of two or more nodes, and yields all the output messages.
+
+    This node copies the input message before passing it to each of the
+    steps in the union.
+    """
 
     steps = None
 
-    def __init__(self):
+    def __init__(self, steps):
         super(Union, self).__init__()
-        self.steps = []
+        self.steps = steps
 
     def initialize(self, ctx):
-        super(Union, self).initialize(ctx)
+        super().initialize(ctx)
+
+        if len(self.steps) <= 0:
+            raise ETLConfigurationException("Union with no steps.")
+
         for p in self.steps:
             ctx.comp.initialize(p)
 
     def finalize(self, ctx):
         for p in self.steps:
             ctx.comp.finalize(p)
-        super(Union, self).finalize(ctx)
+        super().finalize(ctx)
 
     def process(self, ctx, m):
-
-        if (len(self.steps) <= 0):
-            raise Exception("Union with no steps.")
-
         for step in self.steps:
             m2 = ctx.copy_message(m)
             result_msgs = ctx.comp.process(step, m2)

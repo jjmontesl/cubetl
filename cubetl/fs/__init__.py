@@ -135,6 +135,7 @@ class FileReader(Node):
             # Encoding
             encoding = ctx.interpolate(m, self.encoding) if self.encoding else None
             m[self.name] = self._solve_encoding(encoding, m[self.name])
+            m["_file_path"] = msg_path
             m["_encoding"] = encoding
 
         yield m

@@ -57,8 +57,8 @@ class Table(Component):
         elif (len(rows) == 1):
             row = rows[0]
         else:
-            row = None
             #raise Exception("No rows found when looking up in %s: %s" % (self, attribs))
+            row = None
 
         logger.debug("Lookup result on %s: %s = %s" % (self, attribs, row))
 
@@ -302,6 +302,7 @@ class TableLookup(Node):
         if (result):
             Eval.process_evals(ctx, m, self.mappings, result)
         else:
+            raise Exception("No rows found when looking up in %s: %s" % (self, keys))
             m.update({ k: ctx.interpolate(m, v) for k, v in self.default.items() })
 
         yield m

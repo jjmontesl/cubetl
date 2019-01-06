@@ -45,8 +45,8 @@ class CachedSQLTable(Component):
         # Check if using primary key
         if (len(attribs.keys()) > 0):
                 rows = self._cache.get(cache_key)
-                if (rows != None) and (ctx.debug2):
-                    logger.debug("Returning row from cache for search attibs: %s" % (attribs))
+                if (rows is not None) and (ctx.debug2):
+                    logger.debug("Returning row from cache for search attribs: %s" % (attribs))
 
         # TODO: Cache also on natural keys
 

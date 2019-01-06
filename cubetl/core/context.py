@@ -36,7 +36,7 @@ import urllib
 
 from cubetl.core import Component
 from cubetl.core.components import Components
-from cubetl.core.exceptions import ETLException
+from cubetl.core.exceptions import ETLException, ETLConfigurationException
 from cubetl.text import functions
 from cubetl.xml import functions as xmlfunctions
 import cubetl
@@ -301,6 +301,9 @@ class Context():
         logger.info("Including config file: %s", configfile)
         spec = importlib.util.spec_from_file_location("configmodule", configfile)
         configmodule = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(configmodule)
+        try:
+            spec.loader.exec_module(configmodule)
+        except Exception as e:
+            raise ETLConfigurationException("Config include file not found: %s" % (configfile))
         configmodule.cubetl_config(self)
 
