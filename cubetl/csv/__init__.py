@@ -163,47 +163,67 @@ class CsvFileReader (CsvReader):
 
 
 class CsvFileWriter(Node):
+    """
+    This node writes message attributes
+    """
 
-    # TODO: This class should possibly inherit from FileWriter
+    # TODO: columns should be a CubETL type (as SQLColumns, etc). We could use
+    # cubetl.table TableColumns here, which in the end are basic mappings
+    # with name, label, value/eval (and maybe default and/or type...)
 
-    data = '${ m }'
-    headers = None
-    write_headers = True
-    path = "-"
+    # TODO: This class should possibly compose FileWriter and CsvWriter
+    # (a CSVWriter should be able to write CSV rows to messages)
 
-    _row = 0
+    def __init__(self):
+        super().__init__()
 
-    delimiter = ","
-    row_delimiter = "\n"
+        self.data = '${ m }'
+        self.headers = None
+        self.write_headers = True
+        self.path = "-"
 
-    overwrite = False
-    encoding = None #"utf-8"
+        self.delimiter = ","
+        self.row_delimiter = "\n"
 
-    _output = None
-    _csvwriter = None
+        self.overwrite = False
+        self.encoding = None #"utf-8"
 
-    columns = None
+        self.columns = None
+        self.auto_columns = True
+
+        self._row = 0
+        self._output = None
+        self._csvwriter = None
 
     def initialize(self, ctx):
 
         super(CsvFileWriter, self).initialize(ctx)
 
-        self._fileWriter = FileWriter()
-        self._fileWriter.path = self.path
-        self._fileWriter.data = "${ m['_csvdata'] }"
+        self._fileWriter = FileWriter(path=self.path,
+                                      data="${ m['_csvdata'] }",
+                                      newline=False,
+                                      overwrite=self.overwrite)
         if (self.encoding):
             self._fileWriter.encoding = self.encoding
-            self._fileWriter.overwrite = self.overwrite
-            self._fileWriter.newline = False
-
-        # Process columns
-        for c in self.columns:
-            if not "label" in c:
-                c["label"] = c["name"]
-            if not "value" in c:
-                c["value"] = '${ m["' + c["name"] + '"] }'
 
         ctx.comp.initialize(self._fileWriter)
+
+    def initialize_columns(self):
+
+        for c in self.columns:
+            if "label" not in c:
+                c["label"] = c["name"]
+            if "value" not in c:
+                c["value"] = '${ m["' + c["name"] + '"] }'
+
+    def columns_from_message(self, ctx, m):
+        self.columns = []
+        for k, v in m.items():
+            column = {'name': k}
+            self.columns.append(column)
+
+        # Sort by name for repeatable results
+        self.columns.sort(key=lambda c: c['name'])
 
     def finalize(self, ctx):
         ctx.comp.finalize(self._fileWriter)
@@ -224,9 +244,17 @@ class CsvFileWriter(Node):
         if not self._csvwriter:
             self._output = io.StringIO()
             self._csvwriter = csv.writer(self._output, delimiter=self.delimiter,
-                              quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                                         quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
         if (self._row == 0):
+
+            # Process columns
+            if self.columns is None and self.auto_columns and m:
+                self.columns_from_message(ctx, m)
+
+            self.initialize_columns()
+
+            # Write headers
             if (self.write_headers):
                 row = [c["label"] for c in self.columns]
                 m['_csvdata'] = self._csv_row(ctx, row)

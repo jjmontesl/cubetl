@@ -184,14 +184,13 @@ See the `examples/python` directory for a full working example.
 Documentation
 =============
 
-* Usage
-  * Overview
-  * Creating and running ETL processes
-  * Configuration files (include, library...)
-  * Process flow
-  * Interpolated expressions and lambdas
-  * Defining an OLAP schema and load process
-  * Creating custom components and processing nodes
+* [Quickstart](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-quickstart.md)
+* Configuration (includes, expressions, library)
+* Sequential formats (text files, CSV, JSON...)
+* Tables
+* SQL
+* OLAP
+* Custom components and processing nodes
 
 * Library
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)

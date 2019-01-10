@@ -1,0 +1,7 @@
+@startuml
+file file
+collections filesystem
+filesystem -> DirectoryList: directory files
+DirectoryList -> CSVFileWriter: 1 message per directory entry
+CSVFileWriter -> file: header and 1 row per message
+@enduml

@@ -31,6 +31,7 @@ import re
 
 from cubetl.core import Node
 from cubetl.core.exceptions import ETLConfigurationException
+import sys
 
 
 # Get an instance of a logger
@@ -39,16 +40,39 @@ logger = logging.getLogger(__name__)
 
 class DirectoryList(Node):
     """
+    This produces a message for each file in a given path.
+    Each message contains a property named `path` (by default) with the
+    path to the file.
+
+    The list is in arbitrary order.  It does not include the special
+    entries '.' and '..' even if they are present in the directory.
+
+    Note that the input message is ignored by default (and its
+    properties lost), but you can choose to copy the input message
+    using `copy=True`.
     """
 
 
-    def __init__(self, path, filter_re=None):
+    def __init__(self, path, filter_re=None, name="path", maxdepth=0, copy=False):
         super().__init__()
 
         self.path = path
         self.filter_re = filter_re
+        self.copy = copy
+        self.maxdepth = maxdepth
 
-        self.name = "path"
+        self.name = name
+
+    @staticmethod
+    def walklevel(path, maxdepth=0):
+        path = os.path.normpath(path)
+        assert os.path.isdir(path)
+        num_sep = path.rstrip(os.path.sep).count(os.path.sep)
+        for root, dirs, files in os.walk(path):
+            yield root, dirs, files
+            num_sep_this = root.rstrip(os.path.sep).count(os.path.sep)
+            if maxdepth is not None and num_sep + maxdepth <= num_sep_this:
+                del dirs[:]
 
     def process(self, ctx, m):
 
@@ -58,17 +82,48 @@ class DirectoryList(Node):
         # Check m is empty, etc
 
         filter_re = ctx.interpolate(m, self.filter_re)
-        logger.info ("Listing directory %s (mask '%s')" % (path, filter_re))
+        logger.info("Listing directory %s (mask '%s')" % (path, filter_re))
 
-        files = [ f for f in listdir(path) if isfile(join(path, f)) ]
-        if (filter_re != None):
+        files = ((root, f) for root, dirs, files in self.walklevel(path, self.maxdepth) for f in files)
+        if filter_re:
             regex = re.compile(filter_re)
-            files = [m.group(0) for m in [regex.match(f) for f in files] if m]
-        files = [join(path, f) for f in files]
+            files = (ma[0] for ma in (regex.match(f) for f in files) if ma)
+        files = (str(join(f[0], f[1])) for f in files)
 
         for f in files:
-            m = { self.name: f }
-            yield m
+            fields = {self.name: f}
+            if self.copy:
+                m2 = ctx.copy_message(m)
+                m2.update(fields)
+            else:
+                m2 = fields
+            yield m2
+
+
+class FileInfo(Node):
+    """
+    This node adds data to the input message, altering it.
+    """
+
+
+    def __init__(self, path="${m['path']}", prefix=''):
+        super().__init__()
+        self.path = path
+        self.prefix = ''
+
+    def process(self, ctx, m):
+        # Resolve path
+        path = ctx.interpolate(m, self.path)
+        stat = os.stat(path)
+
+        m[self.prefix + 'size'] = stat.st_size
+        m[self.prefix + 'mtime'] = stat.st_mtime
+
+        # TODO: add other info: times, owners
+
+        # TODO: resolve user names optionally
+
+        yield m
 
 
 class FileReader(Node):
@@ -147,15 +202,19 @@ class FileWriter(Node):
     TODO: Create an EncodingFileWriter if needed.
     """
 
-    path = None
-    overwrite = False
+    def __init__(self, path="-", append=False, overwrite=False, data='${ m["data"] }', newline="\n"):
+        super().__init__()
 
-    _open_records = 0
-    _open_file = None
-    _open_path = None
+        self.path = path
+        self.overwrite = overwrite
+        self.append = append
 
-    data = '${ m["data"] }'
-    newline = True
+        self.data = data
+        self.newline = newline
+
+        self._open_records = 0
+        self._open_file = None
+        self._open_path = None
 
     def initialize(self, ctx):
         super(FileWriter, self).initialize(ctx)
@@ -184,20 +243,24 @@ class FileWriter(Node):
 
         if (not self._open_file or path != self._open_path):
 
-            self._close()
+            if self._open_file != sys.stdout:
+                self._close()
 
             # Check if file exists
-            file_exists = os.path.isfile(path)
+            file_exists = os.path.isfile(path) if path != "-" else False
             if file_exists and not self.overwrite:
                 raise Exception("Cannot open file '%s' for writing as it already exists (you may wish to use 'overwrite: True')" % path)
 
             if file_exists:
                 logger.info("Opening (overwriting) file '%s'" % path)
             else:
-                logger.info("Creating file '%s' for writing" % path)
+                if path == "-":
+                    logger.info("Writing to standard output (file: '-'):")
+                else:
+                    logger.info("Creating file '%s' for writing" % path)
             self._open_records = 0
             self._open_path = path
-            self._open_file = open(path, "w")
+            self._open_file = open(path, "w") if path != "-" else sys.stdout
 
             self.on_open()
 
@@ -209,7 +272,9 @@ class FileWriter(Node):
         if not value:
             value = ctx.interpolate(m, self.data)
 
-        self._open_file.write(value + "\n" if self.newline else value)
+        self._open_file.write(value)
+        if self.newline:
+            self._open_file.write(self.newline)
 
 
 class FileLineReader(FileReader):

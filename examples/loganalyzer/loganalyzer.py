@@ -103,6 +103,7 @@ def cubetl_config(ctx):
 
         ]))
 
+
 def process_data(ctx, m):
 
     m['datetime'] = functions.extract_date(m['date_string'], dayfirst=True)

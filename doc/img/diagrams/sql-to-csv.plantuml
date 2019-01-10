@@ -1,0 +1,5 @@
+@startuml
+file file
+SQLQuery -> CSVFileWriter: SQL table rows
+CSVFileWriter -> file: CSV header and rows
+@enduml

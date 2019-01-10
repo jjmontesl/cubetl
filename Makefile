@@ -20,6 +20,10 @@ doc-package:
 	cd $(BUILD_DIR)/doc-public && tar cvzf ../cubetl-doc-$(VERSION).tar.gz --transform 's/^html/cubetl-doc/' html
 	cp $(BUILD_DIR)/doc-public/latex/cubetl-doc.pdf $(BUILD_DIR)/cubetl-doc-$(VERSION).pdf
 
+.PHONY: plantuml
+plantuml:
+	find doc/img/diagrams -name '*.plantuml' -printf 'echo %p ; cat %p | sudo docker run --rm -i think/plantuml > %p.svg\n' | bash
+
 .PHONY: loc
 loc:
 	@echo LOC: $(VERSION)
