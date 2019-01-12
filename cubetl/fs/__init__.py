@@ -47,13 +47,12 @@ class DirectoryList(Node):
     The list is in arbitrary order.  It does not include the special
     entries '.' and '..' even if they are present in the directory.
 
-    Note that the input message is ignored by default (and its
-    properties lost), but you can choose to copy the input message
-    using `copy=True`.
+    Note that the input message is copied by default. You can choose to
+    ignore the input message using `copy=False`.
     """
 
 
-    def __init__(self, path, filter_re=None, name="path", maxdepth=0, copy=False):
+    def __init__(self, path="${ ctx.props.get('path', '.') }", filter_re=None, name="path", maxdepth=0, copy=True):
         super().__init__()
 
         self.path = path
@@ -114,10 +113,15 @@ class FileInfo(Node):
     def process(self, ctx, m):
         # Resolve path
         path = ctx.interpolate(m, self.path)
-        stat = os.stat(path)
+        try:
+            stat = os.stat(path)
 
-        m[self.prefix + 'size'] = stat.st_size
-        m[self.prefix + 'mtime'] = stat.st_mtime
+            m[self.prefix + 'size'] = stat.st_size
+            m[self.prefix + 'mtime'] = stat.st_mtime
+        except IOError as e:
+            logger.warn("Could not stat file: %s", path)
+            m[self.prefix + 'size'] = None
+            m[self.prefix + 'mtime'] = None
 
         # TODO: add other info: times, owners
 

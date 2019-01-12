@@ -63,7 +63,7 @@ class Cubes10ModelWriter(Node):
 
     def initialize(self, ctx):
 
-        super(Cubes10ModelWriter, self).initialize(ctx)
+        super().initialize(ctx)
 
         self._olapmapper = ctx.interpolate(None, self.olapmapper)
         ctx.comp.initialize(self._olapmapper)
@@ -87,7 +87,7 @@ class Cubes10ModelWriter(Node):
         ctx.comp.finalize(self._print)
 
         ctx.comp.finalize(self._olapmapper)
-        super(Cubes10ModelWriter, self).finalize(ctx)
+        super().finalize(ctx)
 
     def process(self, ctx, m):
 

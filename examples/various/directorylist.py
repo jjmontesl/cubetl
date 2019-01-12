@@ -35,8 +35,6 @@ def cubetl_config(ctx):
 
     ]))
 
-    #ctx.start_node = 'example.directorylist'
-
 
 def process_data(ctx, m):
     """

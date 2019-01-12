@@ -5,17 +5,7 @@ CubETL is a tool for data ETL (Extract, Transform and Load).
 
 CubETL provides a mechanism to run data items through a processing pipeline. It takes care
 of initializing only the components used by the process, manages the data flow across
-the process graph, logging and cleanup.
-
-It provides out-of-the-box components that handle common data formats
-and it also includes SQL and OLAP modules that understand SQL and OLAP schemas
-and map data across them. This allows CubETL to insert OLAP facts across multiple tables
-in a single store operation, while automatically performing (and caching) the appropriate lookups.
-
-CubETL can also analyze an existing relational database and generate an OLAP schema, and
-the other way around: generate an SQL schema from an OLAP schema. It can also produce
-a Python Cubes server model. All together it allows for a quick analytical inspection
-of an arbitrary database (see the examples below).
+the process graph, logging and cleanup. It can be used as a tool or from Python code.
 
 Features:
 
@@ -26,12 +16,21 @@ Features:
   * SQL-to-OLAP schema generator
   * Cubes OLAP Server model export
   * SDMX and PC-Axis read support
-* Support for text templating, GeoIP, network queries.
-* Insert / upsert for memory and SQL tables and OLAP entities.
+* Text templating, GeoIP, HTTP requests...
+* Insert / upsert for memory tables, SQL tables and OLAP entities.
 * Extensible
 * Caching
 
-**Note**: This project is in alpha stage and is tested in few environments. Documentation
+It provides out-of-the-box components that handle common data formats
+and it also includes SQL and OLAP modules that understand SQL and OLAP schemas
+and map data across them. This allows CubETL to insert OLAP facts across multiple tables
+in a single store operation, while automatically performing (and caching) the appropriate lookups.
+
+CubETL can also inspect an existing relational database and generate an OLAP schema, and
+the other way around. It can also produce configuration for Databrewery Cubes Server. All together
+it allows for a quick analytical inspection of an arbitrary database (see the examples below).
+
+**Note**: This project is in development stage and is tested in few environments. Documentation
 is incomplete. You will hit issues. Please use the issue tracker for bugs, questions,
 suggestions and contributions.
 
@@ -39,7 +38,7 @@ suggestions and contributions.
 Download / Install
 ------------------
 
-While CubETL is in alpha no *pip* packages are provided, and it should be installed
+While CubETL is in development no *pip* packages are provided, and it should be installed
 using `python setup.py develop`. Using a virtualenv is recommended.
 
     git clone https://github.com/jjmontesl/cubetl.git
@@ -176,7 +175,7 @@ In order to configure and/or run a process from client code, use:
     ctx.add('your_app.node_name', ...)
 
     # Launch process
-    result = ctx.run("your_app.node_id")
+    result = ctx.run("your_app.node_name")
 
 See the `examples/python` directory for a full working example.
 
@@ -184,24 +183,31 @@ See the `examples/python` directory for a full working example.
 Documentation
 =============
 
+Guide:
+
 * [Quickstart](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-quickstart.md)
-* Configuration (includes, expressions, library)
+* [Configuration](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-config.md) (includes, expressions, functions, library)
+* Running (-q, -d, -m, -p, standard input, redirecting, tty vs. non-tty, from Python, running several nodes)
 * Sequential formats (text files, CSV, JSON...)
-* Tables
+* [Tables](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-tables.md)
+* Process flow (unions, chain forks, repeats...)
 * SQL
 * OLAP
-* Custom components and processing nodes
+* Custom functions, components and processing nodes (when to use which)
 
-* Library
+Library:
+
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
   * [Geo](https://github.com/jjmontesl/cubetl/blob/master/library/geo.py)
   * [Net](https://github.com/jjmontesl/cubetl/blob/master/library/net.py)
   * [HTTP](https://github.com/jjmontesl/cubetl/blob/master/library/http.py)
   * [Person](https://github.com/jjmontesl/cubetl/blob/master/library/person.py)
 
+Doc:
+
 * [Components](https://github.com/jjmontesl/cubetl/tree/master/cubetl)
 
-* Examples (see "Example ETL processes" above)
+Examples: see "Example ETL processes" above
 
 
 Support

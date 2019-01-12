@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 
-from inspect import isclass
+from inspect import isclass, getargspec
 from repoze.lru import LRUCache
 import cProfile
 import copy
@@ -64,7 +64,7 @@ class Context():
 
         self.components = OrderedDict()
 
-        self.start_item = {}
+        self.start_item = OrderedDict()
         self.start_nodes = []
         self.config_files = []
 
@@ -76,17 +76,26 @@ class Context():
         self.working_dir = os.getcwd()
         self.library_path = os.path.dirname(os.path.realpath(__file__)) + "/../../library"
 
-        self._globals = {"text": functions,
-                         "xml": xmlfunctions,
-                         "datetime": datetime,
-                         "re": re,
-                         "sys": sys,
-                         "urllib": urllib,
-                         "random": random.Random()}
+        self.comp = Components(self)
+
+        self._functions = {"text": functions,
+                           "xml": xmlfunctions,
+                           "datetime": datetime,
+                           "dt": datetime,
+                           "re": re,
+                           "sys": sys,
+                           "urllib": urllib,
+                           "random": random.Random()}
+        self._globals = self._functions
+
+        class Functions():
+            pass
+        self.f = Functions()
+        for k, v in self._functions.items():
+            setattr(self.f, k, v)
 
         self._compiled = LRUCache(512)  # TODO: Configurable
 
-        self.comp = Components(self)
 
     @staticmethod
     def _class_from_frame(fr):
@@ -146,19 +155,36 @@ class Context():
         return component
 
     # TODO: Put value first
-    def interpolate(self, m, value, data = {}):
+    def interpolate(self, m, value, data={}):
         """
-        Interpolates expressions `${ ... }` in a value.
+        Resolves expressions `${ ... }`, lambdas and functions in a value,
+        with respect to the current context and the current message.
+
+        Expressions are CubETL custom syntax for string interpolation.
         """
 
-        if value == None:
+        if value is None:
             return None
 
+        # If the value is a callable (function or lambda), inspect
+        # its parameters. Acceptable signatures are:
+        # (ctx), (m), (ctx, m)
         if callable(value):
-            value = value(m)
+            spec = getargspec(value)
+            if len(spec.args) == 1 and spec.args[0] == 'ctx':
+                value = value(self)
+            elif len(spec.args) == 1 and spec.args[0] == 'm':
+                value = value(m)
+            elif len(spec.args) == 2 and spec.args[0] == 'ctx' and spec.args[1] == 'm':
+                value = value(self, m)
+            else:
+                raise ETLConfigurationException("Invalid lambda expression signature: %s" % spec.args)
 
+        # If the value is not a string, it is immediately returned
         if not isinstance(value, str):
             return value
+
+        # Process string values
 
         value = value.strip()
 
@@ -178,7 +204,7 @@ class Context():
                         compiled = compile(expr, '', 'eval')
                         self._compiled.put(expr, compiled)
 
-                    c_locals = { "m": m, "ctx": self, "props": self.props, "var": self.var, "cubetl": cubetl }
+                    c_locals = {"m": m, "ctx": self, "f": self.f, "props": self.props, "var": self.var, "cubetl": cubetl}
                     c_locals.update(data)
                     res = eval(compiled, self._globals, c_locals)
 
@@ -225,7 +251,11 @@ class Context():
     def _do_process(self, process, ctx, multiple):
         # TODO: When using multiple, this should allow to yield,
         # TODO: Also, this method shall be called "consume" or something, and public
-        item = ctx.copy_message(ctx.start_item)
+
+        # Reduce the OrderedDict to a dict, but interpolate its attributes in order
+        item = {}
+        for k in ctx.start_item.keys():
+            item[k] = ctx.interpolate(item, ctx.start_item[k])
         msgs = ctx.comp.process(process, item)
         count = 0
         result = [] if multiple else None

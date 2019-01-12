@@ -122,8 +122,8 @@ def process_data(ctx, m):
     m['http_method'] = m['verb'].split(' ')[0]
     m['protocol'] = m['verb'].split(' ')[-1]
 
-    m['referer_domain'] = functions.urlparse(m['referer']).hostname
-    m['referer_path'] = functions.urlparse(m['referer']).path
+    m['referer_domain'] = ctx.f.text.urlparse(m['referer']).hostname
+    m['referer_path'] = ctx.f.text.urlparse(m['referer']).path
     m['referer_origin'] = ("Internal" if m['referer_domain'].endswith(ctx.props['domain']) else "External") if m['referer_domain'] else "Unknown"
 
     m['tld'] = m['referer_domain'].split('.')[-1] if (m['referer_domain'] and len(m['referer_domain'].split('.')) > 0) else ''

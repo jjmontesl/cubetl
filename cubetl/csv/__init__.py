@@ -56,10 +56,12 @@ class CsvReader(Node):
         self._linenumber = 0
 
 
+    '''
     def _utf_8_encoder(self, unicode_csv_data):
         for line in unicode_csv_data:
             yield line
             #yield line.encoes()de('utf-8')
+    '''
 
     def process(self, ctx, m):
 
@@ -174,18 +176,18 @@ class CsvFileWriter(Node):
     # TODO: This class should possibly compose FileWriter and CsvWriter
     # (a CSVWriter should be able to write CSV rows to messages)
 
-    def __init__(self):
+    def __init__(self, path="-", overwrite=False):
         super().__init__()
 
         self.data = '${ m }'
         self.headers = None
         self.write_headers = True
-        self.path = "-"
+        self.path = path
 
         self.delimiter = ","
         self.row_delimiter = "\n"
 
-        self.overwrite = False
+        self.overwrite = overwrite
         self.encoding = None #"utf-8"
 
         self.columns = None
@@ -237,6 +239,7 @@ class CsvFileWriter(Node):
         self._csvwriter.writerow(row)
         result = self._output.getvalue()
         self._output.truncate(0)
+        self._output.seek(0)
         return result
 
     def process(self, ctx, m):
