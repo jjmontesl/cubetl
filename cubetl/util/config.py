@@ -34,6 +34,10 @@ logger = logging.getLogger(__name__)
 
 
 class PrintConfig(Node):
+    """
+    NOTE: this configuration dump is not meant to be used as-is, but instead to be
+          reviewed and/or copy-pasted as needed
+    """
 
     def __init__(self, path=None):
         super().__init__()

@@ -66,16 +66,22 @@ adding those to the context.
         ...
 
 In the above example, the *Print*, *Transaction* and *FileLineReader* nodes are defined
-and listed, without a name, directly inside the `steps` attribute of the *Chain* node
-(which is then named and added to the context).
-
-It is recommended to separate and name
-
+and listed without a name, directly inside the `steps` attribute of the *Chain* node
+(which is then named and added to the context). This is also valid as long as you don't
+need to reference them by name.
 
 
 ## Referencing other components
 
-Many components need to reference other components in the context.
+Component sometimes needs to reference other components in the context.
+
+This can be done by directly defining the component in-place (as shown in the previous section)
+or by refencing the object by name.
+
+In order to reference an object in the context, you can use `ctx.get(...)`. This method
+takes the name of the component as argument and returns it from the context:
+
+    sql.Transaction(connection=ctx.get('myprocess.sql.connection'))
 
 
 ## Config expressions and lambdas
@@ -129,6 +135,9 @@ variables are available:
   - `f`: contains references to all helper function modules
   - `props`: a reference to context properties (same as `ctx.props`)
   - each of the registered helper function modules by name (`text`, `xml`, `dt` , `re`, `sys`...)
+
+Interpolated expressions are precompiled and cached in order to avoid impacting performance, but
+when string substitution is not needed, lambda expressions should be favoured.
 
 **Lambda expressions**
 

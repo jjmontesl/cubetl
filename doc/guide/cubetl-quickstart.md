@@ -155,6 +155,30 @@ If you run the process, you'll see messages now contain attributes `mtime` and `
     {'mtime': 1544018919.0, 'path': '/vmlinuz', 'size': 7171392}
 
 
+## Adding custom processing
+
+Very often you'll want to write small pieces of code to do data manipulation, augmentation,
+calculations... You can easily plug custom processing functions using the *script.Function*
+node. It requires a function that receives parameters `(ctx, m)`, which will be called for
+each message processed:
+
+    def cubetl_config(ctx):
+        ctx.add('directorycsv.process', flow.Chain(steps=[
+            ...
+            fs.FileInfo(),
+            script.Function(process_data),
+            ...
+
+    def process_data(ctx, m):
+        m['mimetype'] = ctx.f.text.mimetype_guess(m['path']) or "none/none"
+        m['mimetype_type'] = m['mimetype'].split('/')[0]
+        m['mimetype_subtype'] = m['mimetype'].split('/')[1]
+
+
+You can find more information in the "Script nodes, custom functions, custom nodes and custom components"
+chapter of this guide.
+
+
 ## Writing to a CSV
 
 Writing messages to screen in JSON format may be useful for development, but let's now transform

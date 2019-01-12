@@ -308,7 +308,7 @@ class SQLTable(Component):
     def upsert(self, ctx, data, keys = []):
         """
         Upsert checks if the row exists and has changed. It does a lookup
-        followe by an update or insert as appropriate.
+        followed by an update or insert as appropriate.
         """
 
         # TODO: Check for AutoIncrement in keys, shall not be used
@@ -465,6 +465,7 @@ class StoreRow(Node):
         super(StoreRow, self).__init__()
         self.sqltable = sqltable
         self.store_mode = store_mode
+        # TODO: mappings are needed (here, not in the schema ¿? :)), standarize (Key/ValueMapping? NameMapping? ColumnMapping? AttributeMapping?)
 
     def initialize(self, ctx):
         super(StoreRow, self).initialize(ctx)
@@ -538,6 +539,7 @@ class QueryLookup(Node):
 class Query(Node):
 
     def __init__(self, connection, query, embed=False, single=False, failifempty=True):
+        super().__init__()
         self.connection = connection
         self.query = query
         self.embed = embed

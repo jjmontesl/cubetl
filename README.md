@@ -207,7 +207,9 @@ Doc:
 
 * [Components](https://github.com/jjmontesl/cubetl/tree/master/cubetl)
 
-Examples: see "Example ETL processes" above
+Examples:
+
+* See "Example ETL processes" above
 
 
 Support

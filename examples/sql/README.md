@@ -1,17 +1,25 @@
-# Create and serve an OLAP schema from an existing DB using Cubes
+# SQL examples
 
-CubETL provides some entry points for inspecting an existing SQL database,
-generating an OLAP model, and exporting a Cubes configuration.
+This directory contains:
 
-All together, this can be used to quickly inspect an existing database using CubesViewer.
+* sql2olap.sh (discussed in this document)
+* sqlexample.py (from the "CubETL Guide - Using SQL" chapter)
 
-## The Chinook database
+**The sample database**
 
 This example uses the well-known *Chinook test database*. It is provided for many
 database systems, this directory includes a copy of the SQLite version.
 
 You can find more information about this database at:
 https://github.com/lerocha/chinook-database/
+
+# Create and serve an OLAP schema for an existing DB
+
+CubETL provides some entry points for inspecting an existing SQL database,
+generating an OLAP model, and exporting a Cubes configuration.
+
+All together, this can be used to quickly inspect an existing database using CubesViewer.
+
 
 ## Generate an OLAP schema and Cubes config
 
@@ -52,11 +60,11 @@ For this example you need to have Cubes Server and CubesViewer packages installe
 ## Options
 
 The *sql2olap* utility generates an OLAP schema using simple guessing. Numbers are
-considered observations and strings are always considered dimensions, even if they are
-details.
+considered observations (measures) and strings are always considered dimensions,
+even if they are just details.
 
-Often, we want to control this process. The SQLToOLAP class accepts several options
-that can be used to fine-tune how the schema generator works.
+Often, we want finer control over this process. The SQLToOLAP class accepts several
+options that can be used to fine-tune how the schema generator works.
 
 **Changing how fields are imported**
 
