@@ -33,7 +33,7 @@ We now have a SQLite database. Run Cubes in order to serve
 analytical queries for this database:
 
     # Run cubes server (in background with &, or in other terminal)
-    pip install https://github.com/jjmontesl/cubes/archive/alias-issue.zip click flask --upgrade
+    pip install https://github.com/DataBrewery/cubes/archive/master.zip click flask --upgrade
     slicer serve ine.slicer.ini  &
 
 Note the `&` argument, which makes the process run in background. You could instead

@@ -1,7 +1,12 @@
 # Log analysis example
 
-This sample defines an OLAP structure from SDMX data. This example uses
-an international trade statistics dataset.
+This example defines an OLAP datastore for HTTP request data like the data that
+can be obtained from a web server log file.
+
+Each fact in this OLAP schema is an HTTP request. Dimensions are HTTP attributes
+like the origin, the user agent, the request path, client country...
+
+A sample apache2 log file is included for the process.
 
 ## Dependencies
 
@@ -35,7 +40,7 @@ which silences print nodes:
 We now have a SQLite database. Run Cubes in order to serve
 analytical queries for this database:
 
-    pip install https://github.com/jjmontesl/cubes/archive/alias-issue.zip click flask --upgrade
+    pip install https://github.com/DataBrewery/cubes/archive/master.zip click flask --upgrade
     slicer serve loganalyzer.cubes-config.ini  &
 
 Note the `&` argument, which makes the process run in background. You could instead

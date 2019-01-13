@@ -147,8 +147,8 @@ def process_data(ctx, m):
     m['is_bot'] = m['ua_is_bot']
 
     m['status_description'] = "%s %s" % (m['status_code'], m['status_description'])
-    m['type_label'] = m['status_type']
-    m['type_code'] = functions.slugu(m['status_type'])
+    m['status_type_label'] = m['status_type']
+    m['status_type_code'] = functions.slugu(m['status_type'])
 
     m['path'] = " ".join(m['verb'].split(' ')[1:-1]).split('?')[0]
     m['path1'] = m['path'].split('/')[1] if len(m['path'].split('/')) > 1 else ""

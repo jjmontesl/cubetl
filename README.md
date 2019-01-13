@@ -101,7 +101,7 @@ SQL mappings for it. Such schema can then be visualized using CubesViewer:
         -p olap2cubes.cubes_config=mydb.cubes-config.ini
 
     # Run cubes server (in background with &)
-    pip install https://github.com/jjmontesl/cubes/archive/alias-issue.zip click flask --upgrade
+    pip install https://github.com/DataBrewery/cubes/archive/master.zip click flask --upgrade
     slicer serve mydb.cubes-config.ini &
 
     # Run a local cubesviewer HTTP server (also opens a browser)
@@ -114,7 +114,7 @@ previously launched Cubes server. Alternatively, you can download CubesViewer an
 load the HTML application locally.
 
 The CubETL project contains an example database that you can use to test this (see the
-[Generate OLAP schema from SQL database and visualize](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2olap)
+[Generate OLAP schema from SQL database and visualize](https://github.com/jjmontesl/cubetl/tree/master/examples/sql)
 example below).
 
 You can control the schema generation process using with options. Check the documentation
@@ -146,7 +146,7 @@ Example ETL processes
 Example ETL processes included with the project:
 
   * [Simple CubETL process (local directory list)](https://github.com/jjmontesl/cubetl/tree/master/examples/various)
-  * [Generate OLAP schema from SQL database and visualize in CubesViewer](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2olap)
+  * [Generate OLAP schema from SQL database and visualize in CubesViewer](https://github.com/jjmontesl/cubetl/tree/master/examples/sql)
   * [Apache web server log file parsing and SQL loading in OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/loganalyzer)
   * [SDMX schema and data import](https://github.com/jjmontesl/cubetl/tree/master/examples/sdmx)
   * [PCAxis to SQL OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/pcaxis)

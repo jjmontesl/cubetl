@@ -66,7 +66,7 @@ def cubetl_config(ctx):
     ctx.add('cubetl.http.response.status', HierarchyDimension(
         name='response_status',
         label='Status',
-        hierarchies=[Hierarchy(name='http_status', label='Status', levels=['type', 'code'])],
+        hierarchies=[Hierarchy(name='http_status', label='Status', levels=['status_type', 'status_code'])],
         attributes=[DimensionAttribute(ctx.get('cubetl.http.response.status.type')),
                     DimensionAttribute(ctx.get('cubetl.http.response.status.code'))]))
 

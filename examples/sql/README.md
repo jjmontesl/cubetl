@@ -49,7 +49,7 @@ Now you can serve the mapped database using Cubes, and browse it using CubesView
 For this example you need to have Cubes Server and CubesViewer packages installed.
 
     # Run cubes server (in background with &, or in other terminal)
-    pip install https://github.com/jjmontesl/cubes/archive/alias-issue.zip click flask --upgrade
+    pip install https://github.com/DataBrewery/cubes/archive/master.zip click flask --upgrade
     slicer serve mydb.cubes-config.ini &
 
     # Run a local cubesviewer HTTP server (also opens a browser)

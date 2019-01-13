@@ -4,7 +4,7 @@ Note: this section assumes you are familiar with CubETL terms (see the
 Quickstart guide for further information).
 
 CubETL is configured by defining *components* that will live in the ETL
-*context*. These components are defined via one ore more configuration files.
+*context*. These components are defined via one or more configuration files.
 
 
 ## Configuration files
@@ -18,8 +18,8 @@ named `cubetl_config(ctx)` that takes a single argument (`ctx`):
 
 ## Including other configuration files
 
-If your context is complex (lots of tables, columns, mappings, OLAP entities...), this
-file can get large.
+When your configuration is complex (lots of tables, columns, mappings, OLAP entities...),
+a single configuration file can get too large.
 
 Separating your entity definitions (like SQL tables and OLAP entities) from your
 process definition (like transformations and mappings) you can better reuse your
@@ -33,7 +33,7 @@ using the `ctx.include(...)` method:
         ctx.include('${ ctx.library_path }/datetime.py')
         ctx.include("myentities.py")
 
-Config *files are only included once*, the first time they are referenced.
+*Configuration files are only included once*, when they are first referenced.
 
 
 ## Adding components
@@ -58,17 +58,15 @@ adding those to the context.
     ctx.add('myprocess.process', flow.Chain(steps=[
 
         config.Print(),
-
         sql.Transaction(connection=ctx.get('myprocess.sql.connection')),
-
         fs.FileLineReader(path='file.txt', encoding=None),
-
         ...
+
+        ]))
 
 In the above example, the *Print*, *Transaction* and *FileLineReader* nodes are defined
 and listed without a name, directly inside the `steps` attribute of the *Chain* node
-(which is then named and added to the context). This is also valid as long as you don't
-need to reference them by name.
+(which is then named and added to the context).
 
 
 ## Referencing other components
@@ -87,20 +85,20 @@ takes the name of the component as argument and returns it from the context:
 ## Config expressions and lambdas
 
 When configuring components, it is often needed to configure component behavior
-depending on the current context or message values.
+depending on the current context or message values. CubETL provides
+"config expressions" for this. Configuration expressions are evaluated when the configuration
+value is used: they allow to define expressions that will be resolved in the
+context of the message currently being processed.
 
 For example, suppose a process needs to read several CSV files and process all rows.
 The *CSVFileReader* component reads a CSV file from the filesystem, but we need to
-specify the path to the CSV file, which comes frmo a previous *DirectoryList* component,
+specify the path to the CSV file, which comes from a previous *DirectoryList* component,
 and it's stored in the `path` attribute of the message. In this case we can use
-a config expression `path="${ m['path'] }"` which will be evaluated for each message:
+the config expression `${ m['path'] }` which will be evaluated for each message:
 
     def cubetl_config(ctx):
-
         ctx.add('myprocess.process', flow.Chain(steps=[
-
             fs.DirectoryList(path=".", filter_re=".*.csv"),
-
             fs.CsvFileReader(path="${ m['path'] }"),
 
             ...
@@ -109,23 +107,26 @@ a config expression `path="${ m['path'] }"` which will be evaluated for each mes
 **Value interpolation**
 
 Value interpolation is performed on strings that contain an expression delimited
-by `${ ... }`. Anything between `{` and `}` is treated as a Python expression.
+by `${ ... }`. Anything between the curly brackets `${` and `}` is treated as
+a Python expression.
 
 This allows you to interpolate context and message data into strings, for example:
 
     log.Log(message="Processing CSV file: ${ m['path'] }"),
 
 When a string is comprised *entirely* of an interpolated expression, the result value
-is taken directly as the result of the interpolation even when this result is not
-a string. The following example shows how to assign an *object reference* through an
+is taken directly as the result of the expression even when this result is not
+a string. This allows numbers, booleans or arbitrary objects to be returned by an
+interpolated expression.
+
+The following example shows how to assign an *object reference* through an
 interpolated string (here, the message `my_store_table` contains a reference to
 a cubetl.sql.SQLTable, and the interpolated value returns that reference instead of
 a string):
 
     sql.StoreRow(sqltable="${ m['my_store_table'] }")
 
-Note that including whitespace will cause the expression to be treated as a string.
-In this case, you can also use a *lambda expression* (see below).
+Note that including whitespace or text will cause the expression to be treated as a string.
 
 Interpolated expressions are executed in a local scope where the following
 variables are available:
@@ -147,7 +148,7 @@ config value that supports expressions:
     fs.CsvFileReader(path=lambda m: m['path']),
 
 Alike *interpolated expressions*, the function will be executed whenever the
-path value is needed. CubETL lambda functions can receive a `ctx` argument, a
+path value is used. CubETL lambda functions can receive a `ctx` argument, a
 `m` argument (with the current message), or both (in that order). CubETL will
 call it with the appropriate arguments.
 
@@ -192,7 +193,12 @@ that you put your organisation entities and schemas in well-organised configurat
 files. You can then reuse them from different ETL processes.
 
 CubETL library includes OLAP schemas, regular expressions, and default data for
-several topics: date and time, HTTP topics,
+several topics: date and time, HTTP topics...
+
+CubETL default library directory can be referenced using the `ctx.library_path` context
+attribute:
+
+    ctx.include('${ ctx.library_path }/datetime.py')
 
 Check the [Library index](https://github.com/jjmontesl/cubetl/blob/master/doc/guide) for
 further information.

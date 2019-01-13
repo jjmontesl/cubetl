@@ -150,7 +150,7 @@ the automatically generated schema and mappings.
 **From command line**
 
 CubETL provides command line support for these operations. See the
-[Generate OLAP schema from SQL database and visualize in CubesViewer](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2olap) example.
+[Generate OLAP schema from SQL database and visualize in CubesViewer](https://github.com/jjmontesl/cubetl/tree/master/examples/sql2) example.
 
 
 ## Serving data with Databrewery Cubes
