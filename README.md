@@ -151,7 +151,7 @@ Example ETL processes included with the project:
   * [SDMX schema and data import](https://github.com/jjmontesl/cubetl/tree/master/examples/sdmx)
   * [PCAxis to SQL OLAP star-schema](https://github.com/jjmontesl/cubetl/tree/master/examples/pcaxis)
   * OLAP schema definition and fake data loading (fictional web shop)
-  * Querying a SQL database and exporting to CSV
+  * [Querying a SQL database and exporting to CSV](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-quickstart.md)
   * Wikipedia huge XML load
   * HTML scraping
 
@@ -187,15 +187,15 @@ Guide:
 
 * [Quickstart](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-quickstart.md)
 * [Configuration](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-config.md) (includes, expressions, functions, library)
-* Running (-q, -d, -m, -p, standard input, redirecting, tty vs. non-tty, from Python, running several nodes)
+<!-- * Running (-q, -d, -m, -p, standard input, redirecting, tty vs. non-tty, from Python, running several nodes) -->
 * Sequential formats (text files, CSV, JSON...)
 * [Tables](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-tables.md)
 * Process flow (unions, chain forks, repeats...)
-* SQL
-* OLAP
-* Custom functions, components and processing nodes (when to use which)
+* [SQL](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-sql.md)
+* [OLAP](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-olap.md)
+* Script nodes, custom functions, custom nodes and custom components
 
-Library:
+Types Library:
 
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
   * [Geo](https://github.com/jjmontesl/cubetl/blob/master/library/geo.py)

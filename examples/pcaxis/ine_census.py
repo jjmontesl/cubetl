@@ -131,7 +131,6 @@ def cubetl_config(ctx):
         cubes10.Cubes10ModelWriter(olapmapper=ctx.get('olap2sql.olapmapper'),
                                    model_path="ine.cubes-model.json",
                                    config_path="ine.cubes-config.ini"),
-        script.Delete(['cubesmodel', 'cubesmodel_json']),
 
         sql.Transaction(connection=ctx.get('ine.sql.connection')),
 

@@ -61,7 +61,9 @@ def cubetl_config(ctx):
 
         util.Print(),
 
-        sql.StoreRow(sqltable=ctx.get('example.agg.table')),
+        sql.StoreRow(sqltable=ctx.get('example.agg.table'), store_mode=sql.SQLTable.STORE_MODE_UPSERT),
+
+        log.LogPerformance(),
 
     ]))
 

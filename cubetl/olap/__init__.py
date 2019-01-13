@@ -288,7 +288,8 @@ class Fact(OlapEntity):
 
 class Key(Component):
 
-    # TODO: Maybe remove, and use one of the attributes (and so reference the key by name or the attribute directly?) +1
+    # TODO: currently must be a component because of sqlschema but it's possibly nonsense, review Key usage!
+    # TODO: Maybe remove, and use one of the attributes (and so reference the key by name or the attribute directly?) +1 (would work for multiple PKs?)
 
     def __init__(self, name, type, label=None):
         super().__init__()

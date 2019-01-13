@@ -9,11 +9,11 @@ Guide:
 * Sequential formats (text files, CSV, JSON...)
 * [Tables](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-tables.md)
 * Process flow (unions, chain forks, repeats...)
-* SQL
-* OLAP
+* [SQL](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-sql.md)
+* [OLAP](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-olap.md)
 * Script nodes, custom functions, custom nodes and custom components
 
-Library:
+Types Library:
 
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
   * [Geo](https://github.com/jjmontesl/cubetl/blob/master/library/geo.py)

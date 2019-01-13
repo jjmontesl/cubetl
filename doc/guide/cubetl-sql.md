@@ -134,6 +134,9 @@ In this example, we insert the results of the previous query into our new databa
 When running the process, CubETL will create the database table if it doesn't exist. It will then store
 each row that resulted from the aggregated query into the new table.
 
+This works because the *StoreRow* node will try to map each table column to the message attribute with the
+same name. If in your scenario names don't match, you neeed to define column mappings in the *StoreRow* node.
+
 If you run this process now, you'll realize it's *very slow*. This is because of autocommit. You should
 always try to wrap your SQL inserts in database transactions. In order to achieve that, add a
 *sql.Transaction* node *before* the SQL Query (as the first node in the chain). Also, when you
@@ -147,6 +150,16 @@ work with more than one database, make sure you correctly target the connection 
 This must be done _before_ the query is run because the *Transaction* node starts a new transaction
 with every incoming message. We want a single transaction, not one per row, so the *Transaction*
 node must be the first one in the chain so it receives only the initial message.
+
+If you now run the example process (`sqlexample.py`) with `-q`, you should see the summary of the process:
+
+    $ cubetl sqlexample.py example.process -q
+    2019-01-13 02:56:51,300 - INFO - Processing Chain(example.process)
+    2019-01-13 02:56:51,300 - INFO - Starting database transaction
+    2019-01-13 02:56:51,552 - INFO - Commiting database transaction
+    2019-01-13 02:56:51,596 - INFO - SQLTable Totals  ins/upd/sel: 0/304/304
+    2019-01-13 02:56:51,597 - INFO - SQLTable example_aggregates ins/upd/sel:      0/   304/304
+    2019-01-13 02:56:51,597 - INFO - Performance - Total time: 0  Total messages: 304  Global rate: 938.138 msg/s
 
 
 ## Doing (cached) table lookups

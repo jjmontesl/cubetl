@@ -15,8 +15,7 @@ A process is defined by a chain of processing **nodes** that can take a message 
 transform it, or produce any number of derived messages. These are then processed by the
 next step of the chain.
 
-For example, a simple process that lists files in a directory writes them to a CSV file
-would look like:
+This section is based on the example process that lists files in a directory writes them to a CSV file:
 
 ![DirectoryList-to-CSV process](https://raw.githubusercontent.com/jjmontesl/cubetl/master/doc/img/diagrams/directorylist-to-csv.plantuml.svg "DirectoryList-to-CSV process")
 
