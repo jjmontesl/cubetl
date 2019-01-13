@@ -13,10 +13,10 @@ Start by listing the available nodes:
 
     cubetl ine_census.py -l
 
-The entry point is called `ine.process.census`, call `cubetl` to run it.
+The entry point is called `ine.process`, call `cubetl` to run it.
 Note that this process make take several minutes:
 
-    cubetl ine_census.py ine.process.census -q
+    cubetl ine_census.py ine.process -q
 
 The `-q` option makes the process run in quiet mode, so process data items will
 not be printed. The process includes a node that will print progress
@@ -25,7 +25,7 @@ the 600k cells in the original file).
 
 This has generated a `ine.sqlite3` database in the current directory.
 Note that the process has also generated a Cubes model and configuration file
-(`ine.model.json` and `ine.slicer.ini`).
+(`ine.cubes-model.json` and `ine.cubes-config.ini`).
 
 **Serving the data**
 
@@ -34,7 +34,7 @@ analytical queries for this database:
 
     # Run cubes server (in background with &, or in other terminal)
     pip install https://github.com/DataBrewery/cubes/archive/master.zip click flask --upgrade
-    slicer serve ine.slicer.ini  &
+    slicer serve ine.cubes-config.ini  &
 
 Note the `&` argument, which makes the process run in background. You could instead
 use a separate terminal window if you wish.
@@ -42,7 +42,7 @@ use a separate terminal window if you wish.
 Now run CubesViewer to inspect the dataset:
 
     # NOTE: not yet available, please download and use CubesViewer manually!
-    cubext cv
+    cvutils cv
 
 This will start a local HTTP service running on port 8085 for CubesViewer studio.
 It will also open a browser pointing to the application.
