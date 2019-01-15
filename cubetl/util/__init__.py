@@ -49,11 +49,11 @@ class Assert(Node):
 
     def process(self, ctx, m):
 
-        value = ctx.interpolate(m, self.eval)
+        value = ctx.interpolate(self.eval, m)
 
         if (not value):
             if (self.message):
-                logger.error(ctx.interpolate(m, self.message))
+                logger.error(ctx.interpolate(self.message, m))
             raise Exception("Assertion failed: %s = %s" % (self.eval, value))
 
         yield m
@@ -98,14 +98,14 @@ class Print(Node):
             do_print = True
 
             if (self.condition):
-                cond = ctx.interpolate(m, self.condition)
+                cond = ctx.interpolate(self.condition, m)
                 if (not cond):
                     do_print = False
 
             if do_print:
 
                 if (self.eval):
-                    obj = ctx.interpolate(m, self.eval)
+                    obj = ctx.interpolate(self.eval, m)
                 else:
                     obj = m
 

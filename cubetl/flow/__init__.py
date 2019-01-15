@@ -72,7 +72,7 @@ class Chain(Node):
 
         cond = True
         if self.condition:
-            cond = parsebool(ctx.interpolate(m, self.condition))
+            cond = parsebool(ctx.interpolate(self.condition, m))
 
         if cond:
             if (not self.fork):
@@ -102,11 +102,11 @@ class Filter(Node):
 
     def process(self, ctx, m):
 
-        if (parsebool(ctx.interpolate(m, self.condition))):
+        if (parsebool(ctx.interpolate(self.condition, m))):
             yield m
         else:
             if (self.message):
-                logger.info(ctx.interpolate(m, self.message))
+                logger.info(ctx.interpolate(self.message, m))
             elif (ctx.debug2):
                 logger.debug("Filtering out message")
             return
@@ -131,7 +131,7 @@ class Skip(Node):
             # Skip message
             return
 
-        self._next_skip = int(ctx.interpolate(m, self.skip))
+        self._next_skip = int(ctx.interpolate(self.skip, m))
         self.counter = 0
 
         yield m
@@ -151,7 +151,7 @@ class Limit(Node):
     def process(self, ctx, m):
 
         self.counter += 1
-        limit = int(ctx.interpolate(m, self.limit))
+        limit = int(ctx.interpolate(self.limit, m))
 
         if self.counter > limit:
             # Skip message
@@ -187,9 +187,9 @@ class Multiplier(Node):
 
         pvalues = self.values
         if (isinstance(pvalues, str)):
-            pvalues = ctx.interpolate(m, self.values)
+            pvalues = ctx.interpolate(self.values, m)
         if (isinstance(pvalues, str)):
-            pvalues = [ v.strip() for v in pvalues.split(",") ]
+            pvalues = [v.strip() for v in pvalues.split(",")]
         for val in pvalues:
             # Copy message and set value
             if (ctx.debug2):
@@ -222,7 +222,7 @@ class Iterator(Node):
 
         pvalues = self.values
         if (isinstance(pvalues, basestring)):
-            pvalues = ctx.interpolate(m, self.values)
+            pvalues = ctx.interpolate(self.values, m)
         if (isinstance(pvalues, basestring)):
             pvalues = [ v.strip() for v in pvalues.split(",") ]
 

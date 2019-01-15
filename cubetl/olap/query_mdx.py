@@ -56,7 +56,7 @@ class MDXQuery(Node):
 
     def process(self, ctx, m):
 
-        query = ctx.interpolate(m, self.query)
+        query = ctx.interpolate(self.query, m)
         logger.debug("MDX Query: %s" % (query))
 
         # Resolve drilldown and cuts to objects

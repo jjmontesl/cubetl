@@ -63,7 +63,7 @@ class JsonReader(Node):
         logger.debug("Processing JSON data at %s" % self)
 
         # Resolve data
-        data = ctx.interpolate(m, self.data)
+        data = ctx.interpolate(self.data, m)
 
         result = json.loads(data)
         if isinstance(result, list) and self.iterate:
@@ -162,7 +162,7 @@ class JsonFileWriter(FileWriter):
 
         self._count = self._count + 1
 
-        data = ctx.interpolate(m, self.data)
+        data = ctx.interpolate(self.data, m)
 
         if self.fields:
             o = {}

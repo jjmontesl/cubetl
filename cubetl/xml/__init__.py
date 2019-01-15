@@ -42,7 +42,7 @@ class XmlPullParser(Node):
 
     def process(self, ctx, m):
 
-        path = ctx.interpolate(ctx, self.path)
+        path = ctx.interpolate(self.path, m)
         logger.debug("Reading XML in pull mode (splitting by tag '%s'): %s" % (self.tagname, path))
 
 
@@ -75,8 +75,8 @@ class XmlParser(Node):
     def process(self, ctx, m):
 
         #logger.debug("Parsing XML")
-        parser = etree.XMLParser(ns_clean=True, recover=True, encoding=ctx.interpolate(m, self.encoding))
-        m["xml"] = etree.fromstring(m["data"].encode(ctx.interpolate(m, self.encoding)), parser=parser)
+        parser = etree.XMLParser(ns_clean=True, recover=True, encoding=ctx.interpolate(self.encoding, m))
+        m["xml"] = etree.fromstring(m["data"].encode(ctx.interpolate(self.encoding, m)), parser=parser)
 
         yield m
 
@@ -107,7 +107,7 @@ class XPathExtract(Node):
 
                 m[eval["name"]] = m[self.xml].xpath(eval["xpath"])
                 if (isinstance(m[eval["name"]], str)):
-                    m[eval["name"]] = m[eval["name"]].decode(ctx.interpolate(m, self.encoding))
+                    m[eval["name"]] = m[eval["name"]].decode(ctx.interpolate(self.encoding, m))
                 #m[mapping["key"]] = etree.XPath("string()")( m["xml"].xpath(mapping["xpath"])[0] )
                 #m[mapping["key"]] = etree.tostring(m["xml"].xpath(mapping["xpath"])[0], method="text", encoding=unicode)
 
@@ -115,14 +115,14 @@ class XPathExtract(Node):
                 raise Exception("Deprecated (invalid) option 'eval' in eval at %s" % self)
 
             if ("value" in eval):
-                m[eval["name"]] = ctx.interpolate(m, eval["value"])
+                m[eval["name"]] = ctx.interpolate(eval["value"], m)
 
             if ("default" in eval):
                 if ((not eval["name"] in m) or
                     (m[eval["name"]] == None) or
                     (m[eval["name"]].strip() == "")):
 
-                    m[eval["name"]] = ctx.interpolate(m, eval["default"])
+                    m[eval["name"]] = ctx.interpolate(eval["default"], m)
 
         yield m
 

@@ -109,7 +109,7 @@ class Eval(Node):
         super(Eval, self).initialize(ctx)
 
         if (hasattr(self, "mappings")):
-            raise Exception ("%s config contains a mappings element which is not allowed (use 'eval' element)" % self)
+            raise Exception("%s config contains a mappings element which is not allowed (use 'eval' element)" % self)
 
 
     @staticmethod
@@ -133,10 +133,10 @@ class Eval(Node):
 
                 elif ("value" in evalitem):
                     try:
-                        m[evalitem["name"]] = ctx.interpolate(m, evalitem["value"], data)
+                        m[evalitem["name"]] = ctx.interpolate(evalitem["value"], m, data)
                     except Exception as e:
                         if "except" in evalitem:
-                            m[evalitem["name"]] = ctx.interpolate(m, evalitem["except"], data)
+                            m[evalitem["name"]] = ctx.interpolate(evalitem["except"], m, data)
                         else:
                             raise
                 else:
@@ -150,7 +150,7 @@ class Eval(Node):
 
                 if ("default" in evalitem):
                     if (not m[evalitem["name"]]):
-                        m[evalitem["name"]] = ctx.interpolate(data, evalitem["default"])
+                        m[evalitem["name"]] = ctx.interpolate(evalitem["default"], data)
 
 
     def process(self, ctx, m):
@@ -162,8 +162,6 @@ class Eval(Node):
 
 class Delete(Node):
     """
-    Note that evaluation is done via ctx.interpolate(), and so
-    requires expressions to be delimited by ${}.
     """
 
     def __init__(self, fields):

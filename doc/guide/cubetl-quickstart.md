@@ -1,24 +1,25 @@
 # CubETL - Introduction
 
 CubETL allows you to define processes that retrieve data from different sources,
-manipulate it, and writes it in the same or different formats. This is usually known
+manipulate it, and store it in the same or different formats. This is commonly known
 as an ETL process (for Extract, Transform and Load).
 
 It does so by handling data as separate items (eg. rows in a database, lines in a text file).
 
-In CubETL, data items are called "**messages**" (sometimes simply "items"). Messages are a
+In CubETL, data items are called "**messages**" (sometimes simply "items"). Messages are
 simple key-value structures which hold any data your process needs to handle.
 
 ## CubETL processes
 
-A process is defined by a chain of processing **nodes** that can take a message message and
-transform it, or produce any number of derived messages. These are then processed by the
-next step of the chain.
+A process is defined by a chain of processing **nodes** that each take a message and
+transform it, producing any number of derived messages. These are then processed by the
+next node in the chain.
 
-This section is based on the example process that lists files in a directory writes them to a CSV file:
+This section is based on a example process that lists files in a directory writes them to a CSV file:
 
 ![DirectoryList-to-CSV process](https://raw.githubusercontent.com/jjmontesl/cubetl/master/doc/img/diagrams/directorylist-to-csv.plantuml.svg "DirectoryList-to-CSV process")
 
+**Note**: The example in this section can be found in the `examples/various/directorycsv.py` file.
 
 ## CubETL context and components
 
@@ -38,14 +39,15 @@ nodes generate and process *messages*.
 
 CubETL provides tools and classes that handle common ETL needs, including common facilities
 like logging and caching and dedicated modules for RegExp, XML, CSV, JSON, SQL, and OLAP
-schemas and data stores.
+schemas and data stores, among others. You can always define your custom processing
+components.
 
 Within this framework, you can define your own transformation processes.
 
 
 ## Creating an ETL process
 
-(Note: The example in this section can be found in the `examples/various/directorycsv.py` file).
+**Note**: The example in this section can be found in the `examples/various/directorycsv.py` file.
 
 In order to define the ETL process, choose a directory for your project and
 create a `directorycsv.py` file with the following content:
@@ -55,8 +57,8 @@ create a `directorycsv.py` file with the following content:
     def cubetl_config(ctx):
         # Your CubETL components configuration goes here
 
-The `cubetl_config` must exist and accept a `ctx` argument. When CubETL loads configuration files,
-it calls this method in order to setup the process configuration.
+The `cubetl_config` function must exist and accept a `ctx` argument. When CubETL loads
+configuration files, it calls this method in order to setup the process configuration.
 
 In this example, we will list files in a directory and write their path and size to
 a CSV file.
@@ -66,6 +68,7 @@ and add it to the context with the name `directorylist.process`:
 
     def cubetl_config(ctx):
         ctx.add('directorycsv.process', flow.Chain(steps=[]))
+
 
 ## Running
 
@@ -79,6 +82,7 @@ This processing chain does nothing, but we can test this already. Run:
     2019-01-10 00:56:50,183 - INFO - Starting CubETL 1.x
     2019-01-10 00:56:50,183 - INFO - Including config file: directorycsv.py
     2019-01-10 00:56:50,224 - INFO - Processing Chain(directorycsv.process)
+
 
 ## Defining the process
 
@@ -117,15 +121,15 @@ a message to the terminal. If you now run the process you'll see:
 
 ## The process flow
 
-When the process is started, the initial *flow.Chain* node receives an initial, empty message.
+When the process is started, the initial *flow.Chain* node receives an empty, **initial message**.
 
-The *Chain* node is a core component of CubETL: it processes messages in cascade (depth-first)
+The *Chain* node is a core component of CubETL: it processes messages in cascade
 through each of the nodes in the *steps* list.
 
 In the example above, the first step of the chain is the *DirectoryList* node, so it receives
 the initial (empty) message. This node then emits a message for each file found in the specified
-directory. Each of those messages is then printed by the *Print* node. Each message contains
-a `path` attribute.
+directory. Each of those messages is then printed by the *Print* node, and as shown in the output
+above each message contains a `path` attribute.
 
 
 ## Adding information
@@ -173,6 +177,8 @@ each message processed:
         m['mimetype_type'] = m['mimetype'].split('/')[0]
         m['mimetype_subtype'] = m['mimetype'].split('/')[1]
 
+In the example above, the `process_data` function is used to calculate the mime type
+of the file, and two other attributes are added to the message.
 
 You can find more information in the "Script nodes, custom functions, custom nodes and custom components"
 chapter of this guide.
@@ -181,7 +187,7 @@ chapter of this guide.
 ## Writing to a CSV
 
 Writing messages to screen in JSON format may be useful for development, but let's now transform
-data into CSV format so it could, for example, be read with a spreadsheet application.
+data into CSV format (so it can be read with a spreadsheet application).
 
 CubETL provides components to read and write CSV formats. Add the following node
 to the end of the process steps list:
@@ -196,8 +202,9 @@ If you don't specify a file path, the *FileWriter* will write to standard output
 convenient to do this, and simply redirect the process output to a file from the shell). You can
 always provide a file path using the `path` argument.
 
-This will interleave *Print* and *CsvFileWriter* output! (test it). You could comment the *Print* node,
-but there's a command line argument to bypass *Print* nodes: `cubetl -q`.
+Note that this will interleave *Print* and *CsvFileWriter* output! (test it). You
+could comment the *Print* node, but there's a command line argument to bypass *Print*
+nodes: the command line switch `cubetl -q`.
 
 If you now run the process with `-q` you can see the CSV output:
 
@@ -221,18 +228,18 @@ If you now run the process with `-q` you can see the CSV output:
 You can define **context properties** using the `-p` command line argument. This is useful to
 pass variables to your ETL process (eg. connection strings, filenames...).
 
-You can then use these properties in expressions. For example, let's take the directory
+You can then use these properties in expressions. For example, let's get the directory
 to list from a property:
 
     fs.DirectoryList(path=lambda ctx: ctx.props.get("path", "/")),
 
-This resolves the path of the directory to list using a lambda expression. Expressions are
+This resolves the path of the directory to list using a *lambda expression*. Expressions are
 understood by many of CubETL components and allow you to define configuration in terms of
 context and message values.
 
 Context properties are a held by a dictionary available through `ctx.props`. Here we
-use the `.get()` method to retrieve a key if it exists, or otherwise return a default
-value `"/"`.
+use the `.get()` method of a dictionary to retrieve a key if it exists, or otherwise
+return a default value (`/`).
 
 We can now run our process for a different directory using:
 

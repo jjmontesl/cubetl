@@ -13,7 +13,7 @@ Guide:
 * [OLAP](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-olap.md)
 * Script nodes, custom functions, custom nodes and custom components
 
-Types Library:
+Config Library:
 
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
   * [Geo](https://github.com/jjmontesl/cubetl/blob/master/library/geo.py)

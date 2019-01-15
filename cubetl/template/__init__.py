@@ -36,7 +36,7 @@ class TemplateRendererBase(Node):
         raise NotImplementedError()
 
     def process(self, ctx, m):
-        #template = ctx.interpolate(m, self.template)
+        #template = ctx.interpolate(self.template, m)
         result = self.render(ctx, {'m': m})
 
         m['templated'] = result

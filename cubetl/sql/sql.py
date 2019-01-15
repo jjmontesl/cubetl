@@ -527,7 +527,7 @@ class QueryLookup(Node):
 
     def process(self, ctx, m):
 
-        query = ctx.interpolate(m, self.query)
+        query = ctx.interpolate(self.query, m)
 
         result = self._do_query(query)
 
@@ -580,7 +580,7 @@ class Query(Node):
 
     def process(self, ctx, m):
 
-        query = ctx.interpolate(m, self.query)
+        query = ctx.interpolate(self.query, m)
 
         logger.debug("Running query: %s" % query.strip())
         rows = self.connection.connection().execute(query)

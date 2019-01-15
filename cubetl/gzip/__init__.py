@@ -33,7 +33,15 @@ from cubetl.fs import FileReader
 logger = logging.getLogger(__name__)
 
 
+
 class GZIPDecompressReader(Node):
+    """
+    TODO: decompress a stream (note: possibly needs a "EOF" message).
+    """
+    pass
+
+
+class GZIPDecompressData(Node):
 
     data = '${ m["data"] }'
     name = "data"
@@ -45,7 +53,7 @@ class GZIPDecompressReader(Node):
     def process(self, ctx, m):
         # TODO: Implement
 
-        data = ctx.interpolate(m, self.data)
+        data = ctx.interpolate(self.data, m)
         compressedFile = StringIO.StringIO(data)
         decompressedFile = gzip.GzipFile(fileobj=compressedFile)
 

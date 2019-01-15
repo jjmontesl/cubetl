@@ -47,7 +47,7 @@ class OlapQueryAggregate(Node):
 
     def process(self, ctx, m):
 
-        entity = ctx.interpolate(m, self.fact)
+        entity = ctx.interpolate(self.fact, m)
         logger.debug("OLAP Query Aggregate: %s" % (entity.name))
 
         # Resolve drilldown and cuts to objects

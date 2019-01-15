@@ -65,7 +65,7 @@ class Cubes10ModelWriter(Node):
 
         super().initialize(ctx)
 
-        self._olapmapper = ctx.interpolate(None, self.olapmapper)
+        self._olapmapper = ctx.interpolate(self.olapmapper)
         ctx.comp.initialize(self._olapmapper)
 
         self._print = Print()
@@ -75,7 +75,7 @@ class Cubes10ModelWriter(Node):
         #self._print.eval = '${ m["cubesmodel_json"] }'
         ctx.comp.initialize(self._print)
 
-        config_path = ctx.interpolate(None, self.config_path)
+        config_path = ctx.interpolate(self.config_path)
         if config_path:
             template_path = os.path.dirname(__file__) + "/cubes.config.template"
             logger.info("Reading cubes config template from: %s", template_path)
@@ -115,13 +115,13 @@ class Cubes10ModelWriter(Node):
         for m2 in res:
             pass
 
-        model_path = ctx.interpolate(m, self.model_path)
+        model_path = ctx.interpolate(self.model_path, m)
         if model_path:
             logger.info("Writing Cubes server model to: %s", model_path)
             with open(model_path, "w") as f:
                 f.write(model_json)
 
-        config_path = ctx.interpolate(m, self.config_path)
+        config_path = ctx.interpolate(self.config_path, m)
         if config_path:
             connection_url = connection.url if connection else None
             logger.info("Writing Cubes server config to: %s", config_path)

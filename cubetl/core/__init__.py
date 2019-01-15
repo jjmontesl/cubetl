@@ -108,7 +108,7 @@ class ContextProperties(Component):
                 continue
 
             value = getattr(self, attr)
-            value = ctx.interpolate(None, value)
+            value = ctx.interpolate(value)
 
             if attr not in ctx.props:
                 logger.debug("Setting context property %s = %s" % (attr, value))

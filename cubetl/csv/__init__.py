@@ -68,7 +68,7 @@ class CsvReader(Node):
         logger.debug("Processing CSV data at %s" % self)
 
         # Resolve data
-        data = ctx.interpolate(m, self.data)
+        data = ctx.interpolate(self.data, m)
 
         header = None
         if (self.headers):
@@ -265,7 +265,7 @@ class CsvFileWriter(Node):
 
         self._row = self._row + 1
 
-        row = [ctx.interpolate(m, c["value"]) for c in self.columns]
+        row = [ctx.interpolate(c["value"], m) for c in self.columns]
         m['_csvdata'] = self._csv_row(ctx, row)
         self._fileWriter.process(ctx, m)
         del (m['_csvdata'])

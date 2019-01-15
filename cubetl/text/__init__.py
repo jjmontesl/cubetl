@@ -77,7 +77,7 @@ class RegExp(Node):
 
     def process(self, ctx, m):
 
-        data = ctx.interpolate(m, self.data)
+        data = ctx.interpolate(self.data, m)
 
         #matches = re.search(self.regexp, data)
         matches = re.findall(self.regexp, data)

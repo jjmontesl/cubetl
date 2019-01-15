@@ -12,6 +12,7 @@ setup(
 
     packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
 
+    zip_safe=False,
     include_package_data=True,
     package_data = {
         'cubetl': ['*.template']

@@ -80,7 +80,7 @@ class CachedTableLookup(TableLookup):
         else:
             print(self.table._rows)
             raise Exception("No rows found when looking up in %s: %s" % (self, keys))
-            m.update({ k: ctx.interpolate(m, v) for k, v in self.default.items() })
+            m.update({ k: ctx.interpolate(v, m) for k, v in self.default.items() })
 
         if (ctx.debug2):
             logger.debug("Cache table lookup (lookup=%s): %s" % (keys, result))

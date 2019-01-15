@@ -58,10 +58,10 @@ class Log(Node):
 
         dolog = True
         if (self.condition):
-            dolog = parsebool(ctx.interpolate(m, self.condition))
+            dolog = parsebool(ctx.interpolate(self.condition, m))
 
         if dolog and (not self.once or self.count == 1):
-            logger.log(self.level, ctx.interpolate(m, self.message))
+            logger.log(self.level, ctx.interpolate(self.message, m))
 
         yield m
 

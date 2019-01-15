@@ -107,18 +107,20 @@ class CachedQueryLookup(QueryLookup):
 
     def process(self, ctx, m):
 
-        query = ctx.interpolate(m, self.query)
+        query = ctx.interpolate(self.query, m)
 
         result = self._cache.get(query, CachedQueryLookup.NOT_CACHED)
         if (result != CachedQueryLookup.NOT_CACHED):
             self.cache_hits = self.cache_hits + 1
-            if (ctx.debug2): logger.debug("Query cache hit: %s" % (result))
+            if (ctx.debug2):
+                logger.debug("Query cache hit: %s" % (result))
         else:
             self.cache_misses = self.cache_misses + 1
             result = self._do_query(query)
             self._cache.put(query, result)
 
-        if (result != None): m.update(result)
+        if result is not None:
+            m.update(result)
 
         yield m
 

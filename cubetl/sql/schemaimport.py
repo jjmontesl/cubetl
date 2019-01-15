@@ -64,8 +64,8 @@ class DBToSQL(Node):
         if options is None:
             options = DBToSQL.sql2cubetl_options_default
 
-        connection.url = ctx.interpolate(None, connection.url)
-        engine = connection.engine()  # create_engine(ctx.interpolate(None, connection.url))
+        connection.url = ctx.interpolate(connection.url)
+        engine = connection.engine()  # create_engine(ctx.interpolate(connection.url))
         metadata = sqlalchemy.MetaData()
         metadata.reflect(engine)
 

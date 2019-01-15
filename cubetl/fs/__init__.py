@@ -76,11 +76,11 @@ class DirectoryList(Node):
     def process(self, ctx, m):
 
         # Resolve path
-        path = ctx.interpolate(m, self.path)
+        path = ctx.interpolate(self.path, m)
 
         # Check m is empty, etc
 
-        filter_re = ctx.interpolate(m, self.filter_re)
+        filter_re = ctx.interpolate(self.filter_re, m)
         logger.info("Listing directory %s (mask '%s')" % (path, filter_re))
 
         files = ((root, f) for root, dirs, files in self.walklevel(path, self.maxdepth) for f in files)
@@ -112,7 +112,7 @@ class FileInfo(Node):
 
     def process(self, ctx, m):
         # Resolve path
-        path = ctx.interpolate(m, self.path)
+        path = ctx.interpolate(self.path, m)
         try:
             stat = os.stat(path)
 
@@ -184,7 +184,7 @@ class FileReader(Node):
     def process(self, ctx, m):
 
         # Resolve path
-        msg_path = ctx.interpolate(m, self.path)
+        msg_path = ctx.interpolate(self.path, m)
 
         logger.debug("Reading file %s (encoding=%s)" % (msg_path, self.encoding))
         with open(msg_path, "rb") as myfile:
@@ -192,7 +192,7 @@ class FileReader(Node):
             m[self.name] = myfile.read()
 
             # Encoding
-            encoding = ctx.interpolate(m, self.encoding) if self.encoding else None
+            encoding = ctx.interpolate(self.encoding, m) if self.encoding else None
             m[self.name] = self._solve_encoding(encoding, m[self.name])
             m["_file_path"] = msg_path
             m["_encoding"] = encoding
@@ -243,7 +243,7 @@ class FileWriter(Node):
 
     def _close_reopen_file(self, ctx, m):
 
-        path = ctx.interpolate(m, self.path)
+        path = ctx.interpolate(self.path, m)
 
         if (not self._open_file or path != self._open_path):
 
@@ -274,7 +274,7 @@ class FileWriter(Node):
         self._open_records = self._open_records + 1
 
         if not value:
-            value = ctx.interpolate(m, self.data)
+            value = ctx.interpolate(self.data, m)
 
         self._open_file.write(value)
         if self.newline:
@@ -292,7 +292,7 @@ class FileLineReader(FileReader):
     def process(self, ctx, m):
 
         # Resolve path
-        msg_path = ctx.interpolate(m, self.path)
+        msg_path = ctx.interpolate(self.path, m)
 
         logger.debug("Reading file %s lines" % msg_path)
         with open(msg_path, "r") as myfile:
@@ -305,7 +305,7 @@ class FileLineReader(FileReader):
                 m2[self.name] = line
 
                 # Encoding
-                encoding = ctx.interpolate(m2, self.encoding)
+                encoding = ctx.interpolate(self.encoding, m2)
                 m2[self.name] = self._solve_encoding(encoding, m2[self.name])
                 m2["_encoding"] = encoding
 

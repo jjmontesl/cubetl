@@ -63,7 +63,7 @@ class HttpReader(FileReader):
     def process(self, ctx, m):
 
         # Resolve path
-        url = ctx.interpolate(m, self.url)
+        url = ctx.interpolate(self.url, m)
 
         logger.debug("Requesting URL: %r" % url)
 
@@ -85,7 +85,7 @@ class HttpReader(FileReader):
 
         # Encoding
         """
-        encoding = ctx.interpolate(m, self.encoding)
+        encoding = ctx.interpolate(self.encoding, m)
         m[self.name] = self._solve_encoding(encoding, m[self.name])
         m["_encoding"] = encoding
         """

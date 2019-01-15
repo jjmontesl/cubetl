@@ -27,6 +27,12 @@ def cubetl_config(ctx):
                       role='year',
                       attributes=[Attribute(name='year', type='Integer', label='Year')]))
 
+    ctx.add('cubetl.datetime.half',
+            Dimension(name='half',
+                      label='Half',
+                      role='half',
+                      attributes=[Attribute(name='half', type='Integer', label='Half')]))
+
     ctx.add('cubetl.datetime.quarter',
             Dimension(name='quarter',
                       label='Quarter',
@@ -82,4 +88,12 @@ def cubetl_config(ctx):
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.month')),
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.day')),
                     DimensionAttribute(dimension=ctx.get('cubetl.datetime.week'))]))
+
+    ctx.add('cubetl.datetime.dateyh', HierarchyDimension(
+        name='dateyh',
+        label='Date',
+        role='date',
+        hierarchies=[Hierarchy(name='yearhalf', label='Year + Half', levels=['year', 'half'])],
+        attributes=[DimensionAttribute(dimension=ctx.get('cubetl.datetime.year')),
+                    DimensionAttribute(dimension=ctx.get('cubetl.datetime.half'))]))
 

@@ -17,7 +17,7 @@ Features:
   * Cubes OLAP Server model export
   * SDMX and PC-Axis read support
 * Text templating, GeoIP, HTTP requests...
-* Insert / upsert for memory tables, SQL tables and OLAP entities.
+* Insert / upsert for memory tables, SQL tables and OLAP entities
 * Extensible
 * Caching
 
@@ -195,7 +195,7 @@ Guide:
 * [OLAP](https://github.com/jjmontesl/cubetl/blob/master/doc/guide/cubetl-olap.md)
 * Script nodes, custom functions, custom nodes and custom components
 
-Types Library:
+Config Library:
 
   * [Datetime](https://github.com/jjmontesl/cubetl/blob/master/library/datetime.py)
   * [Geo](https://github.com/jjmontesl/cubetl/blob/master/library/geo.py)

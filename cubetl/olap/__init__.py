@@ -433,7 +433,7 @@ class Store(Node):
 
     def process(self, ctx, m):
 
-        entity = ctx.interpolate(m, self.entity)
+        entity = ctx.interpolate(self.entity, m)
         logger.debug("Storing entity %s" % (entity.name))
 
         # Store
@@ -465,7 +465,7 @@ class PrintMappings(Node):
 
     def print_mappings(self, ctx, m):
 
-        olapmapper = ctx.interpolate(None, self.olapmapper)
+        olapmapper = ctx.interpolate(self.olapmapper)
         mappers = olapmapper.mappers_recursive()
 
         text = ""
@@ -481,7 +481,7 @@ class PrintMappings(Node):
 
     def print_sql_mappings(self, ctx, m):
 
-        olapmapper = ctx.interpolate(None, self.olapmapper)
+        olapmapper = ctx.interpolate(self.olapmapper)
         mappers = olapmapper.mappers_recursive()
         factmappers = [m for m in mappers if isinstance(m.entity, Fact)]
 

@@ -46,7 +46,7 @@ class SDMXToOLAP(Component):
         def rename_entity(name):
             return entity_rename.get(name, name)
 
-        path_dsd = ctx.interpolate(None, path_dsd)
+        path_dsd = ctx.interpolate(path_dsd)
         dsd = SDMXDSD(path_dsd)
 
         attributes = []
@@ -105,8 +105,8 @@ class SDMXFileReader(Node):
 
     def process(self, ctx, m):
 
-        path_dsd = ctx.interpolate(ctx, self.path_dsd)
-        path_sdmx = ctx.interpolate(ctx, self.path_sdmx)
+        path_dsd = ctx.interpolate(self.path_dsd)
+        path_sdmx = ctx.interpolate(self.path_sdmx)
 
         logger.debug("Reading cells from SDMX file: %s" % path_sdmx)
 

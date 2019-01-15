@@ -81,7 +81,7 @@ class GeoIPFromAddress(Node):
 
     def process(self, ctx, m):
 
-        data = ctx.interpolate(m, self.data)
+        data = ctx.interpolate(self.data, m)
 
         m[self.prefix + "country_code"] = self._gi.country_code_by_addr(data)
         m[self.prefix + "country_name"] = self._gi.country_name_by_addr(data) #.decode("latin1")

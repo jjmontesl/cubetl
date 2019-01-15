@@ -154,14 +154,17 @@ class Context():
         self.components[urn] = component
         return component
 
-    # TODO: Put value first
-    def interpolate(self, m, value, data={}):
+    def interpolate(self, value, m=None, data=None):
         """
         Resolves expressions `${ ... }`, lambdas and functions in a value,
         with respect to the current context and the current message.
 
         Expressions are CubETL custom syntax for string interpolation.
         """
+
+        # FIXME: TO BE REMOVED after migrating all interpolate calls
+        if isinstance(value, dict):
+            raise ETLException("Possibly invalid interpolate call!")
 
         if value is None:
             return None
@@ -205,7 +208,8 @@ class Context():
                         self._compiled.put(expr, compiled)
 
                     c_locals = {"m": m, "ctx": self, "f": self.f, "props": self.props, "var": self.var, "cubetl": cubetl}
-                    c_locals.update(data)
+                    if data:
+                        c_locals.update(data)
                     res = eval(compiled, self._globals, c_locals)
 
                     if (self.debug2):
@@ -255,7 +259,7 @@ class Context():
         # Reduce the OrderedDict to a dict, but interpolate its attributes in order
         item = {}
         for k in ctx.start_item.keys():
-            item[k] = ctx.interpolate(item, ctx.start_item[k])
+            item[k] = ctx.interpolate(ctx.start_item[k], item)
         msgs = ctx.comp.process(process, item)
         count = 0
         result = [] if multiple else None
@@ -327,7 +331,7 @@ class Context():
         return result
 
     def include(self, configfile):
-        configfile = self.interpolate(None, configfile)
+        configfile = self.interpolate(configfile)
         logger.info("Including config file: %s", configfile)
         spec = importlib.util.spec_from_file_location("configmodule", configfile)
         configmodule = importlib.util.module_from_spec(spec)

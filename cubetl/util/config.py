@@ -119,12 +119,12 @@ class CreateTemplateConfig(Node):
         template_text = open(template_path).read()
         self._template_renderer.template = template_text
 
-        m['config_name'] = ctx.interpolate(m, self.config_name)
+        m['config_name'] = ctx.interpolate(self.config_name, m)
         config_text = self._template_renderer.render(ctx, {'m': m})
         m['config_text'] = config_text
         print(config_text)
 
-        config_path = ctx.interpolate(None, self.config_path)
+        config_path = ctx.interpolate(self.config_path, m)
         if config_path:
             logger.info("Writing Cubes server config to: %s", config_path)
             with open(config_path, "w") as f:

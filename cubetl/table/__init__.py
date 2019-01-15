@@ -205,7 +205,7 @@ class CSVMemoryTable(MemoryTable):
         super().initialize(ctx)
 
         self._csv_reader = CsvReader()
-        self._csv_reader.data = ctx.interpolate(None, self.data)
+        self._csv_reader.data = ctx.interpolate(self.data)
         self._csv_reader.strip = True
         ctx.comp.initialize(self._csv_reader)
 
@@ -245,7 +245,7 @@ class TableInsert(Node):
         attribs = {}
         for mapping in self.mappings:
             if "value" in mapping:
-                attribs[mapping["name"]] = ctx.interpolate(m, mapping["value"])
+                attribs[mapping["name"]] = ctx.interpolate(mapping["value"], m)
             else:
                 attribs[mapping["name"]] = m[mapping["name"]]
 
@@ -285,7 +285,7 @@ class TableLookup(Node):
 
         keys = {}
         for (key, expr) in self.lookup.items():
-            keys[key] = ctx.interpolate(m, expr)
+            keys[key] = ctx.interpolate(expr, m)
 
         return keys
 
@@ -303,7 +303,7 @@ class TableLookup(Node):
             Eval.process_evals(ctx, m, self.mappings, result)
         else:
             raise Exception("No rows found when looking up in %s: %s" % (self, keys))
-            m.update({ k: ctx.interpolate(m, v) for k, v in self.default.items() })
+            m.update({ k: ctx.interpolate(v, m) for k, v in self.default.items() })
 
         yield m
 

@@ -50,7 +50,7 @@ class UserAgentParse(Node):
 
     def process(self, ctx, m):
 
-        ua_string = ctx.interpolate(m, self.data)
+        ua_string = ctx.interpolate(self.data, m)
         user_agent = parse(ua_string)
 
         if (self.result_obj):
