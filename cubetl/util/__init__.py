@@ -133,10 +133,11 @@ class PrettyPrint(Print):
     This class prints an object using pretty print, which allows for indenting.
     """
 
-    depth = 2
-    indent = 4
-
-    _pp = None
+    def __init__(self, depth=3, indent=4):
+        super().__init__()
+        self.depth = depth
+        self.indent = indent
+        self._pp = None
 
     def initialize(self, ctx):
 
