@@ -67,6 +67,7 @@ In CubesViewer Studio, click "Tools > Import from JSON", and paste the following
     "chart-disabledseries":{"key":"gender","disabled":{"Hombres":false,"Mujeres":false}}
     }
 
+![CubesViewer Screenshot](https://raw.github.com/jjmontesl/cubetl/master/doc/img/screenshots/cv-ine-population.png "CubesViewer Screenshot")
 
 ## Further information
 

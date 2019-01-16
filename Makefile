@@ -22,7 +22,7 @@ doc-package:
 
 .PHONY: plantuml
 plantuml:
-	find doc/img/diagrams -name '*.plantuml' -printf 'echo %p ; cat %p | sudo docker run --rm -i think/plantuml > %p.svg\n' | bash
+	find doc/img/diagrams -name '*.plantuml' -printf 'echo %p ; cat %p | sudo docker run --rm -i think/plantuml -tpng > %p.png\n' | bash
 
 .PHONY: loc
 loc:

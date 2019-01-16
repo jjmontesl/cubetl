@@ -17,7 +17,7 @@ next node in the chain.
 
 This section is based on a example process that lists files in a directory writes them to a CSV file:
 
-![DirectoryList-to-CSV process](https://raw.githubusercontent.com/jjmontesl/cubetl/master/doc/img/diagrams/directorylist-to-csv.plantuml.svg "DirectoryList-to-CSV process")
+![DirectoryList-to-CSV process](https://raw.githubusercontent.com/jjmontesl/cubetl/master/doc/img/diagrams/directorylist-to-csv.plantuml.png "DirectoryList-to-CSV process")
 
 **Note**: The example in this section can be found in the `examples/various/directorycsv.py` file.
 
@@ -52,10 +52,12 @@ Within this framework, you can define your own transformation processes.
 In order to define the ETL process, choose a directory for your project and
 create a `directorycsv.py` file with the following content:
 
+```python
     from cubetl import text, flow, fs, script, util
 
     def cubetl_config(ctx):
         # Your CubETL components configuration goes here
+```
 
 The `cubetl_config` function must exist and accept a `ctx` argument. When CubETL loads
 configuration files, it calls this method in order to setup the process configuration.
@@ -90,6 +92,7 @@ In this example, we'll use a node that generates a message for each file in a
 given directory. There's a CubETL component for that: `cubetl.fs.DirectoryList`.
 Let's add it to the list of steps of our chain.
 
+```python
     ctx.add('directorycsv.process', flow.Chain(steps=[
 
         # Generates a message for each file in the given directory
@@ -99,6 +102,7 @@ Let's add it to the list of steps of our chain.
         util.Print()
 
         ]))
+```
 
 Observe that the `cubetl.fs.DirectoryList` class takes a `path` argument that
 defines which directory to list. In this example we are using `"/"` in order to
@@ -137,8 +141,10 @@ above each message contains a `path` attribute.
 The `cubetl.fs` package includes a node that retrieves filesystem information for a file.
 Let's add it right after the *DirectoryList* node:
 
+```python
     fs.DirectoryList(path="/"),
     fs.FileInfo(path=lambda m: m['path']),
+```
 
 The *FileInfo* node has a path argument that defines the target file. Here
 we use a lambda expression that gets the path from the current message.
@@ -165,6 +171,7 @@ calculations... You can easily plug custom processing functions using the *scrip
 node. It requires a function that receives parameters `(ctx, m)`, which will be called for
 each message processed:
 
+```python
     def cubetl_config(ctx):
         ctx.add('directorycsv.process', flow.Chain(steps=[
             ...
@@ -176,6 +183,7 @@ each message processed:
         m['mimetype'] = ctx.f.text.mimetype_guess(m['path']) or "none/none"
         m['mimetype_type'] = m['mimetype'].split('/')[0]
         m['mimetype_subtype'] = m['mimetype'].split('/')[1]
+```
 
 In the example above, the `process_data` function is used to calculate the mime type
 of the file, and two other attributes are added to the message.
@@ -192,8 +200,10 @@ data into CSV format (so it can be read with a spreadsheet application).
 CubETL provides components to read and write CSV formats. Add the following node
 to the end of the process steps list:
 
+```python
         # Generates CSV header and rows and writes them
         csv.CsvFileWriter(),
+```
 
 This component generates CSV header and rows and writes them. You could define a list of columns
 to be written, but by default *CsvFileWriter* will write a column for each of the message attributes.
@@ -231,7 +241,9 @@ pass variables to your ETL process (eg. connection strings, filenames...).
 You can then use these properties in expressions. For example, let's get the directory
 to list from a property:
 
+```python
     fs.DirectoryList(path=lambda ctx: ctx.props.get("path", "/")),
+```
 
 This resolves the path of the directory to list using a *lambda expression*. Expressions are
 understood by many of CubETL components and allow you to define configuration in terms of

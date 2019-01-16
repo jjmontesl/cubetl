@@ -44,8 +44,10 @@ class OLAPToSQL(Component):
         Automatically generates OLAP to SQL mappings using a normalized approach.
         """
 
-        olapmapper = olap.OlapMapper()
-        ctx.add('olap2sql.olapmapper', olapmapper)
+        olapmapper = ctx.get('olap2sql.olapmapper', fail=False)
+        if not olapmapper:
+            olapmapper = olap.OlapMapper()
+            ctx.add('olap2sql.olapmapper', olapmapper)
 
         facts = ctx.find(type=cubetl.olap.Fact)
         for fact in facts:

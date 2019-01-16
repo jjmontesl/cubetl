@@ -67,6 +67,7 @@ class Context():
         self.start_item = OrderedDict()
         self.start_nodes = []
         self.config_files = []
+        self.included_files = []
 
         self.props = {}
         self.properties = self.props
@@ -332,6 +333,13 @@ class Context():
 
     def include(self, configfile):
         configfile = self.interpolate(configfile)
+
+        # Import only once
+        abspath = os.path.abspath(configfile)
+        if abspath in self.included_files:
+            return
+        self.included_files.append(abspath)
+
         logger.info("Including config file: %s", configfile)
         spec = importlib.util.spec_from_file_location("configmodule", configfile)
         configmodule = importlib.util.module_from_spec(spec)
