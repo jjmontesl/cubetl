@@ -10,12 +10,14 @@ class TestExamples(object):
     @pytest.fixture(scope='function')
     def ctx(self):
         # Create Cubetl context
-        ctx = cubetl.cubetl(debug=False, quiet=True)
+        ctx = cubetl.cubetl(debug=True, quiet=False)
         return ctx
 
     @pytest.fixture
     def dir_examples(self):
-        return "/home/jjmontes/git/cubetl/examples"
+        ret = os.path.dirname(os.path.abspath(__file__)) + "/../examples"
+        print("dir_examples = %s" % ret)
+        return ret
 
     def test_config_new(self, ctx, tmpdir):
         # Include other configuration files
@@ -30,6 +32,7 @@ class TestExamples(object):
         # Launch process
         result = ctx.run("directorylist.process")
 
+    @pytest.mark.skip(reason="Test not implemented.")
     def test_db2olap(self, ctx, dir_examples):
         # Include other configuration files
         os.chdir(dir_examples + "/sql2olap")
@@ -37,6 +40,7 @@ class TestExamples(object):
         raise NotImplemented("Test not implemented")
         #result = ctx.run("process")
 
+    @pytest.mark.skip(reason="incf.countryutils doesn't work in Python 3.")
     def test_loganalyzer(self, ctx, dir_examples):
         # Include other configuration files
         os.chdir(dir_examples + "/loganalyzer")
@@ -50,6 +54,7 @@ class TestExamples(object):
         ctx.include("estat_eip.py")
         # Launch process
         result = ctx.run("estat.process")
+
 
     def test_pcaxis(self, ctx, dir_examples):
         # Include other configuration files

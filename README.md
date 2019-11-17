@@ -51,9 +51,13 @@ First, install Docker.  Then:
 
     docker-compose build
 
-Test:
+Test the executable (quick):
 
     docker-compose run cubetls /usr/local/bin/cubetl -h
+
+Run pytest tests (quite slow .. 20-30 minutes?):
+
+    docker-compose run cubetls pytest -v
 
 Usage
 -----
