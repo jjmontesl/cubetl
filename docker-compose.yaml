@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  # "cubetl service" = "cubetls"
+  cubetls:
+    build: .
+    environment:
+      - PYTHONDONTWRITEBYTECODE=true
+      - PYTHONPATH=.
+    volumes:
+      # mount current directory so that changes in files are reflected
+      # in the running envirinment
+      - .:/app
