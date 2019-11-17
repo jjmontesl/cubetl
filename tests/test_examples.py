@@ -38,7 +38,7 @@ class TestExamples(object):
         raise NotImplemented("Test not implemented")
         #result = ctx.run("process")
 
-    # @pytest.mark.skip(reason="incf.countryutils doesn't work in Python 3.")
+    @pytest.mark.skip(reason="incf.countryutils doesn't work in Python 3.")
     def test_loganalyzer(self, ctx, dir_examples):
         # Include other configuration files
         os.chdir(dir_examples + "/loganalyzer")
