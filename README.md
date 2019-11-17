@@ -59,6 +59,11 @@ Run pytest tests (quite slow .. 20-30 minutes?):
 
     docker-compose run cubetls pytest -v
 
+Run one pytest:
+
+    docker-compose run cubetls python -m pytest -v -k test_config_new
+
+
 Usage
 -----
 
