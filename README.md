@@ -53,7 +53,7 @@ First, install Docker.  Then:
 
 Test:
 
-    docker-compose run cubetl_container /usr/local/bin/cubetl -h
+    docker-compose run cubetls /usr/local/bin/cubetl -h
 
 Usage
 -----
