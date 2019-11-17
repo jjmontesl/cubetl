@@ -15,9 +15,7 @@ class TestExamples(object):
 
     @pytest.fixture
     def dir_examples(self):
-        ret = os.path.dirname(os.path.abspath(__file__)) + "/../examples"
-        print("dir_examples = %s" % ret)
-        return ret
+        return os.path.dirname(os.path.abspath(__file__)) + "/../examples"
 
     def test_config_new(self, ctx, tmpdir):
         # Include other configuration files
@@ -40,7 +38,7 @@ class TestExamples(object):
         raise NotImplemented("Test not implemented")
         #result = ctx.run("process")
 
-    @pytest.mark.skip(reason="incf.countryutils doesn't work in Python 3.")
+    # @pytest.mark.skip(reason="incf.countryutils doesn't work in Python 3.")
     def test_loganalyzer(self, ctx, dir_examples):
         # Include other configuration files
         os.chdir(dir_examples + "/loganalyzer")
@@ -54,7 +52,6 @@ class TestExamples(object):
         ctx.include("estat_eip.py")
         # Launch process
         result = ctx.run("estat.process")
-
 
     def test_pcaxis(self, ctx, dir_examples):
         # Include other configuration files
