@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 
-from inspect import isclass, getargspec
+from inspect import isclass
 from repoze.lru import LRUCache
 import cProfile
 import copy
@@ -174,15 +174,16 @@ class Context():
         # its parameters. Acceptable signatures are:
         # (ctx), (m), (ctx, m)
         if callable(value):
-            spec = getargspec(value)
-            if len(spec.args) == 1 and spec.args[0] == 'ctx':
+            sig = inspect.signature(value)
+            paramnames = list(sig.parameters.keys())
+            if len(sig.parameters) == 1 and paramnames[0] == 'ctx':
                 value = value(self)
-            elif len(spec.args) == 1 and spec.args[0] == 'm':
+            elif len(sig.parameters) == 1 and paramnames[0] == 'm':
                 value = value(m)
-            elif len(spec.args) == 2 and spec.args[0] == 'ctx' and spec.args[1] == 'm':
+            elif len(sig.parameters) == 2 and paramnames[0] == 'ctx' and paramnames[1] == 'm':
                 value = value(self, m)
             else:
-                raise ETLConfigurationException("Invalid lambda expression signature: %s" % spec.args)
+                raise ETLConfigurationException("Invalid lambda expression signature: %s" % sig)
 
         # If the value is not a string, it is immediately returned
         if not isinstance(value, str):
