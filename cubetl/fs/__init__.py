@@ -65,7 +65,8 @@ class DirectoryList(Node):
     @staticmethod
     def walklevel(path, maxdepth=0):
         path = os.path.normpath(path)
-        assert os.path.isdir(path)
+        if not os.path.isdir(path):
+            raise ETLConfigurationException("Invalid directory to list: %s" % path)
         num_sep = path.rstrip(os.path.sep).count(os.path.sep)
         for root, dirs, files in os.walk(path):
             yield root, dirs, files
@@ -83,13 +84,19 @@ class DirectoryList(Node):
         filter_re = ctx.interpolate(self.filter_re, m)
         logger.info("Listing directory %s (mask '%s')" % (path, filter_re))
 
-        files = ((root, f) for root, dirs, files in self.walklevel(path, self.maxdepth) for f in files)
+        regex = None
         if filter_re:
             regex = re.compile(filter_re)
-            files = (ma[0] for ma in (regex.match(f) for f in files) if ma)
+
+        files = ((root, f) for root, dirs, files in self.walklevel(path, self.maxdepth) for f in files)
         files = (str(join(f[0], f[1])) for f in files)
 
         for f in files:
+            if filter_re:
+                matches = regex.match(f)
+                if not matches:
+                    continue
+
             fields = {self.name: f}
             if self.copy:
                 m2 = ctx.copy_message(m)
@@ -132,11 +139,10 @@ class FileInfo(Node):
 
 class FileReader(Node):
     """
-
     * encoding_errors can be one of "strict, ignore, replace"
     """
 
-    def __init__(self, path, encoding="detect", encoding_errors="strict", encoding_abort=True):
+    def __init__(self, path, encoding=None, encoding_errors="strict", encoding_abort=True):
         super().__init__()
 
         self.path = path
@@ -176,8 +182,8 @@ class FileReader(Node):
                 except UnicodeDecodeError:
                     if (self.encoding_abort):
                         raise Exception("Error decoding unicode with encoding '%s' on data: %r" % (encoding, text))
-                    logger.warning("Error decoding unicode with encoding '%s' on data: %r" % (encoding, text))
-                    result = text.decode("latin-1")
+                    logger.error("Error decoding unicode with encoding '%s' on data: %r" % (encoding, text))
+                    result = text  # .decode("latin-1")
 
         return result
 
@@ -308,6 +314,7 @@ class FileLineReader(FileReader):
                 encoding = ctx.interpolate(self.encoding, m2)
                 m2[self.name] = self._solve_encoding(encoding, m2[self.name])
                 m2["_encoding"] = encoding
+                m2["_line"] = self._line
 
                 yield m2
 

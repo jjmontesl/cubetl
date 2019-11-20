@@ -80,6 +80,26 @@ def parsebool(value):
         raise Exception("Invalid boolean value '%r' (valid values are 'True' or 'False')" % value)
 
 
+def format_seconds_hms(sec):
+
+    sec = int(sec)
+
+    days = sec // 86400
+    sec -= 86400 * days
+
+    hrs = sec // 3600
+    sec -= 3600 * hrs
+
+    mins = sec // 60
+    sec -= 60 * mins
+
+    val = "%02d:%02d:%02d" % (hrs, mins, sec)
+    if days:
+        val = "%dd:%s" % (days, val)
+
+    return val
+
+
 def extract_date(value, dayfirst, fuzzy=True):
 
     if value is None:

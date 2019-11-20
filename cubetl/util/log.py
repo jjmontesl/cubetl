@@ -25,7 +25,7 @@ import os
 import time
 
 from cubetl.core import Node
-from cubetl.text.functions import parsebool
+from cubetl.text.functions import parsebool, format_seconds_hms
 
 
 # Get an instance of a logger
@@ -70,16 +70,15 @@ class LogPerformance(Node):
     """
     """
 
-    interval = 10
-
     _count = 0
     _startTime = time.time()
     _lastTime = time.time()
     _lastCount = 0
 
-    def __init__(self, name="Performance"):
+    def __init__(self, name="Performance", interval=10.0):
         super().__init__()
         self.name = name
+        self.interval = interval
         self._startTime = time.time()
         self._lastTime = time.time()
 
@@ -87,6 +86,7 @@ class LogPerformance(Node):
         # return the memory usage in MB
 
         import psutil
+        '''
         process = psutil.Process(os.getpid())
         if hasattr(process, 'get_memory_info'):
             mem = process.get_memory_info()[0] / float(2 ** 20)
@@ -94,6 +94,13 @@ class LogPerformance(Node):
             mem = process.memory_info()[0] / float(2 ** 20)
         else:
             mem = 0
+        '''
+
+        current_process = psutil.Process(os.getpid())
+        mem = current_process.memory_info()[0] / float(2 ** 20)
+        for child in current_process.children(recursive=True):
+            mem += child.memory_info()[0] / float(2 ** 20)
+
         return mem
 
     def finalize(self, ctx):
@@ -101,27 +108,25 @@ class LogPerformance(Node):
         super(LogPerformance, self).finalize(ctx)
 
         current = time.time()
-        logger.debug("Context expression cache usage - size: %d evictions: %d hits/misses: %d/%d" %
-                    (ctx._compiled.size, ctx._compiled.evictions, ctx._compiled.hits, ctx._compiled.misses))
-        logger.info("%s - Total time: %d  Total messages: %d  Global rate: %.3f msg/s" % (
+        logger.debug("Context expression cache usage - size: %d evictions: %d hits/misses: %d/%d",
+                     ctx._compiled.size, ctx._compiled.evictions, ctx._compiled.hits, ctx._compiled.misses)
+        logger.info("%s - Total time: %s  Total messages: %d  Global rate: %.3f msg/s",
                     self.name,
-                    current - self._startTime,
+                    format_seconds_hms(current - self._startTime),
                     self._count,
-                    float(self._count) / (current - self._startTime)
-                    ))
+                    float(self._count) / (current - self._startTime))
 
     def loginfo(self, ctx):
         import psutil
         current = time.time()
-        logger.info("%s - Time: %d Mem: %.3f MB Messages: %d (+%d) Rate global: %.3f msg/s Rate current: %.3f msg/s" % (
-             self.name,
-             current - self._startTime,
-             self.memory_usage_psutil(),
-             self._count,
-             self._count - self._lastCount,
-             float(self._count) / (current - self._startTime),
-             float(self._count - self._lastCount) / (current - self._lastTime)
-             ))
+        logger.info("%s - Time: %s Mem: %.3f MB Messages: %d (+%d) Rate global: %.3f msg/s Rate current: %.3f msg/s",
+                    self.name,
+                    format_seconds_hms(current - self._startTime),
+                    self.memory_usage_psutil(),
+                    self._count,
+                    self._count - self._lastCount,
+                    float(self._count) / (current - self._startTime),
+                    float(self._count - self._lastCount) / (current - self._lastTime))
 
     def process(self, ctx, m):
 

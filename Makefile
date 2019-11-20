@@ -7,6 +7,7 @@ BUILD_DIR=$(BASE_DIR)/build
 
 #VERSION=$(shell cat VERSION.txt)
 VERSION=$(shell grep '^APP_VERSION = ' $(BASE_DIR)/cubetl/__init__.py | sed -E 's/^APP_VERSION = \"(.*)\"/\1/' )
+VIRTUALENV_ACTIVATE=env/bin/activate
 
 
 .PHONY: doc
@@ -58,7 +59,7 @@ dist: build
 .PHONY: virtualenv
 virtualenv:
 	#sudo apt-get --yes --force-yes install python-virtualenv
-	[ ! -d env ] && virtualenv env || true
+	[ ! -d env ] && python3 -m venv env || true
 	#. $(VIRTUALENV_ACTIVATE) && pip install --upgrade setuptools
 	. $(VIRTUALENV_ACTIVATE) && pip install -r requirements.txt --upgrade
 

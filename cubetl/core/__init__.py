@@ -96,6 +96,15 @@ class Node(Component):
         yield m
 
 
+class ConsumerNode(Node):
+
+    def consume(self, ctx, generator):
+        raise NotImplementedError()
+
+    def process(self, ctx, m):
+        raise ETLException("Cannot call process on a ConsumerNode.")
+
+
 class ContextProperties(Component):
 
     #def after_properties_set(self):

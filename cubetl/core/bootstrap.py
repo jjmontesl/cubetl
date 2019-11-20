@@ -62,6 +62,7 @@ class Bootstrap:
 
         # With file config:
         #logging.config.fileConfig('logging.conf')
+        logging.getLogger("elasticsearch").setLevel(logging.WARN)
 
     def usage(self):
         sys.stderr.write("cubetl [-dd] [-q] [-h] [-r filename] [-p property=value] [-m attribute=value] [config.py ...] <start-node>\n")

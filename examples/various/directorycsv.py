@@ -14,7 +14,7 @@ def cubetl_config(ctx):
     ctx.add('directorycsv.process', flow.Chain(steps=[
 
         # Generates a message for each file in the given directory
-        fs.DirectoryList(path=lambda ctx: ctx.props.get("path", "/"), maxdepth=0),
+        fs.DirectoryList(path=lambda ctx: ctx.props.get("path", "/"), maxdepth=1),
 
         fs.FileInfo(),  # path=lambda m: m['path'])
 

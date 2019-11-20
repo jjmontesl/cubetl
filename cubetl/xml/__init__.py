@@ -152,13 +152,13 @@ class BeautifulSoupParser(Node):
 
     def process(self, ctx, m):
 
-        from bs4 import BeautifulSoup
         #import beautifulsoupselect as soupselect
         # Monkeypatch BeautifulSoup
         #BeautifulSoup.findSelect = soupselect.select
 
+        from bs4 import BeautifulSoup
         #logger.debug("Parsing XML")
-        m["data"] = m["data"].encode("utf-8")
+        m["data"] = m["data"].encode("utf-8")  # For speed and to avoid content wrong encoding (?)
         m["soup"] = BeautifulSoup(m["data"], 'lxml', from_encoding='utf-8')
 
         yield m

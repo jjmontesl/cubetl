@@ -21,11 +21,14 @@
 
 
 from inspect import isclass
+from collections import OrderedDict
 from repoze.lru import LRUCache
 import cProfile
 import copy
 import datetime
+import importlib
 import inspect
+import itertools
 import logging
 import os
 import random
@@ -34,14 +37,12 @@ import sys
 import traceback
 import urllib
 
-from cubetl.core import Component
+from cubetl.core import Component, ConsumerNode
 from cubetl.core.components import Components
 from cubetl.core.exceptions import ETLException, ETLConfigurationException
 from cubetl.text import functions
 from cubetl.xml import functions as xmlfunctions
 import cubetl
-from collections import OrderedDict
-import importlib
 
 
 # Get an instance of a logger
@@ -253,6 +254,23 @@ class Context():
             return {}
         else:
             return copy.copy(m)
+
+    def consume(self, node, generator):
+        """
+        Sends a message to a node for processing. Processing should be done
+        always through this context method (and not calling `node.process()`
+        directly).
+
+        Returns a generator.
+        """
+
+        if isinstance(node, ConsumerNode):
+            msgs = node.consume(self, generator)
+        else:
+            msgs = (self.comp.process(node, m) for m in generator)
+            msgs = itertools.chain.from_iterable(msgs)
+        return msgs
+
 
     def _do_process(self, process, ctx, multiple):
         # TODO: When using multiple, this should allow to yield,

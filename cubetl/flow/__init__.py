@@ -68,6 +68,19 @@ class Chain(Node):
             for m2 in result_msgs2:
                 yield m2
 
+    def _consume(self, steps, ctx, msgs):
+
+        if (len(steps) <= 0):
+            return msgs
+
+        if ctx.debug2:
+            logger.debug("Processing step: %s" % (steps[0]))
+
+        result_msgs = ctx.consume(steps[0], msgs)
+        result_msgs2 = self._consume(steps[1:], ctx, result_msgs)
+
+        return result_msgs2
+
     def process(self, ctx, m):
 
         cond = True
@@ -76,13 +89,13 @@ class Chain(Node):
 
         if cond:
             if (not self.fork):
-                result_msgs = self._process(self.steps, ctx, m)
+                result_msgs = self._consume(self.steps, ctx, [m])
                 for m in result_msgs:
                     yield m
             else:
                 logger.debug("Forking flow (copying message).")
                 m2 = ctx.copy_message(m)
-                result_msgs = self._process(self.steps, ctx, m2)
+                result_msgs = self._consume(self.steps, ctx, [m2])
                 count = 0
                 for mdis in result_msgs:
                     count = count + 1
@@ -156,6 +169,8 @@ class Limit(Node):
         if self.counter > limit:
             # Skip message
             # TODO: We shall actually break the process flow, signalling backwards (return or yield some constant?)
+            if self.counter == limit + 1:
+                logger.info("Limit of %d messages hit by %s", limit, self)
             return
 
         yield m
