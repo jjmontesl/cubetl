@@ -42,10 +42,22 @@ While CubETL is in development no *pip* packages are provided, and it should be 
 using `python setup.py develop`. Using a virtualenv or docker instance is recommended.
 
     git clone https://github.com/jjmontesl/cubetl.git
+    cd cubetl
 
+    # Using a virtualenv is usually recommended:
+    python3 -m venv env
+    . env/bin/activate
 
-Install
--------
+    # Install dependencies (this command is for Ubuntu)
+    sudo apt-get install python3-dev libxml2-dev libxslt1-dev zlib1g-dev
+
+    # Install CubETL (in development mode, so you can make changes to the source)
+    python setup.py develop
+    
+    # Test
+    cubetl -h
+
+**Install on docker**
 
 First, install Docker.  Then:
 
@@ -55,7 +67,7 @@ Test the executable (quick):
 
     docker-compose run cubetls /usr/local/bin/cubetl -h
 
-Run pytest tests (quite slow .. 20-30 minutes?):
+Run pytest tests (this is currently quite slow: 20-30 minutes):
 
     docker-compose run cubetls pytest -v
 
