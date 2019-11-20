@@ -346,7 +346,9 @@ class Context():
         configmodule = importlib.util.module_from_spec(spec)
         try:
             spec.loader.exec_module(configmodule)
-        except Exception as e:
+        except FileNotFoundError as e:
             raise ETLConfigurationException("Config include file not found: %s" % (configfile))
+        except Exception as e:
+            raise ETLConfigurationException("An error ocurred while loading '%s' config file: %s" % (configfile, e))
         configmodule.cubetl_config(self)
 
