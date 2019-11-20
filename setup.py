@@ -39,17 +39,17 @@ setup(
     ],
 
     install_requires = [
+        "beautifulsoup4>=4.8.1",
         "repoze.lru >= 0.5.0",
-        "sqlalchemy >= 0.7.9",
+        "sqlalchemy >= 1.3.11",
         "fs >= 0.3.0",
         "Jinja2 >= 2.10",
-        "pygments >= 2.3.1",
-        "simplejson >= 3.16.0",
-        "dateutils >= 0.6.6",
+        "Pygments >= 2.3.1",
+        "simplejson >= 3.17.0",
+        "dateutils >= 0.6.7",
         "python-slugify >= 1.2.6",
-        "lxml >= 4.2.5",
+        "lxml >= 4.4.1",
         "chardet >= 3.0.4",
-        "beautifulsoup4>=4.6.3",
         "psutil>=5.4.8",
     ],
 

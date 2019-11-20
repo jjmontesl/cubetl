@@ -412,7 +412,7 @@ class SQLToOLAP(Node):
 
 def _match_config(config, config_key, default=None):
     for ci_key, ci_value in config.items():
-        pattern = ci_key.replace('.', '\.').replace('**', '.*').replace('*', '\w+')
+        pattern = ci_key.replace('.', r'\.').replace('**', r'.*').replace('*', r'\w+')
         ci_re = re.compile(pattern)
         if ci_re.match(config_key):
             return ci_value

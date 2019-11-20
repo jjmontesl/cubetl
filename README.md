@@ -54,7 +54,7 @@ using `python setup.py develop`. Using a virtualenv or docker instance is recomm
     # Install CubETL (in development mode, so you can make changes to the source)
     python setup.py develop
     
-    # Test
+    # Test the executable
     cubetl -h
 
 **Install on docker**
@@ -67,12 +67,12 @@ Test the executable (quick):
 
     docker-compose run cubetls /usr/local/bin/cubetl -h
 
-Run pytest tests (this is currently quite slow: 20-30 minutes):
-
+Optionally, run tests:
+	
+	# Run pytest tests (this is currently quite slow: 20-30 minutes):
     docker-compose run cubetls pytest -v
 
-Run one pytest:
-
+	# Run one pytest:
     docker-compose run cubetls python -m pytest -v -k test_config_new
 
 
