@@ -278,7 +278,7 @@ class TableMapper(Component):
 
         if (len(pk_mappings) > 1):
             #raise Exception("%s has multiple primary keys mapped: %s" % (self, pk_mappings))
-            logger.warn("%s has multiple primary keys mapped: %s (ignoring)" % (self, pk_mappings))
+            logger.warning("%s has multiple primary keys mapped: %s (ignoring)" % (self, pk_mappings))
             return None
         elif (len(pk_mappings) == 1):
             return pk_mappings[0]
@@ -419,7 +419,7 @@ class TableMapper(Component):
                     if v1 != v2:
                         # Give warning just one time for each field
                         if (mapping.sqlcolumn not in self._lookup_changed_fields):
-                            logger.warn("%s looked up an entity which exists with different attributes (field=%s, existing_value=%r, tried_value=%r) (reported only once per field)" % (self, mapping.sqlcolumn, v1, v2))
+                            logger.warning("%s looked up an entity which exists with different attributes (field=%s, existing_value=%r, tried_value=%r) (reported only once per field)" % (self, mapping.sqlcolumn, v1, v2))
                             self._lookup_changed_fields.append(mapping.sqlcolumn)
 
         pk = self.pk(ctx)

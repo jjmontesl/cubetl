@@ -62,7 +62,7 @@ class PCAxisIterator(Node):
             try:
                 container['value'] = value
             except ValueError as e:
-                logger.warn("PCAxisIterator could not parse value: %r (cell: %s)", value, container)
+                logger.warning("PCAxisIterator could not parse value: %r (cell: %s)", value, container)
                 value = None
 
             m.update(container)

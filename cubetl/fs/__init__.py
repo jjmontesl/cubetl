@@ -119,7 +119,7 @@ class FileInfo(Node):
             m[self.prefix + 'size'] = stat.st_size
             m[self.prefix + 'mtime'] = stat.st_mtime
         except IOError as e:
-            logger.warn("Could not stat file: %s", path)
+            logger.warning("Could not stat file: %s", path)
             m[self.prefix + 'size'] = None
             m[self.prefix + 'mtime'] = None
 

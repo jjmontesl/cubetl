@@ -120,7 +120,7 @@ class DBToSQL(Node):
                     foreign_sqlcolumn = ctx.get(foreign_sqlcolumn_name, fail=False)
 
                     if not foreign_sqlcolumn and (True):
-                        logger.warn("Skipped foreign key %s in table %s, as foreign key column (%s.%s) was not found.", dbcol.name, dbtable.name, list(dbcol.foreign_keys)[0].column.table.name, list(dbcol.foreign_keys)[0].column.name)
+                        logger.warning("Skipped foreign key %s in table %s, as foreign key column (%s.%s) was not found.", dbcol.name, dbtable.name, list(dbcol.foreign_keys)[0].column.table.name, list(dbcol.foreign_keys)[0].column.name)
                         continue
 
                     column = cubetl.sql.sql.SQLColumnFK(name=dbcol.name, label=functions.labelify(dbcol.name),

@@ -344,7 +344,7 @@ class SQLTable(Component):
                             if (not isinstance(v2, str)): v2 = str(v2)
                         if (v1 != v2):
                             if (c.name not in self._lookup_changed_fields):
-                                logger.warn("%s updating an entity that exists with different attributes, overwriting (field=%s, existing_value=%s, tried_value=%s)" % (self, c.name, v1, v2))
+                                logger.warning("%s updating an entity that exists with different attributes, overwriting (field=%s, existing_value=%s, tried_value=%s)" % (self, c.name, v1, v2))
                                 #self._lookup_changed_fields.append(c["name"])
 
                 # Update the row
@@ -369,7 +369,7 @@ class SQLTable(Component):
                 if (column.type == "String") and (not isinstance(row[column.name], str)):
                     self._unicode_errors = self._unicode_errors + 1
                     if (ctx.debug):
-                        logger.warn("Unicode column %r received non-unicode string: %r " % (column.name, row[column.name]))
+                        logger.warning("Unicode column %r received non-unicode string: %r " % (column.name, row[column.name]))
 
         return row
 

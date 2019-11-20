@@ -81,7 +81,7 @@ class HttpReader(FileReader):
                 response = urllib2.urlopen(req)
                 html = response.read()
             except Exception as e:
-                logger.warn("Could not retrieve HTTP document (attempt %d/%d): %s " % (attempt_count, self.attempts, e))
+                logger.warning("Could not retrieve HTTP document (attempt %d/%d): %s " % (attempt_count, self.attempts, e))
 
         # Encoding
         """

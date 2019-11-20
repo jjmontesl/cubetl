@@ -249,12 +249,12 @@ class SQLToOLAP(Node):
                     if related_fact_name == sqltable.name:
                         # Reference to self
                         # TODO: This does not account for circular dependencies across other entities
-                        logger.warn("Ignoring foreign key reference to self: %s", dbcol.name)
+                        logger.warning("Ignoring foreign key reference to self: %s", dbcol.name)
                         continue
 
                     related_fact = facts.get(related_fact_name, None)
                     if related_fact is None:
-                        logger.warn("Ignoring foreign key reference from %s.%s to not available entity: %s", dbcol.sqltable.name, dbcol.name, related_fact_name)
+                        logger.warning("Ignoring foreign key reference from %s.%s to not available entity: %s", dbcol.sqltable.name, dbcol.name, related_fact_name)
                         continue
 
                     # Create dimension attribute
@@ -354,12 +354,12 @@ class SQLToOLAP(Node):
 
             # Ignore table if more than one primary key was found
             if key_count > 1:
-                logger.warn("Multiple primary key found in table %s (not supported, ignoring table)", sqltable.name)
+                logger.warning("Multiple primary key found in table %s (not supported, ignoring table)", sqltable.name)
                 continue
 
             # Ignore table if it contains no primary key
             if key_count == 0:
-                logger.warn("No primary key found in table %s (not supported, ignoring table)", sqltable.name)
+                logger.warning("No primary key found in table %s (not supported, ignoring table)", sqltable.name)
                 continue
 
             # Define fact

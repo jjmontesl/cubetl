@@ -71,7 +71,7 @@ class Components():
         # TODO: Count references and finalize in an adequate order!!!
 
         if (not self.is_initialized(comp)):
-            logger.warn("Finalized a non initialized component: %s" % comp)
+            logger.warning("Finalized a non initialized component: %s" % comp)
         if (not self.is_finalized(comp)):
             logger.debug("Finalizing %s" % comp)
             self.component_desc(comp).finalized = True
@@ -87,5 +87,5 @@ class Components():
     def cleanup(self):
         for comp_desc in self.components.values():
             if (not comp_desc.finalized):
-                logger.warn("Unfinalized component %s" % comp_desc.comp)
+                logger.warning("Unfinalized component %s" % comp_desc.comp)
 

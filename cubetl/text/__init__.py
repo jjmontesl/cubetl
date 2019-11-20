@@ -87,7 +87,7 @@ class RegExp(Node):
                 raise ETLException("Failed to match regular expresion %s on value: %s" % (self.regexp, data))
             else:
                 if self.errors == RegExp.ERRORS_WARN:
-                    logger.warn("Failed to match regular expresion %s on value: %s", self.regexp, data)
+                    logger.warning("Failed to match regular expresion %s on value: %s", self.regexp, data)
                 return
 
         matches = matches[0]
