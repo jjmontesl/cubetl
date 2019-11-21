@@ -51,7 +51,8 @@ class Connection(Component):
 
     def lazy_init(self):
         if self._engine is None:
-            url = self.url
+            #url = self.url
+            url = self.ctx.interpolate(self.url)
             logger.info("Connecting to database: %s (%s)", url, self.connect_args)
             self._engine = create_engine(url, connect_args=self.connect_args)
             self._connection = self._engine.connect()
