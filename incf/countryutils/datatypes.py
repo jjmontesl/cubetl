@@ -3,8 +3,8 @@ from incf.countryutils import transformations as trafos
 
 class Country(object):
     """encapsulating information about a country
-
-    The constructor needs to be passed in an ISO 3166 numeric, two or
+    
+    The constructor needs to be passed in an ISO 3166 numeric, two or 
     three letter country code or the simple English name.
 
     Raises ValueError if no corresponding country can be found
@@ -12,7 +12,7 @@ class Country(object):
 
     def __init__(self, key):
         """Infer the country from the key
-
+        
         Valid keys are: two letter, three letter or numeric country code
         acording to ISO 3166 or the countries simple English name.
 
@@ -33,18 +33,18 @@ class Country(object):
         self.cca2 = self.alpha2 = trafos.ccn_to_cca2(self.numeric)
         self.cca3 = self.alpha3 = trafos.ccn_to_cca3(self.numeric)
         self.con = self.official_name = trafos.ccn_to_con(self.numeric)
-
+        
         self.ctca2 = trafos.ccn_to_ctca2(self.numeric)
         self.ctn = trafos.ccn_to_ctn(self.numeric)
 
-    @property
+    @property 
     def continent(self):
         return Continent(self.ctn)
 
 
 class Continent(object):
     """encapsulating information about a continent
-
+    
     The constructor needs to be passed a two letter continent code
     or name ('AF': 'Africa', 'AN': 'Antarctica', 'AS': 'Asia',
     'EU': 'Europe', 'NA': 'North America', 'OC': 'Oceania',
@@ -66,4 +66,4 @@ class Continent(object):
 
     @property
     def countries(self):
-        return (Country(c) for c in data.ctca2_to_ccn[self.alpha2])
+        return (Country(c) for c in data.ctca2_to_ccn[self.alpha2]) 

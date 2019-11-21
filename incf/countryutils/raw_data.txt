@@ -216,6 +216,7 @@ AF ZA ZAF 710 South Africa, Republic of
 AF ZW ZWE 716 Zimbabwe, Republic of
 EU ES ESP 724 Spain, Kingdom of
 AF SS SSD 728 South Sudan
+AF SD SDN 729 Sudan
 AF EH ESH 732 Western Sahara
 AF SD SDN 736 Sudan, Republic of
 SA SR SUR 740 Suriname, Republic of
