@@ -37,7 +37,8 @@ def cubetl_config(ctx):
 
     # Database connection for loaded OLAP data
     ctx.add('loganalyzer.sql.connection',
-            sql.Connection(url=lambda ctx: ctx.props.get("db_url", None)))
+            #sql.Connection(url=lambda ctx: ctx.props.get("db_url", None))
+            sql.Connection(url='sqlite:///loganalyzer.sqlite3'))
 
 
     # Generate a SQL star schema and mappings automatically
