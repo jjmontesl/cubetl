@@ -11,3 +11,8 @@ services:
       # mount current directory so that changes in files are reflected
       # in the running envirinment
       - .:/app
+    # Open up ports, hopefully not in conflict with any other you may be running
+    # This allows cubes to show up on port 5005, and an HTTP server on 8008.
+    ports:
+      - "5005:5000"
+      - "8008:8000"
