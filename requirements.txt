@@ -4,7 +4,7 @@ chardet==3.0.4
 dateutils==0.6.7
 fake-factory==0.5.7
 fs==2.4.11
-httplib2==0.12.0
+httplib2==0.18.0
 #incf.countryutils==1.0
 incf.dai==0.7
 lxml==4.4.1
