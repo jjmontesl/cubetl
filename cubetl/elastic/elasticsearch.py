@@ -23,7 +23,8 @@
 import logging
 
 from cubetl.core import Component, Node
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, helpers
+import elasticsearch
 import datetime
 
 # Get an instance of a logger
@@ -41,6 +42,8 @@ class ElasticsearchConnection(Component):
         self._conn = None
         self._uid = None
         self._connected = False
+
+        self._index_bulk_buffer = []
 
     def conn(self):
         if not self._connected:
@@ -62,14 +65,26 @@ class ElasticsearchConnection(Component):
         res = self.conn().index(index=index, doc_type=doc_type, id=data_id, body=data)
         #print(res['result'])  # created, updated
 
+    def index_bulk(self, index, doc_type, data_id, data):
+        bulk_obj = {'_index': index,
+                    '_id': data_id,
+                    '_source': data}
+        self._index_bulk_buffer.append(bulk_obj)
+        if len(self._index_bulk_buffer) > 500:
+            helpers.bulk(self.conn(), (bulk_obj for bulk_obj in self._index_bulk_buffer))
+            self._index_bulk_buffer = []
+
     def get(self, index, doc_type, data_id):
 
         res = self.conn().get(index=index, doc_type=doc_type, id=data_id)
         print(res['_source'])
 
-    def search(self, index, query):
+    def search(self, index, query=None):
         logger.debug("Elasticsearch search [index=%s]", index)
-        res = self.conn().search(index=index, body={'size': 10000})  # {"query": {"match_all": {}}})
+        if not query:
+            res = self.conn().search(index=index, size=10000)  # {"query": {"match_all": {}}})
+        else:
+            res = self.conn().search(index=index, size=10000, q=query)
         #logger.info("Got %d Hits:" % res['hits']['total'])
         for hit in res['hits']['hits']:
             #print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
@@ -78,11 +93,43 @@ class ElasticsearchConnection(Component):
     def index_delete(self, index):
         self.conn().indices.delete(index=index, ignore=[400, 404])
 
-    def index_create(self, index):
-        self.conn().indices.create(index=index, ignore=[400])
+    def index_create(self, index, body=None, ignore_errors=None):
+        logger.info("Creating Elasticsearch index: %s", index)
+
+        if not ignore_errors:
+            ignore_errors = []
+        if ignore_errors is True:
+            ignore_errors = [400]
+
+        if body:
+            self.conn().indices.create(index=index, body=body, ignore=ignore_errors)  # , ignore=[400]
+        else:
+            self.conn().indices.create(index=index, ignore=ignore_errors)  # , ignore=[400])
 
     def index_refresh(self, index):
         self.conn().indices.refresh(index=index)
+
+
+class IndexCreate(Node):
+    """
+    TODO: This shall be an ElasticsearchIndex object, and possibly automatically created
+    as needed and schema compared when already existing.
+    """
+
+    def __init__(self, es, index, mappings, ignore_errors=True):
+        super().__init__()
+        self.es = es
+        self.index = index
+        self.mappings = mappings
+        self.ignore_errors = ignore_errors
+
+    def process(self, ctx, m):
+        index = ctx.interpolate(self.index, m)
+        mappings = self.mappings  # ctx.interpolate(self.mappings, m)
+
+        self.es.index_create(index, mappings, ignore_errors=self.ignore_errors)
+
+        yield m
 
 
 class Index(Node):
@@ -94,19 +141,22 @@ class Index(Node):
         self.doc_type = doc_type
         self.data_id = data_id
 
+
     def process(self, ctx, m):
 
         index = ctx.interpolate(self.index, m)
         doc_type = ctx.interpolate(self.doc_type, m)
-        data_id = ctx.interpolate(self.data_id, m)
-        self.es.index(index, doc_type, data_id, m)
+        data_id = int(ctx.interpolate(self.data_id, m))
+        #self.es.index(index, doc_type, data_id, m)
+        del(m['id'])
+        self.es.index_bulk(index, doc_type, data_id, m)
 
         yield m
 
 
 class Search(Node):
 
-    def __init__(self, es, index, query):
+    def __init__(self, es, index, query=None):
         super().__init__()
         self.es = es
         self.index = index
@@ -114,7 +164,8 @@ class Search(Node):
 
     def process(self, ctx, m):
         index = ctx.interpolate(self.index, m)
-        res = self.es.search(index=index, query=None)
+        query = ctx.interpolate(self.query, m)
+        res = self.es.search(index=index, query=query)
         for item in res:
             m2 = ctx.copy_message(m)
             m2.update(item)

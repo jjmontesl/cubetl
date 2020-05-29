@@ -39,6 +39,7 @@ develop-eggs
 *.slicer.ini
 *.cubes-model.json
 *.cubes-config.ini
+/examples/osm/*.pbf
 
 *~
 
