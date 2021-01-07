@@ -7,7 +7,7 @@ fs==2.4.11
 httplib2==0.18.0
 #incf.countryutils==1.0
 incf.dai==0.7
-lxml==4.4.1
+lxml==4.6.2
 odict==1.6.2
 psutil==5.6.6
 Pygments==2.3.1
